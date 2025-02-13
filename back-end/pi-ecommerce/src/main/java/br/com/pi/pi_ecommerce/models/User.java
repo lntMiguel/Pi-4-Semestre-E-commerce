@@ -9,23 +9,23 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "CPF", unique = true, nullable = false)
+    @Column(name = "NR_CPF", unique = true, nullable = false)
     private Long cpf;
 
-    @Column(name = "email", unique = true, nullable = false)
+    @Column(name = "DS_EMAIL", unique = true, nullable = false)
     private String email;
 
-    @Column(name = "nome", nullable = false)
+    @Column(name = "DS_NOME", nullable = false)
     private String nome;
 
-    @Column(name = "senha", nullable = false)
+    @Column(name = "DS_SENHA", nullable = false)
     private String senha;
 
-    @Column(name = "grupo", nullable = false)
+    @Column(name = "DS_GRUPO", nullable = false)
     private String grupo;
 
-    @Column(name = "status", nullable = false)
-    private String status;
+    @Column(name = "TG_INATIVO", nullable = false)
+    private Tinyint status;
 
     public Long getId() {
         return id;
@@ -75,7 +75,7 @@ public class User {
         this.grupo = grupo;
     }
 
-    public String getStatus() {
+    public Tinyint getStatus() {
         return status;
     }
 
@@ -89,6 +89,6 @@ public class User {
         this.nome = nome;
         this.senha = senha;
         this.grupo = grupo;
-        this.status = "Ativo";
+        this.status = '1';
     }
 }
