@@ -34,8 +34,8 @@ class DaoTest {
 
         // Simula um retorno da userService.listarTodos()
         List<UserDTO> users = new ArrayList<>();
-        users.add(new UserDTO("Miguel", "miguel@gmail.com", "ativo", "admim"));
-        users.add(new UserDTO("Lauri", "lauri@gmail.com", "ativo", "admim"));
+        users.add(new UserDTO("Miguel", "miguel@gmail.com", true, "admim"));
+        users.add(new UserDTO("Lauri", "lauri@gmail.com", true, "admim"));
 
         when(userService.listarTodos()).thenReturn(users);
 
@@ -45,7 +45,7 @@ class DaoTest {
         //Verifica se retornou corretamente
         assertNotNull(resultado);
         assertEquals(2, resultado.size());
-        assertEquals("João", resultado.getFirst().getNome());
+        assertEquals("Miguel", resultado.getFirst().getNome());
 
     }
 

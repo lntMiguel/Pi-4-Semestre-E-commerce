@@ -1,6 +1,6 @@
 package br.com.pi.pi_ecommerce.validator;
 
-import br.com.pi.pi_ecommerce.dao.UserRepository;
+import br.com.pi.pi_ecommerce.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

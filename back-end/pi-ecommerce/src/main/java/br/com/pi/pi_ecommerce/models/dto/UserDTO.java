@@ -4,7 +4,7 @@ public class UserDTO {
 
     private String nome;
     private String email;
-    private String status;
+    private Boolean status;
     private String grupo;
 
     public String getNome() {
@@ -15,7 +15,7 @@ public class UserDTO {
         return email;
     }
 
-    public String getStatus() {
+    public Boolean getStatus() {
         return status;
     }
 
@@ -23,7 +23,7 @@ public class UserDTO {
         return grupo;
     }
 
-    public UserDTO(String nome, String email, String status, String grupo) {
+    public UserDTO(String nome, String email, Boolean status, String grupo) {
         this.nome = nome;
         this.email = email;
         this.status = status;

@@ -33,5 +33,20 @@ public class UserController {
         }
     }
 
+    @PutMapping("/{id}/dados")
+    public ResponseEntity<User> atualizarDados(@PathVariable Long id,
+                                                  @RequestParam String nome,
+                                                  @RequestParam Long cpf,
+                                                  @RequestParam String senha) {
+        User usuarioAtualizado = userService.atualizarDadosUsuario(id, nome, cpf, senha);
+        return ResponseEntity.ok(usuarioAtualizado);
+    }
+
+    // Endpoint para alterar o status do usuário
+    @PutMapping("/{id}/status")
+    public ResponseEntity<User> alterarStatus(@PathVariable Long id) {
+        User usuarioComNovoStatus = userService.alterarStatusUsuario(id);
+        return ResponseEntity.ok(usuarioComNovoStatus);
+    }
 
 }

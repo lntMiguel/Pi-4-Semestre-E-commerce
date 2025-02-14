@@ -1,6 +1,8 @@
 package br.com.pi.pi_ecommerce.models;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcType;
+import org.hibernate.type.descriptor.jdbc.TinyIntJdbcType;
 
 @Entity
 public class User {
@@ -25,7 +27,8 @@ public class User {
     private String grupo;
 
     @Column(name = "TG_INATIVO", nullable = false)
-    private Tinyint status;
+    @JdbcType(TinyIntJdbcType.class)
+    private Boolean status;
 
     public Long getId() {
         return id;
@@ -75,11 +78,11 @@ public class User {
         this.grupo = grupo;
     }
 
-    public Tinyint getStatus() {
+    public Boolean getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(Boolean status) {
         this.status = status;
     }
 
@@ -89,6 +92,6 @@ public class User {
         this.nome = nome;
         this.senha = senha;
         this.grupo = grupo;
-        this.status = '1';
+        this.status = true;
     }
 }

@@ -1,11 +1,13 @@
 package br.com.pi.pi_ecommerce.service;
 
-import br.com.pi.pi_ecommerce.dao.UserRepository;
+import br.com.pi.pi_ecommerce.repository.UserRepository;
 import br.com.pi.pi_ecommerce.models.User;
 import br.com.pi.pi_ecommerce.models.dto.UserDTO;
 import br.com.pi.pi_ecommerce.validator.Validator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
@@ -40,5 +42,36 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    public User atualizarDadosUsuario(Long userId, String nome, Long cpf, String senha) {
+
+        Optional<User> usuarioOptional = userRepository.findById(userId);
+
+        if (usuarioOptional.isPresent()) {
+            User user = usuarioOptional.get();
+
+            user.setNome(nome);
+            user.setCpf(cpf);
+            user.setSenha(senha);
+
+            return userRepository.save(user);
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado");
+        }
+    }
+
+    public User alterarStatusUsuario(Long userId) {
+
+        Optional<User> userOptional = userRepository.findById(userId);
+
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+
+            user.setStatus(!Boolean.TRUE.equals(user.getStatus())); // Muda para inativo (false)
+
+            return userRepository.save(user);
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado");
+        }
+    }
 
 }
