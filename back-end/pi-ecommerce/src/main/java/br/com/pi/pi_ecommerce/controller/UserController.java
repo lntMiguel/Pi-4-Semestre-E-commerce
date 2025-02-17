@@ -49,4 +49,8 @@ public class UserController {
         return ResponseEntity.ok(usuarioComNovoStatus);
     }
 
+    @PostMapping("/login")
+    public ResponseEntity<String> Login(@RequestParam String email, String senha){
+        return userService.login(email, senha);
+    }
 }

@@ -1,4 +1,4 @@
-package br.com.pi.pi_ecommerce.validator;
+package br.com.pi.pi_ecommerce.utils;
 
 import br.com.pi.pi_ecommerce.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
