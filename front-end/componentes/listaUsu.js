@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { createGlobalStyle } from "styled-components";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const GlobalStyle = createGlobalStyle`
   * {
@@ -105,27 +105,60 @@ const ActionButton = styled.button`
   cursor: pointer;
   font-size: 14px;
   transition: 0.3s;
-  background-color: ${(props) => (props.primary ? "#007BFF" : "#DC3545")};
+  background-color: ${(props) => (props.primary === "true" ? "#007BFF" : "#DC3545")};
   color: white;
 
   &:hover {
-    background-color: ${(props) => (props.primary ? "#0056b3" : "#b52b27")};
+    background-color: ${(props) => (props.primary === "true" ? "#0056b3" : "#b52b27")};
   }
 `;
 
 function Usuario() {
-  const [users, setUsers] = useState([
-    { id: 1, name: "João Silva", email: "joao@email.com", status: "Ativo" },
-    { id: 2, name: "Maria Souza", email: "maria@email.com", status: "Inativo" },
-    { id: 3, name: "Carlos Oliveira", email: "carlos@email.com", status: "Ativo" },
-  ]);
+  const [users, setUsers] = useState([]);
+  const [searchTerm, setSearchTerm] = useState(""); // Estado para armazenar o termo de pesquisa
 
-  const toggleStatus = (id) => {
-    setUsers(users.map((user) =>
-      user.id === id
-        ? { ...user, status: user.status === "Ativo" ? "Inativo" : "Ativo" }
-        : user
-    ));
+  // Função para buscar os usuários da API
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch(`http://localhost:8081/users?nome=${searchTerm}`);
+      const data = await response.json();
+      setUsers(data);
+    } catch (error) {
+      console.error("Erro ao buscar usuários:", error);
+    }
+  };
+
+  // Usar o useEffect para buscar os usuários assim que o componente for montado
+  useEffect(() => {
+    fetchUsers();
+  }, [searchTerm]); // Dependência no searchTerm para atualizar a lista ao alterar a pesquisa
+
+  // Função para alternar o status de um usuário
+  const toggleStatus = async (id, currentStatus) => {
+    try {
+      const newStatus = currentStatus === "Ativo" ? "Inativo" : "Ativo"; // Define o novo status
+
+      const response = await fetch(`http://localhost:8081/users/${id}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          status: newStatus, // Envia o novo status
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Erro ao alterar status");
+      }
+
+      // Atualiza o estado com o novo status do usuário
+      setUsers(users.map((user) =>
+        user.id === id ? { ...user, status: newStatus } : user
+      ));
+    } catch (error) {
+      console.error("Erro ao alternar status:", error);
+    }
   };
 
   return (
@@ -134,28 +167,29 @@ function Usuario() {
       <Box>
         <Title>Lista de Usuários</Title>
         <SearchContainer>
-          <Input type="text" placeholder="Pesquisar usuário..." />
+          <Input 
+            type="text" 
+            placeholder="Pesquisar usuário..." 
+            value={searchTerm} 
+            onChange={(e) => setSearchTerm(e.target.value)} // Atualiza o searchTerm conforme digita
+          />
           <AddButton>+</AddButton>
         </SearchContainer>
 
         <Table>
           <thead>
             <tr>
-              <Th>Nome</Th>
-              <Th>Email</Th>
-              <Th>Status</Th>
-              <Th>Ações</Th>
+              <Th>Nome</Th><Th>Email</Th><Th>Status</Th><Th>Ações</Th>
             </tr>
           </thead>
           <tbody>
             {users.map((user) => (
               <tr key={user.id}>
-                <Td>{user.name}</Td>
-                <Td>{user.email}</Td>
-                <Td>{user.status}</Td>
+                <Td>{user.nome}</Td><Td>{user.email}</Td>
+                <Td>{user.status === "Ativo" ? "Ativo" : "Inativo"}</Td>
                 <Td>
-                  <ActionButton primary>Alterar</ActionButton>
-                  <ActionButton onClick={() => toggleStatus(user.id)}>
+                  <ActionButton primary="true">Alterar</ActionButton>
+                  <ActionButton onClick={() => toggleStatus(user.id, user.status)}>
                     {user.status === "Ativo" ? "Desabilitar" : "Habilitar"}
                   </ActionButton>
                 </Td>
@@ -167,4 +201,5 @@ function Usuario() {
     </StyledUsuario>
   );
 }
+
 export default Usuario;

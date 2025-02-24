@@ -2,6 +2,7 @@ import styled from "styled-components";
 import { createGlobalStyle } from "styled-components";
 import { useRouter } from "next/navigation"; 
 import { useState } from "react";
+import { useAuth } from "./authContext";
 
 const GlobalStyle = createGlobalStyle`
   * {
@@ -68,39 +69,45 @@ const Button = styled.button`
     background-color: #28c702;
   }
 `;
+
 function Login() {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
+  const { setUser, setGrupo } = useAuth();
   
-  const handleLogin = async () => {
-    // Lógica fictícia de autenticação e verificação de role (admin ou estoquista)
-    
-    // Aqui, vamos simular que após a autenticação, o banco retorna um usuário com um role
-    const userFromDb = {
-      username: "admin",  // Simulação de nome de usuário
-      role: "admin",      // Pode ser 'admin' ou 'estoquista'
-    };
 
-    // Se o usuário fornecer credenciais válidas (simulando verificação)
-    if (username === "admin" && password === "admin123") {
-      // Em um cenário real, você faria a verificação no banco de dados
-      // Example: const user = await apiLogin(username, password);
-      
-      // Aqui, vamos simular a verificação de role
-      if (userFromDb.role === "admin") {
-        // Redireciona para a página de admin
-        router.push("/main"); // Página de admin, que você pode criar
-      } else if (userFromDb.role === "estoquista") {
-        // Redireciona para a página do estoquista
-        router.push("/main"); // Página de estoquista, que você pode criar
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError(""); // Limpa a mensagem de erro ao iniciar uma nova tentativa
+    try {
+      const response = await fetch("http://localhost:8081/users/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Erro ao fazer login");
       }
-    } else {
-      setError("Credenciais inválidas!");
+
+      const data = await response.json();
+      console.log("Login successful:", data);
+
+      // Salva os dados do usuário no contexto e no localStorage
+      setUser(data);
+      setGrupo(data.grupo); // Assumindo que 'grupo' é "admin" ou "estoquista"
+      localStorage.setItem("user", JSON.stringify(data));
+
+      router.push("/main"); // Redireciona para a página principal
+    } catch (error) {
+      setError(error.message);
     }
   };
-
   return (
     <StyledLogin>
       <GlobalStyle />
@@ -109,8 +116,8 @@ function Login() {
         <Input 
           type="text" 
           placeholder="Nome de usuário" 
-          value={username} 
-          onChange={(e) => setUsername(e.target.value)} 
+          value={email} 
+          onChange={(e) => setEmail(e.target.value)} 
         />
         <Input 
           type="password" 

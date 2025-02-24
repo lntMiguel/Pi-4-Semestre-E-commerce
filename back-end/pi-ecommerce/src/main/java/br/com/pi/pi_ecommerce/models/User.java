@@ -94,4 +94,8 @@ public class User {
         this.grupo = grupo;
         this.status = true;
     }
+
+    public User() {
+
+    }
 }

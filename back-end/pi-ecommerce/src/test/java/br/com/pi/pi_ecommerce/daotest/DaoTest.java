@@ -37,10 +37,10 @@ class DaoTest {
         users.add(new UserDTO("Miguel", "miguel@gmail.com", true, "admim"));
         users.add(new UserDTO("Lauri", "lauri@gmail.com", true, "admim"));
 
-        when(userService.listarTodos()).thenReturn(users);
+        when(userService.listarTodos("")).thenReturn(users);
 
         //chama o metodo do controller
-        List<UserDTO> resultado = userController.listarTodos();
+        List<UserDTO> resultado = userController.listarTodos("");
 
         //Verifica se retornou corretamente
         assertNotNull(resultado);

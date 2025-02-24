@@ -11,10 +11,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.http.ResponseEntity;
+import java.util.HashMap;
+import java.util.Map;
+
 
 @Service
 public class UserService {
@@ -25,45 +29,46 @@ public class UserService {
     @Autowired
     private Validator validator;
 
-    public ResponseEntity<String> login(String email, String senha){
+    public ResponseEntity<Map<String, String>> login(String email, String password) {
+
         Optional<User> userOptional = userRepository.findByEmail(email);
-     
-        if(!userOptional.isPresent()){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Email Incorreto!");
+
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Collections.singletonMap("message", "Email Incorreto!"));
         }
 
-        else{
-            User user = userOptional.get();
-            if(!BCrypt.checkpw(senha, user.getSenha())){
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Senha Incorreta");
-            }
-            else{
-                return ResponseEntity.status(HttpStatus.ACCEPTED).body("Login feito com sucesso");
-            }
-            
+        User user = userOptional.get();
+        if (!BCrypt.checkpw(password, user.getSenha())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Collections.singletonMap("message", "Senha Incorreta"));
         }
 
-        
-        
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Login feito com sucesso");
+        response.put("grupo", user.getGrupo());
+
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
     }
 
-    public List<User> getUsers(String nome) {
+
+    public List<UserDTO> listarTodos(String nome) {
+        List<User> usuarios;
+
         if (nome == null || nome.isEmpty()) {
-            return userRepository.findAll(); // Retorna todos os usuários se nenhum filtro for passado
+            usuarios = userRepository.findAll(); // Retorna todos os usuários
+        } else {
+            usuarios = userRepository.findAll().stream()
+                    .filter(user -> user.getNome().toLowerCase().contains(nome.toLowerCase()))
+                    .collect(Collectors.toList()); // Filtra os usuários pelo nome
         }
-        // Filtra usuários cujo nome contém a string fornecida (case insensitive)
-        return userRepository.findAll().stream()
-                .filter(user -> user.getNome().toLowerCase().contains(nome.toLowerCase()))
+
+        // Converte os usuários para DTO (caso seja necessário)
+        return usuarios.stream()
+                .map(user -> new UserDTO(user.getNome(), user.getEmail(), user.getStatus(), user.getGrupo(), user.getId())) // Assumindo que você tem um construtor no UserDTO que converte o User
                 .collect(Collectors.toList());
     }
 
-
-    public List<UserDTO> listarTodos() {
-        List<User> users = userRepository.findAll();
-        return users.stream()
-                .map(user -> new UserDTO(user.getNome(), user.getEmail(), user.getStatus(), user.getGrupo()))
-                .collect(Collectors.toList());
-    }
 
     public User salvar(User user) {
 

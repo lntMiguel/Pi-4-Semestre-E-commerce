@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import { createGlobalStyle } from "styled-components";
 import { useRouter } from "next/navigation";
+import { useAuth } from "./authContext";
 
 const GlobalStyle = createGlobalStyle`
   * {
@@ -63,6 +64,7 @@ const Button = styled.button`
 
 function Main() {
     const router = useRouter();
+    const { grupo } = useAuth();
     const handleRedirect = () => {
         router.push('/usuarios');
       };
@@ -72,7 +74,7 @@ function Main() {
       <Box>
         <Title>Painel de Controle</Title>
         <Button>Listar Produtos</Button>
-        <Button onClick={handleRedirect}>Listar Usuários</Button>
+        {grupo === "admin" && <Button onClick={handleRedirect}>Listar Usuários</Button>}
         <Button>Listar Pedidos</Button>
       </Box>
     </StyledMain>

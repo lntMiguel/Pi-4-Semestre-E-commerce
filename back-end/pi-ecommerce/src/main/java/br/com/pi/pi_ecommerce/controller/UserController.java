@@ -6,9 +6,11 @@ import br.com.pi.pi_ecommerce.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.Map;
 
 import java.util.List;
 
+@CrossOrigin(origins = "http://localhost:3000")  // Permite CORS apenas para essa origem
 @RestController
 @RequestMapping("/users")
 public class UserController {
@@ -17,9 +19,8 @@ public class UserController {
     private UserService userService;
 
     @GetMapping
-    public List<UserDTO> listarTodos() {
-
-        return userService.listarTodos();
+    public List<UserDTO> listarTodos(@RequestParam(required = false) String nome) {
+        return userService.listarTodos(nome); // Passa o nome como filtro, se fornecido
     }
 
     //ResponseEntity<?> representa toda a resposta HTTP
@@ -50,7 +51,9 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> Login(@RequestParam String email, String senha){
+    public ResponseEntity<Map<String, String>> login(@RequestBody Map<String, String> loginRequest) {
+        String email = loginRequest.get("email");
+        String senha = loginRequest.get("password");
         return userService.login(email, senha);
     }
 }
