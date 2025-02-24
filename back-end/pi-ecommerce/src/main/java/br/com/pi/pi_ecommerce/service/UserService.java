@@ -86,7 +86,7 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public User atualizarDadosUsuario(Long userId, String nome, Long cpf, String senha) {
+    public User atualizarDadosUsuario(String userId, String nome, Long cpf, String senha) {
 
         Optional<User> usuarioOptional = userRepository.findById(userId);
 
@@ -103,7 +103,7 @@ public class UserService {
         }
     }
 
-    public User alterarStatusUsuario(Long userId) {
+    public User alterarStatusUsuario(String userId) {
 
         Optional<User> userOptional = userRepository.findById(userId);
 
