@@ -36,11 +36,21 @@ const Box = styled.div`
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   text-align: center;
+  min-width: 550px; 
+  min-height: 350px; 
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 `;
 
-const Title = styled.h2`
+const Titulo = styled.h2`
   margin-bottom: 20px;
   color: #333;
+`;
+
+const InputWrapper = styled.div`
+  position: relative;
+  width: 100%;
 `;
 
 const Input = styled.input`
@@ -52,12 +62,26 @@ const Input = styled.input`
   font-size: 16px;
 `;
 
-const Button = styled.button`
+const Popup = styled.div`
+  position: absolute;
+  top: 50%;
+  right: -120px; /* Distância do campo */
+  transform: translateY(-50%);
+  background: #ff4d4d;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 12px;
+  white-space: nowrap;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+`;
+
+const Botao = styled.button`
   width: 100%;
   padding: 10px;
   margin-top: 10px;
   border: none;
-  background-color: #30f003;
+  background-color: rgb(22, 77, 9);
   color: #fff;
   font-size: 16px;
   border-radius: 5px;
@@ -69,35 +93,48 @@ const Button = styled.button`
   }
 `;
 function Login() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [usuario, setUsuario] = useState("");
+  const [senha, setSenha] = useState("");
+  const [erro, setErro] = useState("");
+  const [usuarioErro, setUsuarioErro] = useState(false);
+  const [senhaErro, setSenhaErro] = useState(false);
   const router = useRouter();
-  
-  const handleLogin = async () => {
-    // Lógica fictícia de autenticação e verificação de role (admin ou estoquista)
-    
-    // Aqui, vamos simular que após a autenticação, o banco retorna um usuário com um role
-    const userFromDb = {
-      username: "admin",  // Simulação de nome de usuário
-      role: "admin",      // Pode ser 'admin' ou 'estoquista'
-    };
 
-    // Se o usuário fornecer credenciais válidas (simulando verificação)
-    if (username === "admin" && password === "admin123") {
-      // Em um cenário real, você faria a verificação no banco de dados
-      // Example: const user = await apiLogin(username, password);
-      
-      // Aqui, vamos simular a verificação de role
+  const handleLogin = () => {
+    let temErro = false;
+
+    if (!usuario) {
+      setUsuarioErro(true);
+      temErro = true;
+    } else {
+      setUsuarioErro(false);
+    }
+
+    if (!senha) {
+      setSenhaErro(true);
+      temErro = true;
+    } else {
+      setSenhaErro(false);
+    }
+
+    if (temErro) return;
+
+    const userFromDb = { username: "admin", role: "admin" };
+
+    if (usuario === "admin" && senha === "admin123") {
       if (userFromDb.role === "admin") {
-        // Redireciona para a página de admin
-        router.push("/main"); // Página de admin, que você pode criar
+        router.push("/main");
       } else if (userFromDb.role === "estoquista") {
-        // Redireciona para a página do estoquista
-        router.push("/main"); // Página de estoquista, que você pode criar
+        router.push("/main");
       }
     } else {
-      setError("Credenciais inválidas!");
+      setErro("Usuário ou Senha inválidos!");
+    }
+  };
+
+  const enterAcionado = (e) => {
+    if (e.key === "Enter") {
+      handleLogin();
     }
   };
 
@@ -105,24 +142,37 @@ function Login() {
     <StyledLogin>
       <GlobalStyle />
       <Box>
-        <Title>Login</Title>
-        <Input 
-          type="text" 
-          placeholder="Nome de usuário" 
-          value={username} 
-          onChange={(e) => setUsername(e.target.value)} 
-        />
-        <Input 
-          type="password" 
-          placeholder="Senha" 
-          value={password} 
-          onChange={(e) => setPassword(e.target.value)} 
-        />
-        {error && <p style={{ color: "red" }}>{error}</p>}
-        <Button onClick={handleLogin}>Entrar</Button>
+        <Titulo>Login</Titulo>
+        <InputWrapper>
+          <Input
+            type="text"
+            placeholder="Nome de usuário"
+            value={usuario}
+            onChange={(e) => {
+              setUsuario(e.target.value);
+              setUsuarioErro(false); 
+            }}
+            onKeyDown={enterAcionado}
+          />
+          {usuarioErro && <Popup>Campo obrigatório</Popup>}
+        </InputWrapper>
+        <InputWrapper>
+          <Input
+            type="password"
+            placeholder="Senha"
+            value={senha}
+            onChange={(e) => {
+              setSenha(e.target.value);
+              setSenhaErro(false); 
+            }}
+            onKeyDown={enterAcionado}
+          />
+          {senhaErro && <Popup>Campo obrigatório</Popup>}
+        </InputWrapper>
+        {erro && <p style={{ color: "red" }}>{erro}</p>}
+        <Botao onClick={handleLogin}>Entrar</Botao>
       </Box>
     </StyledLogin>
   );
 }
-
 export default Login;

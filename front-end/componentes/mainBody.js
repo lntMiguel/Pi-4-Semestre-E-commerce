@@ -39,17 +39,17 @@ const Box = styled.div`
   width: 350px;
 `;
 
-const Title = styled.h2`
+const Titulo = styled.h2`
   margin-bottom: 20px;
   color: #333;
 `;
 
-const Button = styled.button`
+const Botao = styled.button`
   width: 100%;
   padding: 10px;
   margin: 10px 0;
   border: none;
-  background-color: #30f003;
+  background-color: rgb(22, 77, 9);
   color: #fff;
   font-size: 16px;
   border-radius: 5px;
@@ -70,10 +70,10 @@ function Main() {
     <StyledMain>
       <GlobalStyle />
       <Box>
-        <Title>Painel de Controle</Title>
-        <Button>Listar Produtos</Button>
-        <Button onClick={handleRedirect}>Listar Usuários</Button>
-        <Button>Listar Pedidos</Button>
+        <Titulo>Painel de Controle</Titulo>
+        <Botao>Listar Produtos</Botao>
+        <Botao onClick={handleRedirect}>Listar Usuários</Botao>
+        <Botao>Listar Pedidos</Botao>
       </Box>
     </StyledMain>
   );
