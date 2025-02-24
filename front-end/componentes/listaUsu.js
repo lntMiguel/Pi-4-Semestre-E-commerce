@@ -147,10 +147,11 @@ const ErrorMessage = styled.p`
 `;
 
 const validarCPF = (cpf) => {
-  cpf = cpf.replace(/[^\d]+/g, '');
+  cpf = cpf.replace(/[^\d]+/g, "");
   if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
 
-  let soma = 0, resto;
+  let soma = 0,
+    resto;
   for (let i = 1; i <= 9; i++) soma += parseInt(cpf.substring(i - 1, i)) * (11 - i);
   resto = (soma * 10) % 11;
   if (resto === 10 || resto === 11) resto = 0;
@@ -163,12 +164,10 @@ const validarCPF = (cpf) => {
   return resto === parseInt(cpf.substring(10, 11));
 };
 
-
 function Usuario() {
   const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
-  const [usuarioInvalido, setUsuarioInvalido] = useState(false);
   const [formData, setFormData] = useState({
     nome: "",
     cpf: "",
@@ -178,7 +177,9 @@ function Usuario() {
     grupo: "admin",
   });
   const [error, setError] = useState("");
+  const [errors, setErrors] = useState({});
 
+  // Buscar usuários
   const fetchUsers = async () => {
     try {
       const response = await fetch(`http://localhost:8081/users?nome=${searchTerm}`);
@@ -191,17 +192,47 @@ function Usuario() {
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [searchTerm]); // Atualiza a lista quando o searchTerm muda
 
+  // Atualizar estado do formulário
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Função para alternar o status de um usuário
+  const toggleStatus = async (id, currentStatus) => {
+    try {
+      const newStatus = currentStatus === "Ativo" ? "Inativo" : "Ativo"; // Define o novo status
+
+      const response = await fetch(`http://localhost:8081/users/${id}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          status: newStatus, // Envia o novo status
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Erro ao alterar status");
+      }
+
+      // Atualiza o estado com o novo status do usuário
+      setUsers(users.map((user) =>
+        user.id === id ? { ...user, status: newStatus } : user
+      ));
+    } catch (error) {
+      console.error("Erro ao alternar status:", error);
+    }
+  };
+
+  // Validar campos do formulário
   const validateFields = () => {
     let newErrors = {};
     if (!formData.nome) newErrors.nome = "Campo obrigatório";
     if (!formData.cpf) newErrors.cpf = "Campo obrigatório";
-    else if (!validarCPF(formData.cpf)) newErrors.cpf = "CPF inválido";
+    //else if (!validarCPF(formData.cpf)) newErrors.cpf = "CPF inválido";
     if (!formData.email) newErrors.email = "Campo obrigatório";
     if (!formData.senha) newErrors.senha = "Campo obrigatório";
     if (!formData.confirmSenha) newErrors.confirmSenha = "Campo obrigatório";
@@ -215,29 +246,17 @@ function Usuario() {
     return Object.keys(newErrors).length === 0;
   };
 
+  // Salvar usuário
   const handleSave = async () => {
     setError("");
 
-    if (formData.senha !== formData.confirmSenha) {
-      setError("As senhas não coincidem.");
-      return;
-    }
-
-    if (!validarCPF(formData.cpf)) {
-      setError("CPF inválido.");
-      return;
-    }
-
-    if (users.some((user) => user.email === formData.email)) {
-      setError("E-mail já cadastrado.");
-      return;
-    }
+    if (!validateFields()) return;
 
     try {
       const response = await fetch("http://localhost:8081/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, status: "Ativo" }),
+        body: JSON.stringify({ ...formData, status: true }),
       });
 
       if (response.ok) {
@@ -250,39 +269,14 @@ function Usuario() {
           confirmSenha: "",
           grupo: "admin",
         });
-        fetchUsers();
+        fetchUsers(); // Atualiza lista de usuários
       } else {
-        setError("Erro ao cadastrar usuário.");
+        const errorMessage = await response.text();
+        setError(errorMessage || "Erro ao cadastrar usuário.");
       }
     } catch (error) {
       console.error("Erro ao cadastrar usuário:", error);
       setError("Erro ao cadastrar usuário.");
-    }
-  };
-
-  const pesquisarUsu = (e) => {
-    const query = e.target.value;
-    setConsulta(query);
-
-    if (query === '') {
-      setUsuarioValido(null); 
-      setUsuarioInvalido(false);
-    } else {
-      const UsuarioValido = usuarios.find(user => user.nome.toLowerCase().includes(query.toLowerCase()));
-
-      if (UsuarioValido) {
-        setUsuarioValido(UsuarioValido.id);
-        setUsuarioInvalido(false);
-      } else {
-        setUsuarioValido(null);
-        setUsuarioInvalido(true);
-      }
-    }
-  };
-
-  const enterAcionado = (e) => {
-    if (e.key === "Enter") {
-      pesquisarUsu(e);
     }
   };
 
@@ -292,34 +286,69 @@ function Usuario() {
       <Box>
         <Titulo>Lista de Usuários</Titulo>
         <Pesquisar>
-          <Input 
-            type="text" 
-            placeholder="Pesquisar usuário..." 
-            value={searchTerm} 
+          <Input
+            type="text"
+            placeholder="Pesquisar usuário..."
+            value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
           <AddBotoes onClick={() => setShowModal(true)}>+</AddBotoes>
         </Pesquisar>
 
+        {/* Modal de Cadastro */}
         {showModal && (
           <Modal>
             <ModalContent>
               <h2>Cadastrar Usuário</h2>
               <Input name="nome" placeholder="Nome" onChange={handleInputChange} />
+              {errors.nome && <ErrorMessage>{errors.nome}</ErrorMessage>}
+
               <Input name="cpf" placeholder="CPF" onChange={handleInputChange} />
+              {errors.cpf && <ErrorMessage>{errors.cpf}</ErrorMessage>}
+
               <Input name="email" type="email" placeholder="E-mail" onChange={handleInputChange} />
+              {errors.email && <ErrorMessage>{errors.email}</ErrorMessage>}
+
               <Input name="senha" type="password" placeholder="Senha" onChange={handleInputChange} />
+              {errors.senha && <ErrorMessage>{errors.senha}</ErrorMessage>}
+
               <Input name="confirmSenha" type="password" placeholder="Confirmar Senha" onChange={handleInputChange} />
+              {errors.confirmSenha && <ErrorMessage>{errors.confirmSenha}</ErrorMessage>}
+
               <Select name="grupo" onChange={handleInputChange}>
                 <option value="admin">Admin</option>
                 <option value="estoquista">Estoquista</option>
               </Select>
+
               {error && <ErrorMessage>{error}</ErrorMessage>}
+
               <BotaoAcao onClick={handleSave}>Cadastrar</BotaoAcao>
               <BotaoAcao onClick={() => setShowModal(false)}>Cancelar</BotaoAcao>
             </ModalContent>
           </Modal>
         )}
+
+        <Tabela>
+          <thead>
+            <tr>
+              <Th>Nome</Th><Th>Email</Th><Th>Status</Th><Th>Ações</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map((user) => (
+              <tr key={user.id}>
+                <Td>{user.nome}</Td><Td>{user.email}</Td>
+                <Td>{user.status === "Ativo" ? "Ativo" : "Inativo"}</Td>
+                <Td>
+                  <BotaoAcao primary="true">Alterar</BotaoAcao>
+                  <BotaoAcao onClick={() => toggleStatus(user.id, user.status)}>
+                    {user.status === "Ativo" ? "Desabilitar" : "Habilitar"}
+                  </BotaoAcao>
+                </Td>
+              </tr>
+            ))}
+          </tbody>
+        </Tabela>
       </Box>
     </StyledUsuario>
   );
