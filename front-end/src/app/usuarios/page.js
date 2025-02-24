@@ -1,11 +1,11 @@
 'use client'
 
-import Bemvindo from "../../componentes/bvTela";
+import Usuario from "../../../componentes/listaUsu";
 
 export default function Home() {
   return (
     <div>
-    <Bemvindo/>
+     <Usuario/>
     </div>
   );
 }
