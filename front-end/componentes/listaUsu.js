@@ -2,6 +2,7 @@ import styled from "styled-components";
 import { createGlobalStyle } from "styled-components";
 import { useState } from "react";
 
+
 const GlobalStyle = createGlobalStyle`
   * {
     margin: 0;
@@ -36,16 +37,16 @@ const Box = styled.div`
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
   text-align: center;
-  width: 600px;
-  height: 500px;
+  width: 850px;
+  height: 600px;
 `;
 
-const Title = styled.h2`
+const Titulo = styled.h2`
   margin-bottom: 20px;
   color: #333;
 `;
 
-const SearchContainer = styled.div`
+const Pesquisar = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -60,11 +61,11 @@ const Input = styled.input`
   font-size: 16px;
 `;
 
-const AddButton = styled.button`
+const AddBotoes = styled.button`
   width: 40px;
   height: 40px;
   border: none;
-  background-color: #30f003;
+  background-color: rgb(22, 77, 9);
   color: #fff;
   font-size: 20px;
   font-weight: bold;
@@ -78,14 +79,14 @@ const AddButton = styled.button`
   }
 `;
 
-const Table = styled.table`
+const Tabela = styled.table`
   width: 100%;
   border-collapse: collapse;
   margin-top: 10px;
 `;
 
 const Th = styled.th`
-  background: #30f003;
+  background: rgb(22, 77, 9);
   color: white;
   padding: 10px;
 `;
@@ -97,8 +98,8 @@ const Td = styled.td`
   color: black;
 `;
 
-const ActionButton = styled.button`
-  padding: 5px 10px;
+const BotaoAcao = styled.button`
+  padding: 5px 15px;
   margin: 5px;
   border: none;
   border-radius: 5px;
@@ -113,32 +114,75 @@ const ActionButton = styled.button`
   }
 `;
 
-function Usuario() {
-  const [users, setUsers] = useState([
-    { id: 1, name: "João Silva", email: "joao@email.com", status: "Ativo" },
-    { id: 2, name: "Maria Souza", email: "maria@email.com", status: "Inativo" },
-    { id: 3, name: "Carlos Oliveira", email: "carlos@email.com", status: "Ativo" },
-  ]);
+const Mensagem = styled.p`
+  color: red;
+  margin-top: 10px;
+`;
 
-  const toggleStatus = (id) => {
-    setUsers(users.map((user) =>
+function Usuario() {
+  const [usuarios, setUsuarios] = useState([
+    { id: 1, nome: "JapaPods", email: "japinhagame@gmail.com", status: "Ativo" },
+    { id: 2, nome: "Miguel dos santos", email: "tidolanche@gmail.com", status: "Inativo" },
+    { id: 3, nome: "Matheus Laurixa", email: "laurixinha123@gmail.com", status: "Ativo" },
+  ]);
+  
+  const [consulta, setConsulta] = useState('');
+  const [usuarioValido, setUsuarioValido] = useState(null);
+  const [usuarioInvalido, setUsuarioInvalido] = useState(false);
+
+  const alterarStatus = (id) => {
+    setUsuarios(usuarios.map((user) =>
       user.id === id
         ? { ...user, status: user.status === "Ativo" ? "Inativo" : "Ativo" }
         : user
     ));
   };
 
+  const pesquisarUsu = (e) => {
+    const query = e.target.value;
+    setConsulta(query);
+
+    if (query === '') {
+      setUsuarioValido(null); 
+      setUsuarioInvalido(false);
+    } else {
+      const UsuarioValido = usuarios.find(user => user.nome.toLowerCase().includes(query.toLowerCase()));
+
+      if (UsuarioValido) {
+        setUsuarioValido(UsuarioValido.id);
+        setUsuarioInvalido(false);
+      } else {
+        setUsuarioValido(null);
+        setUsuarioInvalido(true);
+      }
+    }
+  };
+
+  const enterAcionado = (e) => {
+    if (e.key === "Enter") {
+      pesquisarUsu(e);
+    }
+  };
+
   return (
     <StyledUsuario>
       <GlobalStyle />
       <Box>
-        <Title>Lista de Usuários</Title>
-        <SearchContainer>
-          <Input type="text" placeholder="Pesquisar usuário..." />
-          <AddButton>+</AddButton>
-        </SearchContainer>
+        <Titulo>Lista de Usuários</Titulo>
+        <Pesquisar>
+          <Input
+            type="text"
+            placeholder="Pesquisar usuário..."
+            value={consulta}
+            onChange={pesquisarUsu}
+            onKeyDown={enterAcionado}
+          />
+          <AddBotoes>+</AddBotoes>
+        </Pesquisar>
 
-        <Table>
+        {usuarioInvalido && <Mensagem>Nenhum usuário encontrado</Mensagem>}
+
+        <Tabela>
           <thead>
             <tr>
               <Th>Nome</Th>
@@ -148,21 +192,21 @@ function Usuario() {
             </tr>
           </thead>
           <tbody>
-            {users.map((user) => (
-              <tr key={user.id}>
-                <Td>{user.name}</Td>
+            {usuarios.map((user) => (
+              <tr key={user.id} style={{ backgroundColor: user.id === usuarioValido ? '#f0f0f0' : 'white' }}>
+                <Td>{user.nome}</Td>
                 <Td>{user.email}</Td>
                 <Td>{user.status}</Td>
                 <Td>
-                  <ActionButton primary>Alterar</ActionButton>
-                  <ActionButton onClick={() => toggleStatus(user.id)}>
+                  <BotaoAcao primary>Alterar</BotaoAcao>
+                  <BotaoAcao onClick={() => alterarStatus(user.id)}>
                     {user.status === "Ativo" ? "Desabilitar" : "Habilitar"}
-                  </ActionButton>
+                  </BotaoAcao>
                 </Td>
               </tr>
             ))}
           </tbody>
-        </Table>
+        </Tabela>
       </Box>
     </StyledUsuario>
   );
