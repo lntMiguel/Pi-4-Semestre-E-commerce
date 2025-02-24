@@ -106,7 +106,7 @@ const [senhaErro, setSenhaErro] = useState(false);
 
 const handleLogin = async (e) => {
   e.preventDefault();
-  setError(""); // Limpa a mensagem de erro ao iniciar uma nova tentativa
+  setError(""); 
   try {
     const response = await fetch("http://localhost:8081/users/login", {
       method: "POST",
@@ -122,16 +122,15 @@ const handleLogin = async (e) => {
     }
 
     const data = await response.json();
-    console.log("Login successful:", data);
+    console.log("Sucesso ao logar:", data);
 
-    // Salva os dados do usuário no contexto e no localStorage
     setUser(data);
-    setGrupo(data.grupo); // Assumindo que 'grupo' é "admin" ou "estoquista"
+    setGrupo(data.grupo); 
     localStorage.setItem("user", JSON.stringify(data));
 
-    router.push("/main"); // Redireciona para a página principal
+    router.push("/main"); 
   } catch (error) {
-    setError(error.message);
+    setError("Credencias Invalidas");
 
   
 }

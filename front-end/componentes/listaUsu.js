@@ -31,6 +31,34 @@ const StyledUsuario = styled.div`
   background-position: center;
 `;
 
+const Modal = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const ModalContent = styled.div`
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  width: 400px;
+  text-align: left;
+`;
+
+const Select = styled.select`
+  width: 100%;
+  padding: 10px;
+  margin: 5px 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+`;
+
 const Box = styled.div`
   background-color: #fff;
   padding: 40px;
@@ -114,13 +142,43 @@ const BotaoAcao = styled.button`
   }
 `;
 
+const ErrorMessage = styled.p`
+  color: red;
+`;
+
+const validarCPF = (cpf) => {
+  cpf = cpf.replace(/[^\d]+/g, '');
+  if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
+
+  let soma = 0, resto;
+  for (let i = 1; i <= 9; i++) soma += parseInt(cpf.substring(i - 1, i)) * (11 - i);
+  resto = (soma * 10) % 11;
+  if (resto === 10 || resto === 11) resto = 0;
+  if (resto !== parseInt(cpf.substring(9, 10))) return false;
+
+  soma = 0;
+  for (let i = 1; i <= 10; i++) soma += parseInt(cpf.substring(i - 1, i)) * (12 - i);
+  resto = (soma * 10) % 11;
+  if (resto === 10 || resto === 11) resto = 0;
+  return resto === parseInt(cpf.substring(10, 11));
+};
+
+
 function Usuario() {
   const [users, setUsers] = useState([]);
-  const [searchTerm, setSearchTerm] = useState(""); // Estado para armazenar o termo de pesquisa
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showModal, setShowModal] = useState(false);
   const [usuarioInvalido, setUsuarioInvalido] = useState(false);
+  const [formData, setFormData] = useState({
+    nome: "",
+    cpf: "",
+    email: "",
+    senha: "",
+    confirmSenha: "",
+    grupo: "admin",
+  });
+  const [error, setError] = useState("");
 
-
-  // Função para buscar os usuários da API
   const fetchUsers = async () => {
     try {
       const response = await fetch(`http://localhost:8081/users?nome=${searchTerm}`);
@@ -131,43 +189,75 @@ function Usuario() {
     }
   };
 
-  // Usar o useEffect para buscar os usuários assim que o componente for montado
   useEffect(() => {
     fetchUsers();
-  }, [searchTerm]); // Dependência no searchTerm para atualizar a lista ao alterar a pesquisa
+  }, []);
 
-  // Função para alternar o status de um usuário
-  const toggleStatus = async (id, currentStatus) => {
+  const handleInputChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const validateFields = () => {
+    let newErrors = {};
+    if (!formData.nome) newErrors.nome = "Campo obrigatório";
+    if (!formData.cpf) newErrors.cpf = "Campo obrigatório";
+    else if (!validarCPF(formData.cpf)) newErrors.cpf = "CPF inválido";
+    if (!formData.email) newErrors.email = "Campo obrigatório";
+    if (!formData.senha) newErrors.senha = "Campo obrigatório";
+    if (!formData.confirmSenha) newErrors.confirmSenha = "Campo obrigatório";
+    else if (formData.senha !== formData.confirmSenha) newErrors.confirmSenha = "As senhas não coincidem";
+
+    if (users.some((user) => user.email === formData.email)) {
+      newErrors.email = "E-mail já cadastrado";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSave = async () => {
+    setError("");
+
+    if (formData.senha !== formData.confirmSenha) {
+      setError("As senhas não coincidem.");
+      return;
+    }
+
+    if (!validarCPF(formData.cpf)) {
+      setError("CPF inválido.");
+      return;
+    }
+
+    if (users.some((user) => user.email === formData.email)) {
+      setError("E-mail já cadastrado.");
+      return;
+    }
+
     try {
-      const newStatus = currentStatus === "Ativo" ? "Inativo" : "Ativo"; // Define o novo status
-
-      const response = await fetch(`http://localhost:8081/users/${id}/status`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          status: newStatus, // Envia o novo status
-        }),
+      const response = await fetch("http://localhost:8081/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...formData, status: "Ativo" }),
       });
 
-      if (!response.ok) {
-        throw new Error("Erro ao alterar status");
+      if (response.ok) {
+        setShowModal(false);
+        setFormData({
+          nome: "",
+          cpf: "",
+          email: "",
+          senha: "",
+          confirmSenha: "",
+          grupo: "admin",
+        });
+        fetchUsers();
+      } else {
+        setError("Erro ao cadastrar usuário.");
       }
-
-      // Atualiza o estado com o novo status do usuário
-      setUsers(users.map((user) =>
-        user.id === id ? { ...user, status: newStatus } : user
-      ));
     } catch (error) {
-      console.error("Erro ao alternar status:", error);
+      console.error("Erro ao cadastrar usuário:", error);
+      setError("Erro ao cadastrar usuário.");
     }
-const Mensagem = styled.p`
-  color: red;
-  margin-top: 10px;
-`;
-
-
   };
 
   const pesquisarUsu = (e) => {
@@ -206,37 +296,30 @@ const Mensagem = styled.p`
             type="text" 
             placeholder="Pesquisar usuário..." 
             value={searchTerm} 
-            onChange={(e) => setSearchTerm(e.target.value)} // Atualiza o searchTerm conforme digita
-            onKeyDown={enterAcionado}
-
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <AddBotoes>+</AddBotoes>
+          <AddBotoes onClick={() => setShowModal(true)}>+</AddBotoes>
         </Pesquisar>
 
-        {usuarioInvalido && <Mensagem>Nenhum usuário encontrado</Mensagem>}
-
-        <Tabela>
-          <thead>
-            <tr>
-              <Th>Nome</Th><Th>Email</Th><Th>Status</Th><Th>Ações</Th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => (
-              <tr key={user.id}>
-                <Td>{user.nome}</Td><Td>{user.email}</Td>
-                <Td>{user.status === "Ativo" ? "Ativo" : "Inativo"}</Td>
-                <Td>
-                  <BotaoAcao primary="true">Alterar</BotaoAcao>
-                  <BotaoAcao onClick={() => toggleStatus(user.id, user.status)}>
-
-                    {user.status === "Ativo" ? "Desabilitar" : "Habilitar"}
-                  </BotaoAcao>
-                </Td>
-              </tr>
-            ))}
-          </tbody>
-        </Tabela>
+        {showModal && (
+          <Modal>
+            <ModalContent>
+              <h2>Cadastrar Usuário</h2>
+              <Input name="nome" placeholder="Nome" onChange={handleInputChange} />
+              <Input name="cpf" placeholder="CPF" onChange={handleInputChange} />
+              <Input name="email" type="email" placeholder="E-mail" onChange={handleInputChange} />
+              <Input name="senha" type="password" placeholder="Senha" onChange={handleInputChange} />
+              <Input name="confirmSenha" type="password" placeholder="Confirmar Senha" onChange={handleInputChange} />
+              <Select name="grupo" onChange={handleInputChange}>
+                <option value="admin">Admin</option>
+                <option value="estoquista">Estoquista</option>
+              </Select>
+              {error && <ErrorMessage>{error}</ErrorMessage>}
+              <BotaoAcao onClick={handleSave}>Cadastrar</BotaoAcao>
+              <BotaoAcao onClick={() => setShowModal(false)}>Cancelar</BotaoAcao>
+            </ModalContent>
+          </Modal>
+        )}
       </Box>
     </StyledUsuario>
   );
