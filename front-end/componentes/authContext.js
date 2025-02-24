@@ -1,40 +1,34 @@
-'use client'
 import { createContext, useContext, useEffect, useState } from "react";
 
-// Criando o contexto
 const AuthContext = createContext();
 
-// Hook para acessar o contexto
-export const useAuth = () => useContext(AuthContext);
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [grupo, setGrupo] = useState(null);
+  const [isClient, setIsClient] = useState(false); // Estado para verificar se está no cliente
 
-// Provider para envolver a aplicação
-export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [grupo, setGrupo] = useState(null); // Estado para armazenar a role
+  useEffect(() => {
+    setIsClient(true); // Atualiza para indicar que o código está sendo executado no cliente
 
-    // Carregar a role do sessionStorage ao iniciar a página
-    useEffect(() => {
-        const sessao = sessionStorage.getItem("grupoUsuario");
-        if (sessao) {
-            setRole(sessao);
-        }
-    }, []);
+    // Acessa o localStorage apenas no cliente
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      setUser(parsedUser);
+      setGrupo(parsedUser.grupo);
+    }
+  }, []);
 
-    // Função para fazer login e armazenar a role
-    const login = (grupoUsuario) => {
-        setGrupo(grupoUsuario);
-        sessionStorage.setItem("grupoUsuario", grupoUsuario); // Salva na sessão
-    };
+  // Se ainda não estiver no cliente, retorna null para evitar erros na renderização do servidor
+  if (!isClient) return null;
 
-    // Função para logout
-    const logout = () => {
-        setRole(null);
-        sessionStorage.removeItem("grupoUsuario");
-    };
+  return (
+    <AuthContext.Provider value={{ user, setUser, grupo, setGrupo }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
 
-    return (
-        <AuthContext.Provider value={{ user, setUser, grupo, setGrupo, login, logout }}>
-            {children}
-        </AuthContext.Provider>
-    );
-};
+export function useAuth() {
+  return useContext(AuthContext);
+}
