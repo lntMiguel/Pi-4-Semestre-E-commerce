@@ -37,11 +37,21 @@ const Box = styled.div`
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   text-align: center;
+  min-width: 550px; 
+  min-height: 350px; 
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 `;
 
-const Title = styled.h2`
+const Titulo = styled.h2`
   margin-bottom: 20px;
   color: #333;
+`;
+
+const InputWrapper = styled.div`
+  position: relative;
+  width: 100%;
 `;
 
 const Input = styled.input`
@@ -53,12 +63,26 @@ const Input = styled.input`
   font-size: 16px;
 `;
 
-const Button = styled.button`
+const Popup = styled.div`
+  position: absolute;
+  top: 50%;
+  right: -120px; /* Distância do campo */
+  transform: translateY(-50%);
+  background: #ff4d4d;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 12px;
+  white-space: nowrap;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+`;
+
+const Botao = styled.button`
   width: 100%;
   padding: 10px;
   margin-top: 10px;
   border: none;
-  background-color: #30f003;
+  background-color: rgb(22, 77, 9);
   color: #fff;
   font-size: 16px;
   border-radius: 5px;
@@ -71,62 +95,82 @@ const Button = styled.button`
 `;
 
 function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const router = useRouter();
-  const { setUser, setGrupo } = useAuth();
-  
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setError(""); // Limpa a mensagem de erro ao iniciar uma nova tentativa
-    try {
-      const response = await fetch("http://localhost:8081/users/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
+const [email, setEmail] = useState("");
+const [password, setPassword] = useState("");
+const [error, setError] = useState("");
+const router = useRouter();
+const { setUser, setGrupo } = useAuth();
+const [usuarioErro, setUsuarioErro] = useState(false);
+const [senhaErro, setSenhaErro] = useState(false);
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || "Erro ao fazer login");
-      }
+const handleLogin = async (e) => {
+  e.preventDefault();
+  setError(""); // Limpa a mensagem de erro ao iniciar uma nova tentativa
+  try {
+    const response = await fetch("http://localhost:8081/users/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+    });
 
-      const data = await response.json();
-      console.log("Login successful:", data);
-
-      // Salva os dados do usuário no contexto e no localStorage
-      setUser(data);
-      setGrupo(data.grupo); // Assumindo que 'grupo' é "admin" ou "estoquista"
-      localStorage.setItem("user", JSON.stringify(data));
-
-      router.push("/main"); // Redireciona para a página principal
-    } catch (error) {
-      setError(error.message);
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || "Erro ao fazer login");
     }
-  };
+
+    const data = await response.json();
+    console.log("Login successful:", data);
+
+    // Salva os dados do usuário no contexto e no localStorage
+    setUser(data);
+    setGrupo(data.grupo); // Assumindo que 'grupo' é "admin" ou "estoquista"
+    localStorage.setItem("user", JSON.stringify(data));
+
+    router.push("/main"); // Redireciona para a página principal
+  } catch (error) {
+    setError(error.message);
+
+  
+}
+}
+const enterAcionado = (e) => {
+  if (e.key === "Enter") {
+    handleLogin();
+  }
+};
   return (
     <StyledLogin>
       <GlobalStyle />
       <Box>
-        <Title>Login</Title>
-        <Input 
-          type="text" 
-          placeholder="Nome de usuário" 
-          value={email} 
-          onChange={(e) => setEmail(e.target.value)} 
-        />
-        <Input 
-          type="password" 
-          placeholder="Senha" 
-          value={password} 
-          onChange={(e) => setPassword(e.target.value)} 
-        />
+        <Titulo>Login</Titulo>
+        <InputWrapper>
+          <Input
+            type="text"
+            placeholder="Nome de usuário"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)} 
+            onKeyDown={enterAcionado}
+          />
+          {usuarioErro && <Popup>Campo obrigatório</Popup>}
+        </InputWrapper>
+        <InputWrapper>
+          <Input
+            type="password"
+            placeholder="Senha"
+            value={password}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              setSenhaErro(false); 
+            }}
+            onKeyDown={enterAcionado}
+          />
+          {senhaErro && <Popup>Campo obrigatório</Popup>}
+        </InputWrapper>
         {error && <p style={{ color: "red" }}>{error}</p>}
-        <Button onClick={handleLogin}>Entrar</Button>
+        <Botao onClick={handleLogin}>Entrar</Botao>
       </Box>
     </StyledLogin>
   );

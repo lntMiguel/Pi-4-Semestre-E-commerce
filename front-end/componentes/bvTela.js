@@ -1,6 +1,6 @@
 import styled, { keyframes } from "styled-components";
 import { createGlobalStyle } from "styled-components";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 const GlobalStyle = createGlobalStyle`
@@ -39,7 +39,7 @@ const Box = styled.div`
   background-color: #fff;
   padding: 40px;
   border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
   text-align: center;
   width: 600px;
   height: 300px;
@@ -47,14 +47,15 @@ const Box = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  
 `;
 
-const Message = styled.p`
-  font-size: 24px; /* Aumentei o tamanho da fonte */
+const Mensagem = styled.p`
+  font-size: 24px; 
   font-weight: bold;
   color: #000;
   text-align: center;
-  overflow-wrap: break-word; /* Garante que o texto quebre dentro da box */
+  overflow-wrap: break-word; 
   max-width: 100%;
 `;
 
@@ -65,13 +66,13 @@ const Cursor = styled.span`
   animation: ${blink} 1s infinite;
 `;
 
-const Button = styled.button`
+const Botao = styled.button`
   margin-top: 20px;
   padding: 10px 20px;
   font-size: 18px;
   border: none;
   border-radius: 5px;
-  background-color: #30f003;
+  background-color:rgb(22, 77, 9);
   color: white;
   cursor: pointer;
   transition: 0.3s;
@@ -82,34 +83,39 @@ const Button = styled.button`
 `;
 
 function Bemvindo() {
-  const [text, setText] = useState("");
-  const [showCursor, setShowCursor] = useState(true);
-  const fullText = "BBem vindo ao site Turn On The Beck. Adquira as melhores plantas aqui.";
+  const [texto, setTexto] = useState("");
+  const [mostrarCursos] = useState(true);
+  const fullTexto = "BBem-vindo ao site Turn On The Beck. Adquira as melhores plantas aqui.";
   const router = useRouter();
-  const handleRedirect = () => {
+
+  const handleRedirect = useCallback(() => {
     router.push('/login');
-  };
+  }, [router]);
 
   useEffect(() => {
-    const typeText = async () => {
+    let isMounted = true;
+    const textoDigitado = async () => {
       let i = 0;
-      setText(""); // Limpa o texto anterior para começar de novo
-      while (i < fullText.length) {
-        setText((prev) => prev + fullText.charAt(i)); // Adiciona um caractere por vez
+      setTexto("");
+      while (i < fullTexto.length && isMounted) {
+        setTexto((prev) => prev + fullTexto.charAt(i));
         i++;
-        await new Promise(resolve => setTimeout(resolve, 50)); // Espera antes de adicionar o próximo caractere
+        await new Promise(resolve => setTimeout(resolve, 50));
       }
     };
+    textoDigitado();
 
-    typeText(); // Inicia a digitação assim que o componente for montado
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return (
     <StyledBemvindo>
       <GlobalStyle />
       <Box>
-      <Message>{text}{showCursor && <Cursor>|</Cursor>}</Message>
-        <Button onClick={handleRedirect}>Ir para Login</Button>
+      <Mensagem>{texto}{mostrarCursos && <Cursor>|</Cursor>}</Mensagem>
+        <Botao onClick={handleRedirect}>Ir para Login</Botao>
       </Box>
     </StyledBemvindo>
   );
