@@ -35,7 +35,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}/dados")
-    public ResponseEntity<User> atualizarDados(@PathVariable Long id,
+    public ResponseEntity<User> atualizarDados(@PathVariable String id,
                                                   @RequestParam String nome,
                                                   @RequestParam Long cpf,
                                                   @RequestParam String senha) {
@@ -45,7 +45,7 @@ public class UserController {
 
     // Endpoint para alterar o status do usuário
     @PutMapping("/{id}/status")
-    public ResponseEntity<User> alterarStatus(@PathVariable Long id) {
+    public ResponseEntity<User> alterarStatus(@PathVariable String id) {
         User usuarioComNovoStatus = userService.alterarStatusUsuario(id);
         return ResponseEntity.ok(usuarioComNovoStatus);
     }

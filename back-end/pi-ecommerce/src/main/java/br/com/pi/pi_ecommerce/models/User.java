@@ -1,40 +1,41 @@
 package br.com.pi.pi_ecommerce.models;
 
-import jakarta.persistence.*;
-import org.hibernate.annotations.JdbcType;
-import org.hibernate.type.descriptor.jdbc.TinyIntJdbcType;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+import lombok.Data;
 
-@Entity
+
+@Data
+@Document(collection = "users")
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;  // O MongoDB usa ObjectId como padrão, então o tipo é String.
 
-    @Column(name = "NR_CPF", unique = true, nullable = false)
+    @Field("NR_CPF")
     private Long cpf;
 
-    @Column(name = "DS_EMAIL", unique = true, nullable = false)
+    @Field("DS_EMAIL")
     private String email;
 
-    @Column(name = "DS_NOME", nullable = false)
+    @Field("DS_NOME")
     private String nome;
 
-    @Column(name = "DS_SENHA", nullable = false)
+    @Field("DS_SENHA")
     private String senha;
 
-    @Column(name = "DS_GRUPO", nullable = false)
+    @Field("DS_GRUPO")
     private String grupo;
 
-    @Column(name = "TG_INATIVO", nullable = false)
-    @JdbcType(TinyIntJdbcType.class)
+    @Field("TG_INATIVO")
     private Boolean status;
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -86,16 +87,17 @@ public class User {
         this.status = status;
     }
 
+    // Construtor com todos os parâmetros
     public User(String nome, Long cpf, String email, String senha, String grupo) {
         this.cpf = cpf;
         this.email = email;
         this.nome = nome;
         this.senha = senha;
         this.grupo = grupo;
-        this.status = true;
+        this.status = true; // Definido como ativo por padrão
     }
 
+    // Construtor padrão
     public User() {
-
     }
 }
