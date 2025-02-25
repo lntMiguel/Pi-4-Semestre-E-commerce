@@ -107,13 +107,30 @@ const [senhaErro, setSenhaErro] = useState(false);
 const handleLogin = async (e) => {
   e.preventDefault();
   setError(""); 
+
+  if (!email.trim()) {
+    setUsuarioErro(true);
+  } else {
+    setUsuarioErro(false);
+  }
+
+  if (!password.trim()) {
+    setSenhaErro(true);
+  } else {
+    setSenhaErro(false);
+  }
+
+  if (!email.trim() || !password.trim()) {
+    return;
+  }
+
   try {
     const response = await fetch("http://localhost:8081/users/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password}), 
     });
 
     if (!response.ok) {
@@ -124,6 +141,7 @@ const handleLogin = async (e) => {
     const data = await response.json();
     console.log("Sucesso ao logar:", data);
 
+
     setUser(data);
     setGrupo(data.grupo); 
     localStorage.setItem("user", JSON.stringify(data));
@@ -132,12 +150,11 @@ const handleLogin = async (e) => {
   } catch (error) {
     setError("Credencias Invalidas");
 
-  
 }
 }
 const enterAcionado = (e) => {
   if (e.key === "Enter") {
-    handleLogin();
+    handleLogin(e);
   }
 };
   return (
@@ -150,7 +167,7 @@ const enterAcionado = (e) => {
             type="text"
             placeholder="Nome de usuário"
             value={email}
-            onChange={(e) => setEmail(e.target.value)} 
+            onChange={(e) => setEmail(e.target.value)}
             onKeyDown={enterAcionado}
           />
           {usuarioErro && <Popup>Campo obrigatório</Popup>}

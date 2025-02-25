@@ -107,16 +107,17 @@ const AddBotoes = styled.button`
   }
 `;
 
+
 const Tabela = styled.table`
   width: 100%;
   border-collapse: collapse;
-  margin-top: 10px;
 `;
 
 const Th = styled.th`
   background: rgb(22, 77, 9);
   color: white;
   padding: 10px;
+  text-align: center;
 `;
 
 const Td = styled.td`
@@ -125,6 +126,21 @@ const Td = styled.td`
   text-align: center;
   color: black;
 `;
+
+const Tbody = styled.tbody`
+  display: block;
+  width: 100%;
+  height: 400px;  /* Defina o mesmo valor para o corpo da tabela */
+  overflow-y: auto;  /* Ativa a rolagem do corpo */
+  overflow-x: hidden; /* Impede a rolagem horizontal */
+`;
+
+const Tr = styled.tr`
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+`;
+
 
 const BotaoAcao = styled.button`
   padding: 5px 15px;
@@ -146,28 +162,14 @@ const ErrorMessage = styled.p`
   color: red;
 `;
 
-const validarCPF = (cpf) => {
-  cpf = cpf.replace(/[^\d]+/g, "");
-  if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
-
-  let soma = 0,
-    resto;
-  for (let i = 1; i <= 9; i++) soma += parseInt(cpf.substring(i - 1, i)) * (11 - i);
-  resto = (soma * 10) % 11;
-  if (resto === 10 || resto === 11) resto = 0;
-  if (resto !== parseInt(cpf.substring(9, 10))) return false;
-
-  soma = 0;
-  for (let i = 1; i <= 10; i++) soma += parseInt(cpf.substring(i - 1, i)) * (12 - i);
-  resto = (soma * 10) % 11;
-  if (resto === 10 || resto === 11) resto = 0;
-  return resto === parseInt(cpf.substring(10, 11));
-};
 
 function Usuario() {
   const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [showModal, setShowModal] = useState(false);
+  const [setShowModal] = useState(false);
+  const [showCadastroModal, setShowCadastroModal] = useState(false);
+  const [showAlterarModal, setShowAlterarModal] = useState(false)
+  const [editingUser, setEditingUser] = useState(null);
   const [formData, setFormData] = useState({
     nome: "",
     cpf: "",
@@ -179,12 +181,15 @@ function Usuario() {
   const [error, setError] = useState("");
   const [errors, setErrors] = useState({});
 
-  // Buscar usuários
   const fetchUsers = async () => {
     try {
       const response = await fetch(`http://localhost:8081/users?nome=${searchTerm}`);
       const data = await response.json();
-      setUsers(data);
+
+      setUsers(data.map(user => ({
+        ...user,
+        status: user.status === true ? "Ativo" : "Inativo"
+      })));
     } catch (error) {
       console.error("Erro ao buscar usuários:", error);
     }
@@ -192,33 +197,33 @@ function Usuario() {
 
   useEffect(() => {
     fetchUsers();
-  }, [searchTerm]); // Atualiza a lista quando o searchTerm muda
+  }, [searchTerm]); 
 
-  // Atualizar estado do formulário
+
   const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,  
+    }));
   };
 
-  // Função para alternar o status de um usuário
   const toggleStatus = async (id, currentStatus) => {
     try {
-      const newStatus = currentStatus === "Ativo" ? "Inativo" : "Ativo"; // Define o novo status
-
+      const newStatus = currentStatus === "Ativo" ? "Inativo" : "Ativo"; 
+  
       const response = await fetch(`http://localhost:8081/users/${id}/status`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          status: newStatus, // Envia o novo status
-        }),
+        body: JSON.stringify({ status: newStatus }), 
       });
-
+  
       if (!response.ok) {
         throw new Error("Erro ao alterar status");
       }
-
-      // Atualiza o estado com o novo status do usuário
+  
       setUsers(users.map((user) =>
         user.id === id ? { ...user, status: newStatus } : user
       ));
@@ -227,12 +232,10 @@ function Usuario() {
     }
   };
 
-  // Validar campos do formulário
   const validateFields = () => {
     let newErrors = {};
     if (!formData.nome) newErrors.nome = "Campo obrigatório";
     if (!formData.cpf) newErrors.cpf = "Campo obrigatório";
-    //else if (!validarCPF(formData.cpf)) newErrors.cpf = "CPF inválido";
     if (!formData.email) newErrors.email = "Campo obrigatório";
     if (!formData.senha) newErrors.senha = "Campo obrigatório";
     if (!formData.confirmSenha) newErrors.confirmSenha = "Campo obrigatório";
@@ -246,7 +249,6 @@ function Usuario() {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Salvar usuário
   const handleSave = async () => {
     setError("");
 
@@ -260,7 +262,37 @@ function Usuario() {
       });
 
       if (response.ok) {
-        setShowModal(false);
+        handleCloseModal(false);
+        setFormData({
+          nome: "",
+          cpf: "",
+          email: "",
+          senha: "",
+          confirmSenha: "",
+          grupo: "admin",
+        });
+        fetchUsers(); // Atualiza lista de usuários
+      } else {
+        const errorMessage = await response.text();
+        setError(errorMessage || "Erro ao cadastrar usuário.");
+      }
+    } catch (error) {
+      console.error("Erro ao cadastrar usuário:", error);
+      setError("Erro ao cadastrar usuário.");
+    }
+  };
+  const handleUpdate = async () => {
+    setError("");
+
+    try {
+      const response = await fetch(`http://localhost:8081/users/${editingUser.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...formData, status: editingUser.status }),
+      });
+
+      if (response.ok) {
+        handleCloseEditModal(false);
         setFormData({
           nome: "",
           cpf: "",
@@ -280,6 +312,61 @@ function Usuario() {
     }
   };
 
+  const handleAddUser = () => {
+    setFormData({
+      nome: "",
+      cpf: "",
+      email: "",
+      senha: "",
+      confirmSenha: "",
+      grupo: "admin", 
+    });
+    setShowCadastroModal(true); 
+  };
+
+  const handleEditUser = (user) => {
+    setEditingUser(user);
+    setFormData({
+      nome: user.nome,
+      cpf: user.cpf,
+      email: user.email,
+      senha: "",
+      confirmSenha: "",
+      grupo: user.grupo,
+    });
+    setShowAlterarModal(true)
+  };
+
+  const resetForm = () => {
+    setErrors({});
+  };
+  const handleCloseEditModal = () => {
+    resetForm();
+    setShowAlterarModal(false); 
+  };
+  const handleCloseModal = () => {
+    resetForm(); 
+    setShowCadastroModal(false); 
+  };
+
+  const handleDeleteUser = async (id) => {
+    try {
+      const response = await fetch(`http://localhost:8081/users/${id}`, {
+        method: "DELETE",
+      });
+  
+      if (response.ok) {
+        setUsers(users.filter((user) => user.id !== id)); 
+      } else {
+        alert("Erro ao excluir usuário.");
+      }
+    } catch (error) {
+      console.error("Erro ao excluir usuário:", error);
+    }
+  };
+  
+  
+
   return (
     <StyledUsuario>
       <GlobalStyle />
@@ -292,11 +379,10 @@ function Usuario() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <AddBotoes onClick={() => setShowModal(true)}>+</AddBotoes>
+          <AddBotoes onClick={() => handleAddUser(true)}>+</AddBotoes>
         </Pesquisar>
 
-        {/* Modal de Cadastro */}
-        {showModal && (
+        {showCadastroModal && (
           <Modal>
             <ModalContent>
               <h2>Cadastrar Usuário</h2>
@@ -323,32 +409,95 @@ function Usuario() {
               {error && <ErrorMessage>{error}</ErrorMessage>}
 
               <BotaoAcao onClick={handleSave}>Cadastrar</BotaoAcao>
-              <BotaoAcao onClick={() => setShowModal(false)}>Cancelar</BotaoAcao>
+              <BotaoAcao onClick={() => handleCloseModal()}> Cancelar</BotaoAcao>
             </ModalContent>
           </Modal>
         )}
 
-        <Tabela>
-          <thead>
-            <tr>
-              <Th>Nome</Th><Th>Email</Th><Th>Status</Th><Th>Ações</Th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => (
-              <tr key={user.id}>
-                <Td>{user.nome}</Td><Td>{user.email}</Td>
-                <Td>{user.status === "Ativo" ? "Ativo" : "Inativo"}</Td>
-                <Td>
-                  <BotaoAcao primary="true">Alterar</BotaoAcao>
-                  <BotaoAcao onClick={() => toggleStatus(user.id, user.status)}>
-                    {user.status === "Ativo" ? "Desabilitar" : "Habilitar"}
-                  </BotaoAcao>
-                </Td>
+{showAlterarModal && (
+  <Modal>
+    <ModalContent>
+      <h2>Alterar Usuário</h2>
+      <Input
+        name="nome"
+        placeholder="Nome"
+        value={formData.nome}
+        onChange={handleInputChange}
+      />
+      <Input
+        name="cpf"
+        placeholder="CPF"
+        value={formData.cpf}
+        onChange={handleInputChange}
+      />
+      <Input
+        name="email"
+        type="email"
+        placeholder="E-mail"
+        value={formData.email}
+        onChange={handleInputChange}
+      />
+      {errors.email && <ErrorMessage>{errors.email}</ErrorMessage>}
+      <Input
+        name="senha"
+        type="password"
+        placeholder="Senha"
+        value={formData.senha}
+        onChange={handleInputChange}
+      />
+      {errors.senha && <ErrorMessage>{errors.senha}</ErrorMessage>}
+      <Input
+        name="confirmSenha"
+        type="password"
+        placeholder="Confirmar Senha"
+        value={formData.confirmSenha}
+        onChange={handleInputChange}
+      />
+      {errors.confirmSenha && <ErrorMessage>{errors.confirmSenha}</ErrorMessage>}
+      <Select name="grupo" value={formData.grupo} onChange={handleInputChange}>
+        <option value="admin">Admin</option>
+        <option value="estoquista">Estoquista</option>
+      </Select>
+      {error && <ErrorMessage>{error}</ErrorMessage>}
+      <BotaoAcao onClick={handleUpdate}>Salvar Alterações</BotaoAcao>
+      <BotaoAcao onClick={() => handleCloseEditModal()}> Cancelar</BotaoAcao>
+      <BotaoAcao onClick={() => handleDeleteUser(editingUser.id)} style={{ backgroundColor: "#dc3545" }}>
+        Excluir
+      </BotaoAcao>
+    </ModalContent>
+  </Modal>
+)}
+          <Tabela>
+            <thead>
+              <tr>
+                <Th>Nome</Th>
+                <Th>Email</Th>
+                <Th>Grupo</Th>
+                <Th>Status</Th>
+                <Th>Ações</Th>
               </tr>
-            ))}
-          </tbody>
-        </Tabela>
+            </thead>
+          </Tabela>
+          <Tabela>
+            <Tbody>
+              {users.map((user) => (
+                <Tr key={user.id}>
+                  <Td>{user.nome}</Td>
+                  <Td>{user.email}</Td>
+                  <Td>{user.grupo === "admin" ? "Admin" : "Estoquista"}</Td>
+                  <Td>{user.status === "Ativo" ? "Ativo" : "Inativo"}</Td>
+                  <Td>
+                    <BotaoAcao primary="true" onClick={() => handleEditUser(user)}>
+                      Alterar
+                    </BotaoAcao>
+                    <BotaoAcao onClick={() => toggleStatus(user.id, user.status)}>
+                      {user.status === "Ativo" ? "Desabilitar" : "Habilitar"}
+                    </BotaoAcao>
+                  </Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Tabela>
       </Box>
     </StyledUsuario>
   );

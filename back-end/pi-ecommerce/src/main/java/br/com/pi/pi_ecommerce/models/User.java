@@ -3,6 +3,7 @@ package br.com.pi.pi_ecommerce.models;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
+
 import lombok.Data;
 
 
@@ -28,7 +29,7 @@ public class User {
     @Field("DS_GRUPO")
     private String grupo;
 
-    @Field("TG_INATIVO")
+    @Field("TG_ATIVO")
     private Boolean status;
 
     public String getId() {

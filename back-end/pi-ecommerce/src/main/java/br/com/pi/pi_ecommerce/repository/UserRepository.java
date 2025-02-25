@@ -1,9 +1,8 @@
 package br.com.pi.pi_ecommerce.repository;
 
-import br.com.pi.pi_ecommerce.models.User;
-import java.util.*;
-import org.springframework.data.mongodb.repository.MongoRepository;
 import java.util.Optional;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import br.com.pi.pi_ecommerce.models.User;
 
 public interface UserRepository extends MongoRepository<User,String> { 
     

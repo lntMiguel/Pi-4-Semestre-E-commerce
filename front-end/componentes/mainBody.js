@@ -75,7 +75,7 @@ function Main() {
         <Titulo>Painel de Controle</Titulo>
         <Botao>Listar Produtos</Botao>
         {grupo === "admin" && <Botao onClick={handleRedirect}>Listar Usuários</Botao>}        
-        <Botao>Listar Pedidos</Botao>
+        {grupo === "estoquista" && <Botao onClick={handleRedirect}>Listar Pedidos</Botao>}   
       </Box>
     </StyledMain>
   );
