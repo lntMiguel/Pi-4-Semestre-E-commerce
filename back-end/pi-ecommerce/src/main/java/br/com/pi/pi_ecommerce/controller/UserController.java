@@ -56,4 +56,9 @@ public class UserController {
         String senha = loginRequest.get("password");
         return userService.login(email, senha);
     }
+
+    @GetMapping("/status")
+    public boolean retornaStatusUsuario(@PathVariable String id){
+        return userService.retornaStatusUsuario(id);
+    }
 }

@@ -118,4 +118,19 @@ public class UserService {
         }
     }
 
+    public boolean retornaStatusUsuario(String userId){
+
+        Optional<User> userOptional = userRepository.findById(userId);
+
+        if (userOptional.isPresent()){
+            User user = userOptional.get();
+            return user.getStatus();
+        }
+
+        else{
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado");
+        }
+
+    }
+
 }
