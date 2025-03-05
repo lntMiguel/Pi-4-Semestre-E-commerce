@@ -101,7 +101,8 @@ public class UserService {
 
             user.setNome(nome);
             user.setCpf(cpf);
-            user.setSenha(senha);
+            String senhaHash = BCrypt.hashpw(senha, BCrypt.gensalt());
+            user.setSenha(senhaHash);
 
             return userRepository.save(user);
         } else {
@@ -138,5 +139,7 @@ public class UserService {
         }
 
     }
+
+    
 
 }

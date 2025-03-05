@@ -199,9 +199,6 @@ function Usuario() {
     fetchUsers();
   }, [searchTerm]); 
 
-  
-
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -322,7 +319,7 @@ function Usuario() {
   };
 
   const handleUpdate = async () => {
-    setError(""); // Limpa mensagens de erro
+    setError(""); // Limpa mensagens de erro antes de começar
   
     const updatedData = new URLSearchParams();
     if (formData.nome) updatedData.append("nome", formData.nome);
@@ -333,22 +330,23 @@ function Usuario() {
       const response = await fetch(`http://localhost:8081/users/${editingUser.id}/dados`, {
         method: "PUT",
         headers: {
-          "Content-Type": "application/json", // Informar que o conteúdo da requisição é JSON
+          "Content-Type": "application/x-www-form-urlencoded", // Tipo correto para @RequestParam
         },
+        body: updatedData.toString(), // Envia os dados corretamente
       });
   
-      if (response.ok) {
-        setShowAlterarModal(false); 
-        fetchUsers(); // Atualiza a lista de usuários
-      } else {
-        const errorMessage = await response.text();
-        setError(errorMessage || "Erro ao atualizar usuário.");
+      if (!response.ok) {
+        throw new Error("Erro ao atualizar usuário");
       }
+  
+      const data = await response.json();
+      console.log("Usuário atualizado:", data);
     } catch (error) {
-      console.error("Erro ao atualizar usuário:", error);
-      setError("Erro ao atualizar usuário.");
+      console.error(error);
+      setError("Erro ao atualizar usuário");
     }
   };
+  
 
   const handleDeleteUser = async (id) => {
     try {
@@ -415,41 +413,56 @@ function Usuario() {
 
 {showAlterarModal && (
   <Modal>
-    <ModalContent>
-      <h2>Alterar Usuário</h2>
-      <Input
-        name="nome"
-        placeholder="Nome"
-        value={formData.nome}
-        onChange={handleInputChange}
-      />
-      <Input
-        name="cpf"
-        placeholder="CPF"
-        value={formData.cpf}
-        onChange={handleInputChange}
-      />
-      <Input
-        name="email"
-        type="email"
-        placeholder="E-mail"
-        value={formData.email}
-        onChange={handleInputChange}
-      />
-      {errors.email && <ErrorMessage>{errors.email}</ErrorMessage>}
-      {/* Não inclua senha ou confirmação de senha no formulário */}
-      <Select name="grupo" value={formData.grupo} onChange={handleInputChange}>
-        <option value="admin">Admin</option>
-        <option value="estoquista">Estoquista</option>
-      </Select>
-      {error && <ErrorMessage>{error}</ErrorMessage>}
-      <BotaoAcao onClick={handleUpdate}>Salvar Alterações</BotaoAcao>
-      <BotaoAcao onClick={() => handleCloseEditModal()}>Cancelar</BotaoAcao>
-      <BotaoAcao onClick={() => handleDeleteUser(editingUser.id)} style={{ backgroundColor: "#dc3545" }}>
-        Excluir
-      </BotaoAcao>
-    </ModalContent>
-  </Modal>
+  <ModalContent>
+    <h2>Alterar Usuário</h2>
+    <Input
+      name="nome"
+      placeholder="Nome"
+      value={formData.nome}
+      onChange={handleInputChange}
+    />
+    <Input
+      name="cpf"
+      placeholder="CPF"
+      value={formData.cpf}
+      onChange={handleInputChange}
+    />
+    <Input
+      name="email"
+      type="email"
+      placeholder="E-mail"
+      value={formData.email}
+      onChange={handleInputChange}
+    />
+    {errors.email && <ErrorMessage>{errors.email}</ErrorMessage>}
+    <Input
+      name="senha"
+      type="password"
+      placeholder="Senha"
+      value={formData.senha}
+      onChange={handleInputChange}
+    />
+    {errors.senha && <ErrorMessage>{errors.senha}</ErrorMessage>}
+    <Input
+      name="confirmSenha"
+      type="password"
+      placeholder="Confirmar Senha"
+      value={formData.confirmSenha}
+      onChange={handleInputChange}
+    />
+    {errors.confirmSenha && <ErrorMessage>{errors.confirmSenha}</ErrorMessage>}
+    <Select name="grupo" value={formData.grupo} onChange={handleInputChange}>
+      <option value="admin">Admin</option>
+      <option value="estoquista">Estoquista</option>
+    </Select>
+    {error && <ErrorMessage>{error}</ErrorMessage>}
+    <BotaoAcao onClick={handleUpdate}>Salvar Alterações</BotaoAcao>
+    <BotaoAcao onClick={() => handleCloseEditModal()}> Cancelar</BotaoAcao>
+    <BotaoAcao onClick={() => handleDeleteUser(editingUser.id)} style={{ backgroundColor: "#dc3545" }}>
+      Excluir
+    </BotaoAcao>
+  </ModalContent>
+</Modal>
 )}
           <Tabela>
             <thead>
