@@ -65,7 +65,7 @@ public class UserService {
 
         // Converte os usuários para DTO (caso seja necessário)
         return usuarios.stream()
-                .map(user -> new UserDTO(user.getNome(), user.getEmail(), user.getStatus(), user.getGrupo(), user.getId())) // Assumindo que você tem um construtor no UserDTO que converte o User
+                .map(user -> new UserDTO(user.getId(),user.getNome(), user.getEmail(), user.getStatus(), user.getGrupo(), user.getCpf()))
                 .collect(Collectors.toList());
     }
 
