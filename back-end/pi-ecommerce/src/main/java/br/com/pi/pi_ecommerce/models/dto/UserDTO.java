@@ -7,6 +7,11 @@ public class UserDTO {
     private String email;
     private Boolean status;
     private String grupo;
+    private Long cpf;
+
+    public Long getCpf() {
+        return cpf;
+    }
 
     public String getNome() {
         return nome;
@@ -41,5 +46,14 @@ public class UserDTO {
         this.email = email;
         this.status = status;
         this.grupo = grupo;
+    }
+
+    public UserDTO(String id, String nome, String email, Boolean status, String grupo, Long cpf) {
+        this.id = id;
+        this.nome = nome;
+        this.email = email;
+        this.status = status;
+        this.grupo = grupo;
+        this.cpf = cpf;
     }
 }

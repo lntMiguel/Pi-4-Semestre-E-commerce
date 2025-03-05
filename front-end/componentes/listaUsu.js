@@ -166,7 +166,6 @@ const ErrorMessage = styled.p`
 function Usuario() {
   const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [setShowModal] = useState(false);
   const [showCadastroModal, setShowCadastroModal] = useState(false);
   const [showAlterarModal, setShowAlterarModal] = useState(false)
   const [editingUser, setEditingUser] = useState(null);
@@ -185,6 +184,7 @@ function Usuario() {
     try {
       const response = await fetch(`http://localhost:8081/users?nome=${searchTerm}`);
       const data = await response.json();
+      console.log(data);
 
       setUsers(data.map(user => ({
         ...user,
@@ -198,6 +198,8 @@ function Usuario() {
   useEffect(() => {
     fetchUsers();
   }, [searchTerm]); 
+
+  
 
 
   const handleInputChange = (e) => {
@@ -271,37 +273,7 @@ function Usuario() {
           confirmSenha: "",
           grupo: "admin",
         });
-        fetchUsers(); // Atualiza lista de usuários
-      } else {
-        const errorMessage = await response.text();
-        setError(errorMessage || "Erro ao cadastrar usuário.");
-      }
-    } catch (error) {
-      console.error("Erro ao cadastrar usuário:", error);
-      setError("Erro ao cadastrar usuário.");
-    }
-  };
-  const handleUpdate = async () => {
-    setError("");
-
-    try {
-      const response = await fetch(`http://localhost:8081/users/${editingUser.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, status: editingUser.status }),
-      });
-
-      if (response.ok) {
-        handleCloseEditModal(false);
-        setFormData({
-          nome: "",
-          cpf: "",
-          email: "",
-          senha: "",
-          confirmSenha: "",
-          grupo: "admin",
-        });
-        fetchUsers(); // Atualiza lista de usuários
+        fetchUsers();
       } else {
         const errorMessage = await response.text();
         setError(errorMessage || "Erro ao cadastrar usuário.");
@@ -324,19 +296,6 @@ function Usuario() {
     setShowCadastroModal(true); 
   };
 
-  const handleEditUser = (user) => {
-    setEditingUser(user);
-    setFormData({
-      nome: user.nome,
-      cpf: user.cpf,
-      email: user.email,
-      senha: "",
-      confirmSenha: "",
-      grupo: user.grupo,
-    });
-    setShowAlterarModal(true)
-  };
-
   const resetForm = () => {
     setErrors({});
   };
@@ -347,6 +306,48 @@ function Usuario() {
   const handleCloseModal = () => {
     resetForm(); 
     setShowCadastroModal(false); 
+  };
+
+  const handleEditUser = (user) => {
+    setEditingUser(user);
+    setFormData({
+      nome: user.nome,
+      cpf: user.cpf,
+      email: user.email,
+      senha: "", 
+      confirmSenha: "",
+      grupo: user.grupo,
+    });
+    setShowAlterarModal(true); 
+  };
+
+  const handleUpdate = async () => {
+    setError(""); // Limpa mensagens de erro
+  
+    const updatedData = new URLSearchParams();
+    if (formData.nome) updatedData.append("nome", formData.nome);
+    if (formData.cpf) updatedData.append("cpf", formData.cpf);
+    if (formData.senha) updatedData.append("senha", formData.senha);
+  
+    try {
+      const response = await fetch(`http://localhost:8081/users/${editingUser.id}/dados`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json", // Informar que o conteúdo da requisição é JSON
+        },
+      });
+  
+      if (response.ok) {
+        setShowAlterarModal(false); 
+        fetchUsers(); // Atualiza a lista de usuários
+      } else {
+        const errorMessage = await response.text();
+        setError(errorMessage || "Erro ao atualizar usuário.");
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar usuário:", error);
+      setError("Erro ao atualizar usuário.");
+    }
   };
 
   const handleDeleteUser = async (id) => {
@@ -365,8 +366,6 @@ function Usuario() {
     }
   };
   
-  
-
   return (
     <StyledUsuario>
       <GlobalStyle />
@@ -438,29 +437,14 @@ function Usuario() {
         onChange={handleInputChange}
       />
       {errors.email && <ErrorMessage>{errors.email}</ErrorMessage>}
-      <Input
-        name="senha"
-        type="password"
-        placeholder="Senha"
-        value={formData.senha}
-        onChange={handleInputChange}
-      />
-      {errors.senha && <ErrorMessage>{errors.senha}</ErrorMessage>}
-      <Input
-        name="confirmSenha"
-        type="password"
-        placeholder="Confirmar Senha"
-        value={formData.confirmSenha}
-        onChange={handleInputChange}
-      />
-      {errors.confirmSenha && <ErrorMessage>{errors.confirmSenha}</ErrorMessage>}
+      {/* Não inclua senha ou confirmação de senha no formulário */}
       <Select name="grupo" value={formData.grupo} onChange={handleInputChange}>
         <option value="admin">Admin</option>
         <option value="estoquista">Estoquista</option>
       </Select>
       {error && <ErrorMessage>{error}</ErrorMessage>}
       <BotaoAcao onClick={handleUpdate}>Salvar Alterações</BotaoAcao>
-      <BotaoAcao onClick={() => handleCloseEditModal()}> Cancelar</BotaoAcao>
+      <BotaoAcao onClick={() => handleCloseEditModal()}>Cancelar</BotaoAcao>
       <BotaoAcao onClick={() => handleDeleteUser(editingUser.id)} style={{ backgroundColor: "#dc3545" }}>
         Excluir
       </BotaoAcao>

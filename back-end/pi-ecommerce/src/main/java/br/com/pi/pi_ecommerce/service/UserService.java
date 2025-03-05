@@ -1,23 +1,23 @@
 package br.com.pi.pi_ecommerce.service;
 
-import br.com.pi.pi_ecommerce.repository.UserRepository;
-import br.com.pi.pi_ecommerce.utils.Validator;
-import br.com.pi.pi_ecommerce.models.User;
-import br.com.pi.pi_ecommerce.models.dto.UserDTO;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import org.springframework.http.ResponseEntity;
-import java.util.HashMap;
-import java.util.Map;
+import br.com.pi.pi_ecommerce.models.User;
+import br.com.pi.pi_ecommerce.models.dto.UserDTO;
+import br.com.pi.pi_ecommerce.repository.UserRepository;
+import br.com.pi.pi_ecommerce.utils.Validator;
 
 
 @Service
@@ -32,22 +32,28 @@ public class UserService {
     public ResponseEntity<Map<String, String>> login(String email, String password) {
 
         Optional<User> userOptional = userRepository.findByEmail(email);
-
+    
         if (userOptional.isEmpty()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Collections.singletonMap("message", "Email Incorreto!"));
         }
-
+    
         User user = userOptional.get();
+    
+        if (!user.getStatus()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)  // Retorna status 403
+                    .body(Collections.singletonMap("message", "Usuário inativo"));
+        }
+    
         if (!BCrypt.checkpw(password, user.getSenha())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Collections.singletonMap("message", "Senha Incorreta"));
         }
-
+    
         Map<String, String> response = new HashMap<>();
         response.put("message", "Login feito com sucesso");
         response.put("grupo", user.getGrupo());
-
+    
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
     }
 

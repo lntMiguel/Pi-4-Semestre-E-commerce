@@ -106,7 +106,7 @@ const [senhaErro, setSenhaErro] = useState(false);
 
 const handleLogin = async (e) => {
   e.preventDefault();
-  setError(""); 
+  setError(""); // Limpar erro anterior
 
   if (!email.trim()) {
     setUsuarioErro(true);
@@ -121,7 +121,7 @@ const handleLogin = async (e) => {
   }
 
   if (!email.trim() || !password.trim()) {
-    return;
+    return; // Se qualquer um estiver vazio, não continua
   }
 
   try {
@@ -130,28 +130,36 @@ const handleLogin = async (e) => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ email, password}), 
+      body: JSON.stringify({ email, password }),
     });
 
+    const errorText = await response.json();  // Lê a resposta uma vez
+
+    // Depuração: logar a resposta
+    console.log("Response status:", response.status);
+    console.log("Response message:", errorText.message);
+
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(errorText || "Erro ao fazer login");
+      if (response.status === 403 && errorText.message === "Usuário inativo") {
+        setError("Seu usuário está inativo. Contate o suporte.");
+      } else {
+        setError(errorText.message || "Credenciais inválidas");
+      }
+      return;
     }
 
-    const data = await response.json();
-    console.log("Sucesso ao logar:", data);
-
-
-    setUser(data);
-    setGrupo(data.grupo); 
-    localStorage.setItem("user", JSON.stringify(data));
+    // Se login for bem-sucedido
+    setUser(errorText);
+    setGrupo(errorText.grupo); 
+    localStorage.setItem("user", JSON.stringify(errorText));
 
     router.push("/main"); 
   } catch (error) {
-    setError("Credencias Invalidas");
+    setError(error.message || "Erro ao fazer login");
+  }
+};
 
-}
-}
+
 const enterAcionado = (e) => {
   if (e.key === "Enter") {
     handleLogin(e);

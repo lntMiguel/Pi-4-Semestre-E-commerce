@@ -1,14 +1,24 @@
 package br.com.pi.pi_ecommerce.controller;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import br.com.pi.pi_ecommerce.models.User;
 import br.com.pi.pi_ecommerce.models.dto.UserDTO;
 import br.com.pi.pi_ecommerce.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import java.util.Map;
-
-import java.util.List;
 
 @CrossOrigin(origins = "http://localhost:3000")  // Permite CORS apenas para essa origem
 @RestController
@@ -53,12 +63,17 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(@RequestBody Map<String, String> loginRequest) {
         String email = loginRequest.get("email");
-        String senha = loginRequest.get("password");
-        return userService.login(email, senha);
-    }
+        String senha = loginRequest.get("password");  
+        ResponseEntity<Map<String, String>> response = userService.login(email, senha);
+        return response;
+}
 
-    @GetMapping("/status")
-    public boolean retornaStatusUsuario(@PathVariable String id){
-        return userService.retornaStatusUsuario(id);
-    }
+    @GetMapping("/{id}/status")  // Agora o parâmetro de 'id' está correto
+    public ResponseEntity<Map<String, Boolean>> retornaStatusUsuario(@PathVariable String id){
+        boolean status = userService.retornaStatusUsuario(id);
+        Map<String, Boolean> response = new HashMap<>();
+        response.put("status", status);
+        return ResponseEntity.ok(response);
+}
+
 }
