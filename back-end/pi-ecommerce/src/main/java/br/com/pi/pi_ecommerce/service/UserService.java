@@ -101,14 +101,18 @@ public class UserService {
 
             user.setNome(nome);
             user.setCpf(cpf);
-            String senhaHash = BCrypt.hashpw(senha, BCrypt.gensalt());
-            user.setSenha(senhaHash);
+
+            if (senha != null && !senha.isEmpty()) {  // Verifica se a senha foi fornecida
+                String senhaHash = BCrypt.hashpw(senha, BCrypt.gensalt());
+                user.setSenha(senhaHash);
+            }
 
             return userRepository.save(user);
         } else {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado");
         }
     }
+
 
     public User alterarStatusUsuario(String userId) {
 
@@ -139,6 +143,8 @@ public class UserService {
         }
 
     }
+
+
 
     
 
