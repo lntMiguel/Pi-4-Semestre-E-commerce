@@ -57,3 +57,4 @@ public class UserDTO {
         this.cpf = cpf;
     }
 }
+
