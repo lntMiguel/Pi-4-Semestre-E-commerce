@@ -199,9 +199,6 @@ function Usuario() {
     fetchUsers();
   }, [searchTerm]); 
 
-  
-
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -333,7 +330,7 @@ function Usuario() {
       const response = await fetch(`http://localhost:8081/users/${editingUser.id}/dados`, {
         method: "PUT",
         headers: {
-          "Content-Type": "application/json", // Informar que o conteúdo da requisição é JSON
+          "Content-Type": "application/json",
         },
       });
   

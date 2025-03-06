@@ -68,12 +68,15 @@ function Main() {
     const handleRedirect = () => {
         router.push('/usuarios');
       };
+      const handleRedirectP = () => {
+        router.push('/produtos');
+      };
   return (
     <StyledMain>
       <GlobalStyle />
       <Box>
         <Titulo>Painel de Controle</Titulo>
-        <Botao>Listar Produtos</Botao>
+        <Botao onClick={handleRedirectP} >Listar Produtos</Botao>
         {grupo === "admin" && <Botao onClick={handleRedirect}>Listar Usuários</Botao>}        
         {grupo === "estoquista" && <Botao onClick={handleRedirect}>Listar Pedidos</Botao>}   
       </Box>
