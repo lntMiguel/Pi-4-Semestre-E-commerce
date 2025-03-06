@@ -30,13 +30,13 @@ public class ImagemService {
     private ProdutoRepository produtoRepository;
 
     private static final String UPLOAD_DIR = "imagens/";
-    //"../../../../../imagens"
 
     public ResponseEntity<String> salvarImagens(String idProduto, MultipartFile[] files, String nomeImagemPrincipal) {
-
+        boolean principalIsPresent = nomeImagemPrincipal == null;
         try {
             for (MultipartFile file : files) {
-                salvarImagemNoSistema(idProduto, file, nomeImagemPrincipal);
+                salvarImagemNoSistema(idProduto, file, nomeImagemPrincipal, principalIsPresent);
+                principalIsPresent = false;
             }
 
             return ResponseEntity.status(HttpStatus.CREATED).body("Imagens salvas");
@@ -45,7 +45,7 @@ public class ImagemService {
         }
     }
 
-    private void salvarImagemNoSistema(String idProduto, MultipartFile file, String nomeImagemPrincipal) throws Exception {
+    private void salvarImagemNoSistema(String idProduto, MultipartFile file, String nomeImagemPrincipal, boolean principalIsPresent) throws Exception {
 
         try {
             // Gera um novo nome único
@@ -55,9 +55,9 @@ public class ImagemService {
 
             // Copia o arquivo para o diretório
             Files.copy(file.getInputStream(), caminhoArquivo, StandardCopyOption.REPLACE_EXISTING);
+            boolean isPrincipal = (nomeImagemPrincipal != null && Objects.equals(file.getOriginalFilename(), nomeImagemPrincipal)) || principalIsPresent;
 
             // Define se esta imagem será a principal
-            boolean isPrincipal = Objects.equals(file.getOriginalFilename(), nomeImagemPrincipal);
 
             // Salva no banco
             Imagem imagem = new Imagem(idProduto, caminhoArquivo.toString(), isPrincipal);

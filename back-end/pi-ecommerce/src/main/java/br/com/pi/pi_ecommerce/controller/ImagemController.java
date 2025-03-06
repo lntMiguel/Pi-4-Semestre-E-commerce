@@ -22,7 +22,7 @@ public class ImagemController {
         try{
             return imagemService.salvarImagens(idProduto, files, nomeImagemPrincipal);
         }catch (Exception e){
-            throw new Exception("Erro ao salvar imagens" + e.getMessage(), e);
+            return ResponseEntity.internalServerError().body("Erro ao salvar imagens: " + e.getMessage());
         }
     }
 
