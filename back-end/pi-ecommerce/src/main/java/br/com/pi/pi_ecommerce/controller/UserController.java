@@ -48,8 +48,10 @@ public class UserController {
     public ResponseEntity<User> atualizarDados(@PathVariable String id,
                                                @RequestParam String nome,
                                                @RequestParam Long cpf,
-                                               @RequestParam(required = false) String senha) {  // A senha é agora opcional
-        User usuarioAtualizado = userService.atualizarDadosUsuario(id, nome, cpf, senha);
+                                               @RequestParam(required = false) String senha,
+                                               @RequestParam(required = false) String grupo)
+                                                {  // A senha é agora opcional
+        User usuarioAtualizado = userService.atualizarDadosUsuario(id, nome, cpf, senha, grupo);
         return ResponseEntity.ok(usuarioAtualizado);
     }
 

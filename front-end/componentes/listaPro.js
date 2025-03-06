@@ -19,6 +19,7 @@ const GlobalStyle = createGlobalStyle`
 
 const StyledProdutos = styled.div`
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   width: 100vw;
@@ -72,7 +73,8 @@ const Sair = styled.button`
 `;
 const Container = styled.div`
    width: 90%;
-  margin-top: 80px; 
+   height: 70%;
+  margin-top: 40px; 
   background: white;
   padding: 20px;
   border-radius: 10px;
@@ -85,18 +87,19 @@ const TopBar = styled.div`
   margin-bottom: 10px;
 `;
 
-const SearchInput = styled.input`
+const Pesquisar = styled.input`
   padding: 8px;
-  width: 200px;
+  width: 300px;
   margin-right: 10px;
   border: 1px solid #ccc;
   border-radius: 5px;
 `;
 
-const Button = styled.button`
+const Botao = styled.button`
   padding: 8px 12px;
   background-color: ${(props) => props.color || "#007BFF"};
   color: white;
+  margin-left: 10px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
@@ -105,14 +108,36 @@ const Button = styled.button`
   }
 `;
 
-const Table = styled.table`
+const AddBotoes = styled.button`
+  width: 40px;
+  padding: 8px;
+  height: 40px;
+  border: none;
+  background-color: rgb(22, 77, 9);
+  color: #fff;
+  font-size: 20px;
+  font-weight: bold;
+  border-radius: 50%;
+  cursor: pointer;
+  margin-left: 10px;
+  transition: 0.3s;
+
+  &:hover {
+    background-color: #28c702;
+  }
+`;
+
+const Tabela = styled.table`
   width: 100%;
   border-collapse: collapse;
+  overflow-y: auto; 
+  overflow-x: hidden; 
+  
 `;
 
 const Th = styled.th`
   padding: 10px;
-  background-color: #007BFF;
+  background-color: rgb(22, 77, 9);
   color: white;
   border: 1px solid #ddd;
 `;
@@ -140,7 +165,7 @@ const Modal = styled.div`
   align-items: center;
 `;
 
-const ModalContent = styled.div`
+const ModalConteudo = styled.div`
   background: white;
   padding: 20px;
   width: 400px;
@@ -148,7 +173,7 @@ const ModalContent = styled.div`
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
 `;
 
-const ModalTitle = styled.h3`
+const ModalTitulo = styled.h3`
   margin-bottom: 10px;
 `;
 
@@ -160,7 +185,7 @@ const Input = styled.input`
   border-radius: 5px;
 `;
 
-const TextArea = styled.textarea`
+const TextoArea = styled.textarea`
   width: 100%;
   padding: 8px;
   margin-bottom: 10px;
@@ -169,23 +194,31 @@ const TextArea = styled.textarea`
   resize: none;
 `;
 
-const ButtonGroup = styled.div`
+const GpBotoes = styled.div`
   display: flex;
   justify-content: space-between;
 `;
 
 function Produtos(){
   const [isModalOpen, setModalOpen] = useState(false);
+  const [isEditModalOpen, setEditModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const [products, setProducts] = useState([
     { id: 1, name: "Produto A", quantity: 10, price: 100, active: true },
     { id: 2, name: "Produto B", quantity: 5, price: 50, active: false },
+    { id: 3, name: "Produto C", quantity: 8, price: 75, active: true },
   ]);
+
+  const filteredProducts = products.filter((product) =>
+    product.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
 
   return (
     <StyledProdutos>
       <GlobalStyle />
       <Header>
-        <Logo src="logo.png" alt="Logo" />
+        <Logo src="imagem/logo.png" alt="Logo" />
         <Titulo>Produtos</Titulo>
         <Usuario>
           <Nome>Usuário</Nome>
@@ -196,27 +229,34 @@ function Produtos(){
       <Container>
         <TopBar>
           <div>
-            <SearchInput type="text" placeholder="Buscar produto..." />
-            <Button color="#28a745">Buscar</Button>
+            <Pesquisar 
+              type="text"
+              placeholder="Buscar produto..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            /> 
+            <Botao color="rgb(22, 77, 9)">Buscar</Botao>
           </div>
-          <Button color="#17a2b8" onClick={() => setModalOpen(true)}>
-            Adicionar Produto
-          </Button>
+          <AddBotoes onClick={() => setModalOpen(true)}>
+          +
+          </AddBotoes>
         </TopBar>
 
-        <Table>
+        <Tabela>
           <thead>
-            <tr>
-              <Th>Código</Th>
-              <Th>Nome</Th>
-              <Th>Quantidade</Th>
-              <Th>Valor</Th>
-              <Th>Status</Th>
-              <Th>Ações</Th>
+           <tr>
+              
+           <Th style={{ width: "10%" }}>Código</Th>
+          <Th style={{ width: "40%" }}>Nome</Th>
+          <Th style={{ width: "10%" }}>Quantidade</Th>
+          <Th style={{ width: "10%" }}>Preço</Th>
+          <Th style={{ width: "10%" }}>Status</Th>
+          <Th style={{ width: "20%" }}>Ações</Th>
+           
             </tr>
           </thead>
           <tbody>
-            {products.map((product) => (
+          {filteredProducts.map((product) => (
               <tr key={product.id}>
                 <Td>{product.id}</Td>
                 <Td>{product.name}</Td>
@@ -228,37 +268,39 @@ function Produtos(){
                   </Status>
                 </Td>
                 <Td>
-                  <Button color="#ffc107">Alterar</Button>{" "}
-                  <Button color="#007BFF">Visualizar</Button>{" "}
-                  <Button color={product.active ? "#dc3545" : "#28a745"}>
+                  <Botao color="#007BFF">Alterar</Botao>{() => handleEditClick(product)}
+                  <Botao color="#007BFF">Visualizar</Botao>{" "}
+                  <Botao color={product.active ? "#dc3545" : "#28a745"}>
                     {product.active ? "Desativar" : "Ativar"}
-                  </Button>
+                  </Botao>
                 </Td>
               </tr>
             ))}
           </tbody>
-        </Table>
+        </Tabela>
       </Container>
 
       {isModalOpen && (
         <Modal>
-          <ModalContent>
-            <ModalTitle>Adicionar Produto</ModalTitle>
+          <ModalConteudo>
+            <ModalTitulo>Adicionar Produto</ModalTitulo>
             <Input type="text" placeholder="Nome do produto" />
             <Input type="number" placeholder="Preço" />
             <Input type="number" placeholder="Estoque" />
-            <TextArea rows="3" placeholder="Descrição detalhada"></TextArea>
+            <TextoArea rows="3" placeholder="Descrição detalhada"></TextoArea>
             <Input type="number" placeholder="Avaliação (1-5)" />
-            <Button color="#6c757d">Adicionar Imagem</Button>
-            <ButtonGroup>
-              <Button color="#28a745">Concluir</Button>
-              <Button color="#dc3545" onClick={() => setModalOpen(false)}>
+            <Botao color="#007BFF">Adicionar Imagem</Botao>
+            <GpBotoes>
+              <Botao color="rgb(22, 77, 9)">Concluir</Botao>
+              <Botao color="#dc3545" onClick={() => setModalOpen(false)}>
                 Cancelar
-              </Button>
-            </ButtonGroup>
-          </ModalContent>
+              </Botao>
+            </GpBotoes>
+          </ModalConteudo>
         </Modal>
       )}
+
+      
     </StyledProdutos>
   );
 }

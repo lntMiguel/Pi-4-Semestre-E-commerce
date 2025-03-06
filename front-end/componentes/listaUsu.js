@@ -84,6 +84,7 @@ const Pesquisar = styled.div`
 const Input = styled.input`
   flex: 1;
   padding: 10px;
+  margin: 2px;
   border: 1px solid #ccc;
   border-radius: 5px;
   font-size: 16px;
@@ -127,12 +128,20 @@ const Td = styled.td`
   color: black;
 `;
 
+const TdStatus = styled.td`
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  text-align: center;
+  font-weight: bold;
+  color: ${(props) => (props.status === "Ativo" ? "green" : "red")};
+`;
+
 const Tbody = styled.tbody`
   display: block;
   width: 100%;
-  height: 400px;  /* Defina o mesmo valor para o corpo da tabela */
-  overflow-y: auto;  /* Ativa a rolagem do corpo */
-  overflow-x: hidden; /* Impede a rolagem horizontal */
+  height: 400px;  
+  overflow-y: auto; 
+  overflow-x: hidden; 
 `;
 
 const Tr = styled.tr`
@@ -158,6 +167,8 @@ const BotaoAcao = styled.button`
   }
 `;
 
+
+
 const ErrorMessage = styled.p`
   color: red;
 `;
@@ -179,6 +190,7 @@ function Usuario() {
   });
   const [error, setError] = useState("");
   const [errors, setErrors] = useState({});
+  const [senhaHabilitada, setSenhaHabilitada] = useState(false);
 
   const fetchUsers = async () => {
     try {
@@ -325,6 +337,7 @@ function Usuario() {
     if (formData.nome) updatedData.append("nome", formData.nome);
     if (formData.cpf) updatedData.append("cpf", formData.cpf);
     if (formData.senha) updatedData.append("senha", formData.senha);
+    if (formData.grupo) updatedData.append("grupo", formData.grupo);
   
     try {
       const response = await fetch(`http://localhost:8081/users/${editingUser.id}/dados`, {
@@ -340,29 +353,15 @@ function Usuario() {
       if (!response.ok) {
         throw new Error("Erro ao atualizar usuário");
       }
+
+      await fetchUsers(); 
+      setShowAlterarModal(false);
   
       const data = await response.json();
       console.log("Usuário atualizado:", data);
     } catch (error) {
       console.error(error);
       setError("Erro ao atualizar usuário");
-    }
-  };
-  
-
-  const handleDeleteUser = async (id) => {
-    try {
-      const response = await fetch(`http://localhost:8081/users/${id}`, {
-        method: "DELETE",
-      });
-  
-      if (response.ok) {
-        setUsers(users.filter((user) => user.id !== id)); 
-      } else {
-        alert("Erro ao excluir usuário.");
-      }
-    } catch (error) {
-      console.error("Erro ao excluir usuário:", error);
     }
   };
   
@@ -430,11 +429,13 @@ function Usuario() {
       onChange={handleInputChange}
     />
     <Input
-      name="email"
-      type="email"
-      placeholder="E-mail"
-      value={formData.email}
-      onChange={handleInputChange}
+       name="email"
+       type="email"
+       placeholder="E-mail"
+       value={formData.email}
+       onChange={handleInputChange}
+       disabled={true}  
+       style={{ backgroundColor: "#e0e0e0", cursor: "not-allowed" }}
     />
     {errors.email && <ErrorMessage>{errors.email}</ErrorMessage>}
     <Input
@@ -443,7 +444,16 @@ function Usuario() {
       placeholder="Senha"
       value={formData.senha}
       onChange={handleInputChange}
+      disabled={!senhaHabilitada}
+      style={{ backgroundColor: !senhaHabilitada ? "#e0e0e0" : "white" }}
     />
+     <label>
+      <input 
+        type="checkbox" 
+        checked={senhaHabilitada} 
+        onChange={() => setSenhaHabilitada(!senhaHabilitada)}
+      /> Alterar senha
+    </label>
     {errors.senha && <ErrorMessage>{errors.senha}</ErrorMessage>}
     <Input
       name="confirmSenha"
@@ -451,6 +461,8 @@ function Usuario() {
       placeholder="Confirmar Senha"
       value={formData.confirmSenha}
       onChange={handleInputChange}
+      disabled={!senhaHabilitada}
+      style={{ backgroundColor: !senhaHabilitada ? "#e0e0e0" : "white" }}
     />
     {errors.confirmSenha && <ErrorMessage>{errors.confirmSenha}</ErrorMessage>}
     <Select name="grupo" value={formData.grupo} onChange={handleInputChange}>
@@ -460,9 +472,6 @@ function Usuario() {
     {error && <ErrorMessage>{error}</ErrorMessage>}
     <BotaoAcao onClick={handleUpdate}>Salvar Alterações</BotaoAcao>
     <BotaoAcao onClick={() => handleCloseEditModal()}> Cancelar</BotaoAcao>
-    <BotaoAcao onClick={() => handleDeleteUser(editingUser.id)} style={{ backgroundColor: "#dc3545" }}>
-      Excluir
-    </BotaoAcao>
   </ModalContent>
 </Modal>
 )}
@@ -484,7 +493,7 @@ function Usuario() {
                   <Td>{user.nome}</Td>
                   <Td>{user.email}</Td>
                   <Td>{user.grupo === "admin" ? "Admin" : "Estoquista"}</Td>
-                  <Td>{user.status === "Ativo" ? "Ativo" : "Inativo"}</Td>
+                  <TdStatus status={user.status}>{user.status}</TdStatus>
                   <Td>
                     <BotaoAcao primary="true" onClick={() => handleEditUser(user)}>
                       Alterar
