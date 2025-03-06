@@ -1,4 +1,4 @@
-package main.java.br.com.pi.pi_ecommerce.service;
+package br.com.pi.pi_ecommerce.service;
 
 import java.util.Optional;
 import java.util.List;

@@ -2,9 +2,7 @@ package br.com.pi.pi_ecommerce.service;
 
 
 import br.com.pi.pi_ecommerce.models.Imagem;
-import br.com.pi.pi_ecommerce.models.Produto;
 import br.com.pi.pi_ecommerce.repository.ImagemRepository;
-import br.com.pi.pi_ecommerce.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,24 +17,13 @@ import java.nio.file.StandardCopyOption;
 import java.util.Objects;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-
-import br.com.pi.pi_ecommerce.models.Imagem;
-import br.com.pi.pi_ecommerce.repository.ImagemRepository;
-import br.com.pi.pi_ecommerce.repository.ProdutoRepository;
-
 @Service
 public class ImagemService {
 
     @Autowired
     private ImagemRepository imagemRepository;
 
-    @Autowired
-    private ProductRepository produtoRepository;
+
 
     private static final String UPLOAD_DIR = "imagens/";
 
