@@ -335,7 +335,7 @@ function Usuario() {
         body: updatedData.toString(), // Envia os dados corretamente
           "Content-Type": "application/json",
         },
-      });
+      );
   
       if (!response.ok) {
         throw new Error("Erro ao atualizar usuário");
