@@ -70,7 +70,7 @@
     <groupId>org.mongodb</groupId>
     <artifactId>mongodb-driver-sync</artifactId>
 	</dependency>
-
+ 
     <dependency>
         <groupId>org.mindrot</groupId>
         <artifactId>jbcrypt</artifactId>

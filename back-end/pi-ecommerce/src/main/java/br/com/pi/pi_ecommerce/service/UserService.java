@@ -112,7 +112,7 @@ public class UserService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado");
         }
     }
-
+ 
     public User alterarStatusUsuario(String userId) {
 
         Optional<User> userOptional = userRepository.findById(userId);

@@ -47,5 +47,5 @@ public class ProductService {
         else{
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado");
         }
-    }
+    } 
 }

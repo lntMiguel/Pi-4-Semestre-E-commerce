@@ -12,7 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/imagens")
 public class ImagemController {
 
-    @Autowired
+    @Autowired 
     private ImagemService imagemService;
 
     @PostMapping
