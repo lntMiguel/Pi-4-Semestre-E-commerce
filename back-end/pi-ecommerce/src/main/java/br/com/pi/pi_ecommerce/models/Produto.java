@@ -24,7 +24,7 @@ public class Produto {
     @NotNull(message = "O preço do produto não pode ser nulo.")
     @DecimalMin(value = "0.00", message = "O preço do produto deve ser no mínimo 0.00")
     private BigDecimal preco;
- 
+  
     @Field("NR_QUANTIDADE")
     @Min(value = 0, message = "A quantidade em estoque não pode ser negativa.")
     private int qtdEstoque;

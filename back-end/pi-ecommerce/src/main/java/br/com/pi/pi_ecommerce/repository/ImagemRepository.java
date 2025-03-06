@@ -8,3 +8,4 @@ import java.util.List;
 public interface ImagemRepository extends MongoRepository<Imagem, String> {
     List<Imagem> findByIdProduto(String idProduto);
 }
+ 
