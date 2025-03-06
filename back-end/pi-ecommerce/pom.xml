@@ -77,22 +77,22 @@
         <version>0.4</version>
     </dependency>
 
-<dependency>
-            <groupId>jakarta.validation</groupId>
-            <artifactId>jakarta.validation-api</artifactId>
-
-        </dependency>
-        <dependency>
-            <groupId>org.hibernate.validator</groupId>
-            <artifactId>hibernate-validator</artifactId>
-
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/jakarta.el/jakarta.el-api -->
-        <dependency>
-            <groupId>jakarta.el</groupId>
-            <artifactId>jakarta.el-api</artifactId>
-            <version>6.0.1</version>
-        </dependency>
+		<dependency>
+			<groupId>jakarta.validation</groupId>
+			<artifactId>jakarta.validation-api</artifactId>
+			
+		</dependency>
+		<dependency>
+			<groupId>org.hibernate.validator</groupId>
+			<artifactId>hibernate-validator</artifactId>
+			
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/jakarta.el/jakarta.el-api -->
+		<dependency>
+			<groupId>jakarta.el</groupId>
+			<artifactId>jakarta.el-api</artifactId>
+			<version>6.0.1</version>
+		</dependency>
 
 
 	</dependencies>

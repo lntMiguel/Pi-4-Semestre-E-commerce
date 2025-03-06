@@ -89,7 +89,7 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public User atualizarDadosUsuario(String userId, String nome, Long cpf, String senha) {
+    public User atualizarDadosUsuario(String userId, String nome, Long cpf, String senha, String grupo) {
 
         Optional<User> usuarioOptional = userRepository.findById(userId);
 
@@ -102,6 +102,9 @@ public class UserService {
             if (senha != null && !senha.isEmpty()) {  // Verifica se a senha foi fornecida
                 String senhaHash = BCrypt.hashpw(senha, BCrypt.gensalt());
                 user.setSenha(senhaHash);
+            }
+            if (grupo != null && !grupo.isEmpty()) {
+                user.setGrupo(grupo);  
             }
 
             return userRepository.save(user);
