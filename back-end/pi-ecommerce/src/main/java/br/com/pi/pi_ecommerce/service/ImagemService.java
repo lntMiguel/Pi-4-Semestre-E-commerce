@@ -4,13 +4,13 @@ package br.com.pi.pi_ecommerce.service;
 import br.com.pi.pi_ecommerce.models.Imagem;
 import br.com.pi.pi_ecommerce.models.Produto;
 import br.com.pi.pi_ecommerce.repository.ImagemRepository;
-import br.com.pi.pi_ecommerce.repository.ProdutoRepository;
+import br.com.pi.pi_ecommerce.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
+ 
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -27,7 +27,7 @@ public class ImagemService {
     private ImagemRepository imagemRepository;
 
     @Autowired
-    private ProdutoRepository produtoRepository;
+    private ProductRepository produtoRepository;
 
     private static final String UPLOAD_DIR = "imagens/";
 
