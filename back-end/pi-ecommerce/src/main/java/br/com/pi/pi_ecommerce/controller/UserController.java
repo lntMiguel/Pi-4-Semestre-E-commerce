@@ -73,9 +73,6 @@ public class UserController {
         Map<String, Boolean> response = new HashMap<>();
         response.put("status", status);
         return ResponseEntity.ok(response);
-}
-
-
-
+    }
 
 }
