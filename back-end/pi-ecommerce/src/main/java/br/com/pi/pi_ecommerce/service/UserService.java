@@ -19,7 +19,6 @@ import br.com.pi.pi_ecommerce.models.dto.UserDTO;
 import br.com.pi.pi_ecommerce.repository.UserRepository;
 import br.com.pi.pi_ecommerce.utils.Validator;
 
-
 @Service
 public class UserService {
 

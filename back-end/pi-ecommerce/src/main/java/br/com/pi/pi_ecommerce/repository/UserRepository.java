@@ -10,5 +10,5 @@ public interface UserRepository extends MongoRepository<User,String> {
     boolean existsByCpf(Long cpf);
     boolean existsByEmail(String email);
     boolean findByid(Long id);
-}
+} 
 

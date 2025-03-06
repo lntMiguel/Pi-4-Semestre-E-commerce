@@ -8,3 +8,4 @@ public interface ProductRepository extends MongoRepository<Produto,String> {
     
     boolean findByid(Long id);
 }
+ 
