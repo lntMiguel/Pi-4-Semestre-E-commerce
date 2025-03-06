@@ -46,9 +46,9 @@ public class UserController {
 
     @PutMapping("/{id}/dados")
     public ResponseEntity<User> atualizarDados(@PathVariable String id,
-                                                  @RequestParam String nome,
-                                                  @RequestParam Long cpf,
-                                                  @RequestParam String senha) {
+                                               @RequestParam String nome,
+                                               @RequestParam Long cpf,
+                                               @RequestParam(required = false) String senha) {  // A senha é agora opcional
         User usuarioAtualizado = userService.atualizarDadosUsuario(id, nome, cpf, senha);
         return ResponseEntity.ok(usuarioAtualizado);
     }
@@ -63,9 +63,8 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(@RequestBody Map<String, String> loginRequest) {
         String email = loginRequest.get("email");
-        String senha = loginRequest.get("password");  
-        ResponseEntity<Map<String, String>> response = userService.login(email, senha);
-        return response;
+        String senha = loginRequest.get("password");
+        return userService.login(email, senha);
 }
 
     @GetMapping("/{id}/status")  // Agora o parâmetro de 'id' está correto
@@ -75,5 +74,8 @@ public class UserController {
         response.put("status", status);
         return ResponseEntity.ok(response);
 }
+
+
+
 
 }
