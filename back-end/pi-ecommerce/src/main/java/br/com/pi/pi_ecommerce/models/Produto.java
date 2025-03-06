@@ -89,7 +89,7 @@ public class Produto {
         this.avaliacao = avaliacao;
     }
 
-    public boolean isStatus() {
+    public boolean getStatus() {
         return status;
     }
 

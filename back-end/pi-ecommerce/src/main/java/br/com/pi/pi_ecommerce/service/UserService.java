@@ -57,7 +57,6 @@ public class UserService {
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
     }
 
-
     public List<UserDTO> listarTodos(String nome) {
         List<User> usuarios;
 
@@ -74,7 +73,6 @@ public class UserService {
                 .map(user -> new UserDTO(user.getId(),user.getNome(), user.getEmail(), user.getStatus(), user.getGrupo(), user.getCpf()))
                 .collect(Collectors.toList());
     }
-
 
     public User salvar(User user) {
 
@@ -112,7 +110,6 @@ public class UserService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado");
         }
     }
-
 
     public User alterarStatusUsuario(String userId) {
 
