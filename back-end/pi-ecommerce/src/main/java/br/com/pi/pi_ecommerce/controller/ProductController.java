@@ -16,7 +16,7 @@ import br.com.pi.pi_ecommerce.models.Produto;
 @RequestMapping("/produto")
 public class ProductController {
     @Autowired
-    private main.java.br.com.pi.pi_ecommerce.service.ProductService productService;
+    private ProductService productService;
 
     @GetMapping
     public List<Produto> listarTodos(@RequestParam(required = false) String nome) {
