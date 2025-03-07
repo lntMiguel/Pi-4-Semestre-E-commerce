@@ -1,16 +1,12 @@
 package br.com.pi.pi_ecommerce.controller;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import br.com.pi.pi_ecommerce.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import br.com.pi.pi_ecommerce.models.Produto;
 
 @CrossOrigin(origins = "http://localhost:3000")  // Permite CORS apenas para essa origem
@@ -20,6 +16,19 @@ public class ProductController {
     @Autowired
     private ProductService productService;
 
+    @GetMapping
+    public List<Produto> listarTodos(@RequestParam(required = false) String nome) {
+        return productService.listarTodos(nome);
+    }
+    @PostMapping
+    public ResponseEntity<?> salvar(@RequestBody Produto prod) {
+        try {
+            Produto novoProd = productService.salvar(prod);
+            return ResponseEntity.ok(novoProd);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
         
     @PutMapping("/{id}/status")
     public ResponseEntity<Produto> alterarStatus(@PathVariable String id) {

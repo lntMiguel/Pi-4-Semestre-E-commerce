@@ -1,8 +1,11 @@
 package br.com.pi.pi_ecommerce.service;
 
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -47,6 +50,25 @@ public class ProductService {
         else{
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado");
         }
-    } 
+    }
+
+    public List<Produto> listarTodos(String nome) {
+        List<Produto> produtos;
+
+        if (nome == null || nome.isEmpty()) {
+            produtos = productRepository.findAll();
+        } else {
+            produtos = productRepository.findAll().stream()
+                    .filter(produto -> produto.getNome().toLowerCase().contains(nome.toLowerCase()))
+                    .collect(Collectors.toList());
+        }
+
+        return produtos;
+    }
+
+    public Produto salvar(Produto prod) {
+        return productRepository.save(prod);
+    }
+
 }
  
