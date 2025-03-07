@@ -39,18 +39,18 @@ public class ProductService {
        }
     }
 
-    public Produto atualizaProduto(String productID, String NrCodigo,String nome, BigDecimal NrPreco, int NrQuantidade, String DsDescricao,Double Avaliacao){
+    public Produto atualizaProduto(String productID, String nrCodigo,String nome, BigDecimal nrPreco, int nrQuantidade, String dsDescricao,Double avaliacao){
         Optional<Produto> productOptional = productRepository.findByid(productID);
 
         if(productOptional.isPresent()){
             Produto produto = productOptional.get();
 
-            produto.setAvaliacao(Avaliacao);
-            produto.setCodigo(NrCodigo);
-            produto.setDescDetalhada(DsDescricao);
+            produto.setAvaliacao(avaliacao);
+            produto.setCodigo(nrCodigo);
+            produto.setDescDetalhada(dsDescricao);
             produto.setNome(nome);
-            produto.setPreco(NrPreco);
-            produto.setQtdEstoque(NrQuantidade);
+            produto.setPreco(nrPreco);
+            produto.setQtdEstoque(nrQuantidade);
             
             return productRepository.save(produto); 
         }else {
@@ -59,10 +59,10 @@ public class ProductService {
     }
 
     public boolean retornaStatusProduct(String productId){
-        Optional<Produto> ProdutoOptional = productRepository.findById(productId);
+        Optional<Produto> produtoOptional = productRepository.findById(productId);
 
-        if(ProdutoOptional.isPresent()){
-            Produto produto = ProdutoOptional.get();
+        if(produtoOptional.isPresent()){
+            Produto produto = produtoOptional.get();
             return produto.getStatus();
         }
         else{

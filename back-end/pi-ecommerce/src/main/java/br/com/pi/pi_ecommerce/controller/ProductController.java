@@ -16,7 +16,7 @@ import br.com.pi.pi_ecommerce.models.Produto;
 @RequestMapping("/produto")
 public class ProductController {
     @Autowired
-    private main.java.br.com.pi.pi_ecommerce.service.ProductService productService;
+    private ProductService productService;
 
     @GetMapping
     public List<Produto> listarTodos(@RequestParam(required = false) String nome) {
@@ -48,13 +48,13 @@ public class ProductController {
 
     @PutMapping("/{id}/dados")
     public ResponseEntity<Produto> atualizaProduto(@PathVariable String id,
-                                                   @RequestParam String NrCodigo,
+                                                   @RequestParam String codigo,
                                                    @RequestParam String nome,
-                                                   @RequestParam BigDecimal NrPreco,
-                                                   @RequestParam int NrQuantidade,
-                                                   @RequestParam String DsDescricao,
-                                                   @RequestParam Double Avaliacao){
-        Produto produtoAtualizado = productService.atualizaProduto(id, NrCodigo, nome, NrPreco, NrQuantidade, DsDescricao, Avaliacao);
+                                                   @RequestParam BigDecimal preco,
+                                                   @RequestParam int quantidade,
+                                                   @RequestParam String descricao,
+                                                   @RequestParam Double avaliacao){
+        Produto produtoAtualizado = productService.atualizaProduto(id, codigo, nome, preco, quantidade, descricao, avaliacao);
         return ResponseEntity.ok(produtoAtualizado);
     }
 }

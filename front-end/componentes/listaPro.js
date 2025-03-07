@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { createGlobalStyle } from "styled-components";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const GlobalStyle = createGlobalStyle`
   * {
@@ -212,6 +212,258 @@ function Produtos(){
   const filteredProducts = products.filter((product) =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const fetchProdutos = async () => {
+    try{
+      const response = await fetch(`http://localhost:8081/produto?nome=${searchTerm}`);
+      const data = await response.json();
+      console.log(data);
+      
+      setProducts(data.map(product => ({
+        ...product,
+        status: product.status === true ? "Ativo" : "Inativo"
+      })))      
+    } catch(error){
+      console.error("Erro ao buscar produtos:", error);
+    }
+  }
+
+  useEffect(() => {
+    fetchProdutos();
+  }, [searchTerm]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,  
+    }));
+  };
+
+  const toggleStatus = async (id, currentStatus) => {
+    try {
+      const newStatus = currentStatus === "Ativo" ? "Inativo" : "Ativo"; 
+  
+      const response = await fetch(`http://localhost:8081/produto/${id}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status: newStatus }), 
+      });
+  
+      if (!response.ok) {
+        throw new Error("Erro ao alterar status");
+      }
+  
+      setUsers(users.map((user) =>
+        user.id === id ? { ...user, status: newStatus } : user
+      ));
+    } catch (error) {
+      console.error("Erro ao alternar status:", error);
+    }
+  };
+
+  const validateFields = () => {
+    let newErrors = {};
+    if (!formData.nome) newErrors.nome = "Campo obrigatório";
+    if (!formData.preco) newErrors.preco = "Campo obrigatório";
+    if (!formData.codigo) newErrors.codigo = "Campo obrigatório";
+    if (!formData.qtdEstoque) newErrors.qtdEstoque = "Campo obrigatório";
+    if (!formData.descDetalhada) newErrors.descDetalhada = "Campo obrigatório";
+    if (!formData.avaliacao) newErrors.avaliacao = "Campo obrigatório";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSave = async () => {
+    setError("");
+
+    if (!validateFields()) return;
+
+    try {
+      const response = await fetch("http://localhost:8081/produto", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...formData, status: true }),
+      });
+
+      if (response.ok) {
+        handleCloseModal(false);
+        setFormData({
+          nome: "",
+          preco: "",
+          codigo: "",
+          qtdEstoque: "",
+          descDetalhada: "" ,
+          avaliacao: "",
+           
+        });
+        fetchUsers();
+      } else {
+        const errorMessage = await response.text();
+        setError(errorMessage || "Erro ao cadastrar usuário.");
+      }
+    } catch (error) {
+      console.error("Erro ao cadastrar usuário:", error);
+      setError("Erro ao cadastrar usuário.");
+    }
+  };
+
+  const handleAddProduct = () => {
+    setFormData({
+      nome: "",
+      preco: "",
+      codigo: "",
+      qtdEstoque: "",
+      descDetalhada: "" ,
+      avaliacao: "", 
+    });
+    setShowCadastroModal(true); 
+  };
+
+  const resetForm = () => {
+    setErrors({});
+  };
+  const handleCloseEditModal = () => {
+    resetForm();
+    setShowAlterarModal(false); 
+  };
+  const handleCloseModal = () => {
+    resetForm(); 
+    setShowCadastroModal(false); 
+  };
+
+  const handleEditProduct = (product) => {
+    setEditingProduct(product);
+    setFormData({
+      nome: product.nome,
+      preco: product.preco,
+      codigo: product.codigo,
+      qtdEstoque: product.qtdEstoque,
+      descDetalhada: product.descDetalhada,
+      avaliacao: product.avaliacao, 
+    });
+    setShowAlterarModal(true); 
+  };
+
+  const handUpdate = async () => {
+    setError("");
+
+    const updatedData = new URLSearchParams();
+    
+    if(formData.nome) updatedData.append("nome",formData.nome);
+    if(formData.preco) updatedData.append("preco",formData.preco);
+    if(formData.codigo) updatedData.append("codigo",formData.codigo);
+    if(formData.qtdEstoque) updatedData.append("qtdEstoque",formData.qtdEstoque);
+    if(formData.descDetalhada) updatedData.append("descDetalhada",formData.descDetalhada);
+    if(formData.avaliacao)updatedData.append("avaliacao",formData.avaliacao);
+
+    try {
+      const response = await fetch(`http://localhost:8081/produto/${editingProduct.id}/dados`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded", // Tipo correto para @RequestParam
+        },
+        body: updatedData.toString(), // Envia os dados corretamente
+          "Content-Type": "application/json",
+        },
+      );
+  
+      if (!response.ok) {
+        throw new Error("Erro ao atualizar produto");
+      }
+
+      await fetchProdutos(); 
+      setShowAlterarModal(false);
+  
+      const data = await response.json();
+      console.log("Produto atualizado:", data);
+    } catch (error) {
+      console.error(error);
+      setError("Erro ao atualizar produto");
+    }
+
+  };
+
+ const handleUploadImages = async () => {
+  setError(""); // Limpa erros anteriores
+
+  if (!selectedFiles.length || !idProduto) {
+    setError("Selecione pelo menos uma imagem e informe o ID do produto.");
+    return;
+  }
+
+  try {
+    const formData = new FormData();
+    formData.append("idProduto", idProduto);
+    
+    // Adiciona todas as imagens ao formData
+    selectedFiles.forEach((file) => {
+      formData.append("files", file);
+    });
+
+    // Se houver uma imagem principal selecionada
+    if (nomeImagemPrincipal) {
+      formData.append("nomeImagemPrincipal", nomeImagemPrincipal);
+    }
+
+    const response = await fetch("http://localhost:8081/imagens", {
+      method: "POST",
+      body: formData, // Envia o FormData
+    });
+
+    if (response.ok) {
+      setSelectedFiles([]); // Limpa os arquivos selecionados
+      setIdProduto(""); // Limpa o ID do produto
+      setNomeImagemPrincipal(""); // Limpa o nome da imagem principal
+      fetchImagens(); // Atualiza a lista de imagens (caso tenha uma função para isso)
+    } else {
+      const errorMessage = await response.text();
+      setError(errorMessage || "Erro ao fazer upload das imagens.");
+    }
+  } catch (error) {
+    console.error("Erro ao enviar imagens:", error);
+    setError("Erro ao fazer upload das imagens.");
+  }
+};
+
+const handleDeleteImages = async (idImagem) => {
+  try {
+    const response = await fetch(`http://localhost:8081/imagens/${idImagem}`, {
+      method: "DELETE",
+    });
+
+    if (response.ok) {
+      fetchImagens(); // Atualiza a lista de imagens após a exclusão
+    } else {
+      const errorMessage = await response.text();
+      setError(errorMessage || "Erro ao excluir imagem.");
+    }
+  } catch (error) {
+    console.error("Erro ao excluir imagem:", error);
+    setError("Erro ao excluir imagem.");
+  }
+};
+
+const fetchImages = async (idProduto) => {
+  try {
+    const response = await fetch(`http://localhost:8081/imagens/${idProduto}`);
+
+    if (!response.ok) {
+      throw new Error("Erro ao buscar imagens");
+    }
+
+    const imagens = await response.json();
+    return imagens; // Retorna a lista de imagens
+  } catch (error) {
+    console.error("Erro ao buscar imagens:", error);
+    return [];
+  }
+};
+    
+  
 
 
   return (

@@ -107,4 +107,14 @@ public class Produto {
     public void setStatus(boolean status) {
         this.status = status;
     }
+
+    public Produto(String codigo, String nome, BigDecimal preco, int qtdEstoque, String descDetalhada, double avaliacao) {
+        this.codigo = codigo;
+        this.nome = nome;
+        this.preco = preco;
+        this.qtdEstoque = qtdEstoque;
+        this.descDetalhada = descDetalhada;
+        this.avaliacao = avaliacao;
+        this.status = true;
+    }
 }
