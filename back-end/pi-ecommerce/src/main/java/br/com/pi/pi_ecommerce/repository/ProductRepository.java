@@ -5,6 +5,6 @@ import br.com.pi.pi_ecommerce.models.Produto;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 public interface ProductRepository extends MongoRepository<Produto,String> {
-    boolean findByid(Long id);
+    Optional<Produto> findByid(String id);
 } 
    

@@ -1,5 +1,5 @@
 package br.com.pi.pi_ecommerce.service;
-
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.List;
@@ -39,6 +39,24 @@ public class ProductService {
        }
     }
 
+    public Produto atualizaProduto(String productID, String NrCodigo,String nome, BigDecimal NrPreco, int NrQuantidade, String DsDescricao,Double Avaliacao){
+        Optional<Produto> productOptional = productRepository.findByid(productID);
+
+        if(productOptional.isPresent()){
+            Produto produto = productOptional.get();
+
+            produto.setAvaliacao(Avaliacao);
+            produto.setCodigo(NrCodigo);
+            produto.setDescDetalhada(DsDescricao);
+            produto.setNome(nome);
+            produto.setPreco(NrPreco);
+            produto.setQtdEstoque(NrQuantidade);
+            
+            return productRepository.save(produto); 
+        }else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado");
+        }
+    }
 
     public boolean retornaStatusProduct(String productId){
         Optional<Produto> ProdutoOptional = productRepository.findById(productId);

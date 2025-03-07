@@ -1,4 +1,6 @@
 package br.com.pi.pi_ecommerce.controller;
+//package main.java.br.com.pi.pi_ecommerce.controller;
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,7 +16,7 @@ import br.com.pi.pi_ecommerce.models.Produto;
 @RequestMapping("/produto")
 public class ProductController {
     @Autowired
-    private ProductService productService;
+    private main.java.br.com.pi.pi_ecommerce.service.ProductService productService;
 
     @GetMapping
     public List<Produto> listarTodos(@RequestParam(required = false) String nome) {
@@ -42,5 +44,17 @@ public class ProductController {
         Map<String, Boolean> response = new HashMap<>();
         response.put("status", status);
         return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{id}/dados")
+    public ResponseEntity<Produto> atualizaProduto(@PathVariable String id,
+                                                   @RequestParam String NrCodigo,
+                                                   @RequestParam String nome,
+                                                   @RequestParam BigDecimal NrPreco,
+                                                   @RequestParam int NrQuantidade,
+                                                   @RequestParam String DsDescricao,
+                                                   @RequestParam Double Avaliacao){
+        Produto produtoAtualizado = productService.atualizaProduto(id, NrCodigo, nome, NrPreco, NrQuantidade, DsDescricao, Avaliacao);
+        return ResponseEntity.ok(produtoAtualizado);
     }
 }
