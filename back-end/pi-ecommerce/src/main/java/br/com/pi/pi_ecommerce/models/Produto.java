@@ -16,6 +16,9 @@ public class Produto {
     @Id
     private String id;
 
+    @Field("NR_CODIGO")
+    private String codigo;
+
     @Field("DS_NOME")
     @Size(max = 200, message = "O nome do produto não pode exceder 200 caracteres.")
     private String nome;
