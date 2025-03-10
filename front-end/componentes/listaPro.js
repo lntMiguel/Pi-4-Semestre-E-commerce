@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { createGlobalStyle } from "styled-components";
 import { useEffect, useState } from "react";
 import { useAuth } from "./authContext";
-
+import { useRouter } from "next/navigation";
 
 const GlobalStyle = createGlobalStyle`
   * {
@@ -201,28 +201,31 @@ const GpBotoes = styled.div`
   justify-content: space-between;
 `;
 
-function Produtos(){
+function Produtos() {
   const [isModalOpen, setModalOpen] = useState(false);
   const [isEditModalOpen, setEditModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [products, setProducts] = useState([]);
   const [error, setError] = useState("");
+  const router = useRouter();
   const [formData, setFormData] = useState({
     nome: "",
-    codigo:"",
+    codigo: "",
     preco: "",
     qtdEstoque: "",
     descDetalhada: "",
     avaliacao: "",
   });
-  const { grupo } = useAuth();
   const [viewingProduct, setViewingProduct] = useState(null);
   const [isViewModalOpen, setViewModalOpen] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [idProduto, setIdProduto] = useState("");
   const [nomeImagemPrincipal, setNomeImagemPrincipal] = useState("");
   const [imagemPrincipalIndex, setImagemPrincipalIndex] = useState(null);
+  const { grupo } = useAuth();
+  const [isConfirmPopupOpen, setConfirmPopupOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const filteredProducts = products.filter((product) =>
     product.nome.toLowerCase().includes(searchTerm.toLowerCase())
@@ -236,15 +239,22 @@ function Produtos(){
     const { name, value } = e.target;
     setFormData((prevData) => ({
       ...prevData,
-      [name]: value,  
+      [name]: value,
     }));
   };
 
 
   const toggleStatus = async (id, currentStatus) => {
+    const confirmacao = window.confirm(
+      `Tem certeza que deseja alterar o status do produto para ${currentStatus === "Ativo" ? "Inativo" : "Ativo"}?`
+    );
+
+    if (!confirmacao) {
+      return; // Se a confirmação for negada, não faz nada.
+    }
     try {
       const newStatus = currentStatus === "Ativo" ? "Inativo" : "Ativo";
-  
+
       const response = await fetch(`http://localhost:8081/produto/${id}/status`, {
         method: "PUT",
         headers: {
@@ -252,24 +262,24 @@ function Produtos(){
         },
         body: JSON.stringify({ status: newStatus }),
       });
-  
+
       if (!response.ok) {
         throw new Error("Erro ao alterar status");
       }
-  
+
       // Atualiza corretamente o estado
       setProducts((prevProducts) =>
         prevProducts.map((product) =>
           product.id === id ? { ...product, status: newStatus } : product
         )
       );
-  
+
       console.log(`Status do produto ${id} alterado para ${newStatus}`);
     } catch (error) {
       console.error("Erro ao alternar status:", error);
     }
   };
-  
+
 
   const validateFields = () => {
     let newErrors = {};
@@ -286,12 +296,12 @@ function Produtos(){
 
   const handleSave = async () => {
     console.log("handleSave iniciado");
-    
+
     if (!validateFields()) {
       console.log("Validação falhou com os dados:", formData);
       return; // Se os campos não forem válidos, não faça nada
     }
-  
+
     const productData = {
       nome: formData.nome,
       codigo: formData.codigo,
@@ -300,9 +310,9 @@ function Produtos(){
       descDetalhada: formData.descDetalhada,
       avaliacao: formData.avaliacao,
     };
-  
+
     console.log("Dados do produto a ser enviado:", productData);
-  
+
     try {
       const response = await fetch("http://localhost:8081/produto", {
         method: "POST",
@@ -311,19 +321,19 @@ function Produtos(){
         },
         body: JSON.stringify(productData),
       });
-  
+
       console.log("Response do servidor:", response);
-  
+
       if (!response.ok) {
         console.error("Erro na resposta do servidor");
         throw new Error("Erro ao adicionar produto");
       }
-  
+
       const result = await response.json();
       console.log("Produto adicionado:", result);
-  
+
       await fetchProdutos(); // Atualiza a tabela com os produtos do backend
-  
+
       setModalOpen(false); // Fecha o modal após o salvamento
       resetForm(); // Reseta o formulário
       console.log("Produto salvo e lista atualizada");
@@ -333,7 +343,7 @@ function Produtos(){
       setError("Erro ao adicionar produto");
     }
   };
-  
+
   const resetForm = () => {
     setError({});
     setFormData({
@@ -345,31 +355,31 @@ function Produtos(){
       avaliacao: "",
     });
   };
-  
-  
+
+
   const fetchProdutos = async () => {
-    try{
+    try {
       const response = await fetch(`http://localhost:8081/produto?nome=${searchTerm}`);
       const data = await response.json();
       console.log(data);
-      
+
       setProducts(data.map(product => ({
         ...product,
         status: product.status === true ? "Ativo" : "Inativo"
-      })))      
-    } catch(error){
+      })))
+    } catch (error) {
       console.error("Erro ao buscar produtos:", error);
     }
   }
 
   const handleViewClick = (product) => {
-    setViewingProduct(product); 
+    setViewingProduct(product);
     setViewModalOpen(true);
   };
 
   const handleCloseModal = () => {
-    resetForm(); 
-    setModalOpen(false); 
+    resetForm();
+    setModalOpen(false);
   };
 
   const handleEditProduct = (product) => {
@@ -382,41 +392,41 @@ function Produtos(){
       descDetalhada: product.descDetalhada,
       avaliacao: product.avaliacao,
     });
-    setEditModalOpen(true); 
+    setEditModalOpen(true);
   };
 
   const handUpdate = async () => {
-    setError(""); 
+    setError("");
     const updatedData = new URLSearchParams();
-  
-    if(formData.nome) updatedData.append("nome", formData.nome);
-    if(formData.preco) updatedData.append("preco", formData.preco);
-    if(formData.codigo) updatedData.append("codigo", formData.codigo);
-    if(formData.qtdEstoque) updatedData.append("qtdEstoque", formData.qtdEstoque);
-    if(formData.descDetalhada) updatedData.append("descDetalhada", formData.descDetalhada);
-    if(formData.avaliacao) updatedData.append("avaliacao", formData.avaliacao);
-  
+
+    if (formData.nome) updatedData.append("nome", formData.nome);
+    if (formData.preco) updatedData.append("preco", formData.preco);
+    if (formData.codigo) updatedData.append("codigo", formData.codigo);
+    if (formData.qtdEstoque) updatedData.append("qtdEstoque", formData.qtdEstoque);
+    if (formData.descDetalhada) updatedData.append("descDetalhada", formData.descDetalhada);
+    if (formData.avaliacao) updatedData.append("avaliacao", formData.avaliacao);
+
     console.log("Dados para atualização:", updatedData.toString());
-  
+
     try {
       const response = await fetch(`http://localhost:8081/produto/${editingProduct.id}/dados`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
         },
-        body: updatedData.toString(), 
+        body: updatedData.toString(),
         "Content-Type": "application/json",
       });
-  
+
       if (!response.ok) {
         const errorData = await response.json(); // Captura os dados de erro retornados
         console.error("Erro retornado da API:", errorData); // Exibe o erro completo
         throw new Error(errorData.error || "Erro ao atualizar produto");
       }
-  
+
       await fetchProdutos(); // Atualiza a lista de produtos após a atualização
       setEditModalOpen(false); // Fecha o modal de edição
-  
+
       const data = await response.json();
       console.log("Produto atualizado:", data);
     } catch (error) {
@@ -424,7 +434,7 @@ function Produtos(){
       setError("Erro ao atualizar produto: " + error.message); // Exibe a mensagem do erro detalhado
     }
   };
-   
+
   const handleAtualizaQuantidade = async (id, novaQtd) => {
     try {
       const response = await fetch(`http://localhost:8081/produto/${id}/quantidade`, {
@@ -434,13 +444,13 @@ function Produtos(){
         },
         body: new URLSearchParams({ quantidade: novaQtd.toString() }),
       });
-  
+
       if (!response.ok) {
         throw new Error("Erro ao atualizar a quantidade do produto");
       }
-  
+
       const produtoAtualizado = await response.json();
-  
+
       // Atualiza a lista de produtos no estado
       setProducts((prevProducts) =>
         prevProducts.map((product) =>
@@ -457,7 +467,7 @@ function Produtos(){
   };
   
   const handleUploadImages = async () => {
-    setError("");
+    setError(""); // Limpa erros anteriores
 
     if (!selectedFiles.length || !idProduto) {
       setError("Selecione pelo menos uma imagem e informe o ID do produto.");
@@ -486,49 +496,86 @@ function Produtos(){
         setSelectedFiles([]);
         setIdProduto("");
         setImagemPrincipalIndex(null);
+
+      // Adiciona todas as imagens ao formData
+      selectedFiles.forEach((file) => {
+        formData.append("files", file);
+      });
+
+      // Se houver uma imagem principal selecionada
+      if (nomeImagemPrincipal) {
+        formData.append("nomeImagemPrincipal", nomeImagemPrincipal);
+      }
+
+      const response = await fetch("http://localhost:8081/imagens", {
+        method: "POST",
+        body: formData, // Envia o FormData
+      });
+
+      if (response.ok) {
+        setSelectedFiles([]); // Limpa os arquivos selecionados
+        setIdProduto(""); // Limpa o ID do produto
+        setNomeImagemPrincipal(""); // Limpa o nome da imagem principal
+        fetchImagens(); // Atualiza a lista de imagens (caso tenha uma função para isso)
       } else {
         const errorMessage = await response.text();
         setError(errorMessage || "Erro ao fazer upload das imagens.");
       }
-    } catch (error) {
+    }
+  } catch (error) {
       console.error("Erro ao enviar imagens:", error);
       setError("Erro ao fazer upload das imagens.");
     }
   };
 
-const handleDeleteImages = async (idImagem) => {
-  try {
-    const response = await fetch(`http://localhost:8081/imagens/${idImagem}`, {
-      method: "DELETE",
-    });
+  const handleDeleteImages = async (idImagem) => {
+    try {
+      const response = await fetch(`http://localhost:8081/imagens/${idImagem}`, {
+        method: "DELETE",
+      });
 
-    if (response.ok) {
-      fetchImagens(); // Atualiza a lista de imagens após a exclusão
-    } else {
-      const errorMessage = await response.text();
-      setError(errorMessage || "Erro ao excluir imagem.");
+      if (response.ok) {
+        fetchImagens(); // Atualiza a lista de imagens após a exclusão
+      } else {
+        const errorMessage = await response.text();
+        setError(errorMessage || "Erro ao excluir imagem.");
+      }
+    } catch (error) {
+      console.error("Erro ao excluir imagem:", error);
+      setError("Erro ao excluir imagem.");
     }
-  } catch (error) {
-    console.error("Erro ao excluir imagem:", error);
-    setError("Erro ao excluir imagem.");
-  }
-};
+  };
 
-const fetchImages = async (idProduto) => {
-  try {
-    const response = await fetch(`http://localhost:8081/imagens/${idProduto}`);
+  const fetchImages = async (idProduto) => {
+    try {
+      const response = await fetch(`http://localhost:8081/imagens/${idProduto}`);
 
-    if (!response.ok) {
-      throw new Error("Erro ao buscar imagens");
+      if (!response.ok) {
+        throw new Error("Erro ao buscar imagens");
+      }
+
+      const imagens = await response.json();
+      return imagens; // Retorna a lista de imagens
+    } catch (error) {
+      console.error("Erro ao buscar imagens:", error);
+      return [];
     }
+  };
 
-    const imagens = await response.json();
-    return imagens; // Retorna a lista de imagens
-  } catch (error) {
-    console.error("Erro ao buscar imagens:", error);
-    return [];
-  }
-};
+  const [currentPage, setCurrentPage] = useState(1); // Página atual
+  const productsPerPage = 10; // Número de produtos por página
+
+  // Calcular os produtos que devem ser exibidos na página atual
+  const indexOfLastProduct = currentPage * productsPerPage;
+  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
+  const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
+
+  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+
+  // Função para mudar de página
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
 
 const handleFileChange = (event) => {
   const files = Array.from(event.target.files);
@@ -541,7 +588,6 @@ const handleSelectPrincipal = (index) => {
 
     
   
-
 
   return (
     <StyledProdutos>
@@ -587,72 +633,73 @@ const handleSelectPrincipal = (index) => {
         <Logo src="imagem/logo.png" alt="Logo" />
         <Titulo>Produtos</Titulo>
         <Usuario>
-          <Nome>Usuário</Nome>
-          <Sair>Sair</Sair>
+          <Nome>{grupo === "admin" ? "Administrador" : "Estoquista"}</Nome>
         </Usuario>
       </Header>
 
       <Container>
         <TopBar>
           <div>
-            <Pesquisar 
+            <Pesquisar
               type="text"
               placeholder="Buscar produto..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-            /> 
+            />
             <Botao color="rgb(22, 77, 9)">Buscar</Botao>
           </div>
           <AddBotoes onClick={() => { resetForm(); setModalOpen(true); }}>
-          +
+            +
           </AddBotoes>
         </TopBar>
        
         <Tabela>
           <thead>
-           <tr>
-              
-           <Th style={{ width: "10%" }}>Código</Th>
-          <Th style={{ width: "40%" }}>Nome</Th>
-          <Th style={{ width: "10%" }}>Quantidade</Th>
-          <Th style={{ width: "10%" }}>Preço</Th>
-          <Th style={{ width: "10%" }}>Status</Th>
-          <Th style={{ width: "20%" }}>Ações</Th>
-           
+            <tr>
+
+              <Th style={{ width: "10%" }}>Código</Th>
+              <Th style={{ width: "40%" }}>Nome</Th>
+              <Th style={{ width: "10%" }}>Quantidade</Th>
+              <Th style={{ width: "10%" }}>Preço</Th>
+              <Th style={{ width: "10%" }}>Status</Th>
+              <Th style={{ width: "20%" }}>Ações</Th>
+
             </tr>
           </thead>
           <tbody>
-          {filteredProducts.map((product) => (
+            {currentProducts.map((product) => (
               <tr key={product.id}>
                 <Td>{product.codigo}</Td>
                 <Td>{product.nome}</Td>
                 <Td>{product.qtdEstoque}</Td>
-                <Td>R$ {product.preco}</Td>                                
+                <Td>R$ {product.preco}</Td>
                 <Td>
-                <Status active={product.status === "Ativo" ? "true" : undefined}>
-                {product.status}
-                </Status>               
+                  <Status disabled={grupo === "estoquista"} active={product.status === "Ativo" ? "true" : undefined}>
+                    {product.status}
+                  </Status>
                 </Td>
                 <td>
-                <Botao color="#007BFF" onClick={() =>handleEditProduct(product)}>
-                  Alterar
-                </Botao>
-                <Botao color="#007BFF" onClick={() => handleViewClick(product)}>
-                  Visualizar
-                </Botao>
-                <Botao
-                  onClick={() => toggleStatus(product.id, product.status)}
-                  style={{
-                    backgroundColor: product.status === "Ativo" ? "green" : "red",
-                    color: "white",
-                    padding: "5px 10px",
-                    borderRadius: "5px",
-                    cursor: "pointer",
-                  }}
-                >
-                  {product.status === "Ativo" ? "Ativo" : "Inativo"}
-                </Botao>
-              </td>
+                  <Botao color="#007BFF" onClick={() => handleEditProduct(product)}>
+                    Alterar
+                  </Botao>
+                  <Botao color="#007BFF" onClick={() => handleViewClick(product)}>
+                    Visualizar
+                  </Botao>
+                  <Botao
+                    onClick={() => toggleStatus(product.id, product.status)}
+                    style={{
+                      backgroundColor: grupo === "estoquista" ? "gray" : (product.status === "Ativo" ? "green" : "red"),
+                      color: "white",
+                      padding: "5px 10px",
+                      borderRadius: "5px",
+                      cursor: grupo === "estoquista" ? "not-allowed" : "pointer",
+                      opacity: grupo === "estoquista" ? 0.5 : 1,
+                    }}
+                    disabled={grupo === "estoquista"}
+                  >
+                    {product.status === "Ativo" ? "Desativar" : "Ativar"}
+                  </Botao>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -661,7 +708,7 @@ const handleSelectPrincipal = (index) => {
 
       {isModalOpen && (
         <Modal>
-           <ModalConteudo>
+          <ModalConteudo>
             <ModalTitulo>Adicionar Produto</ModalTitulo>
             <Input
               type="text"
@@ -670,7 +717,6 @@ const handleSelectPrincipal = (index) => {
               value={formData.nome}
               onChange={handleInputChange}
             />
-            {/* Novo campo para código */}
             <Input
               type="text"
               name="codigo"
@@ -713,83 +759,107 @@ const handleSelectPrincipal = (index) => {
         </Modal>
       )}
 
-{isEditModalOpen && (
-  <Modal>
-    <ModalConteudo>
-      <ModalTitulo>Editar Produto</ModalTitulo>
-        <>
-          <Input
-            type="text"
-            name="nome"
-            placeholder="Nome do Produto"
-            value={formData.nome}
-            onChange={handleInputChange}
-          />
-          <Input
-            type="text"
-            name="codigo"
-            placeholder="Código do Produto"
-            value={formData.codigo}
-            onChange={handleInputChange}
-          />
-          <Input
-            type="number"
-            name="preco"
-            placeholder="Preço"
-            value={formData.preco}
-            onChange={handleInputChange}
-          />
-          <Input
-        type="number"
-        name="qtdEstoque"
-        placeholder="Quantidade em Estoque"
-        value={formData.qtdEstoque}
-        onChange={handleInputChange}
-          />
-          <TextoArea
-            name="descDetalhada"
-            placeholder="Descrição Detalhada"
-            value={formData.descDetalhada}
-            onChange={handleInputChange}
-          />
-          <Input
-            type="number"
-            name="avaliacao"
-            placeholder="Avaliação"
-            value={formData.avaliacao}
-            onChange={handleInputChange}
-          />
-        </>
-      
-      
-      <GpBotoes>
-        <Botao onClick={handUpdate}>Salvar</Botao>
-        <Botao onClick={() => setEditModalOpen(false)}>Cancelar</Botao>
-      </GpBotoes>
-    </ModalConteudo>
-  </Modal>
-)}
+      {isEditModalOpen && (
+        <Modal>
+          <ModalConteudo>
+            <ModalTitulo>Editar Produto</ModalTitulo>
+            <>
+              <Input
+                type="text"
+                name="nome"
+                placeholder="Nome do Produto"
+                value={formData.nome}
+                onChange={handleInputChange}
+                disabled={grupo === "estoquista"}
+              />
+              <Input
+                type="text"
+                name="codigo"
+                placeholder="Código do Produto"
+                value={formData.codigo}
+                onChange={handleInputChange}
+                disabled={grupo === "estoquista"}
+              />
+              <Input
+                type="number"
+                name="preco"
+                placeholder="Preço"
+                value={formData.preco}
+                onChange={handleInputChange}
+                disabled={grupo === "estoquista"}
+              />
+              <Input
+                type="number"
+                name="qtdEstoque"
+                placeholder="Quantidade em Estoque"
+                value={formData.qtdEstoque}
+                onChange={handleInputChange}
+              />
+              <TextoArea
+                name="descDetalhada"
+                placeholder="Descrição Detalhada"
+                value={formData.descDetalhada}
+                onChange={handleInputChange}
+                disabled={grupo === "estoquista"}
+              />
+              <Input
+                type="number"
+                name="avaliacao"
+                placeholder="Avaliação"
+                value={formData.avaliacao}
+                onChange={handleInputChange}
+                disabled={grupo === "estoquista"}
+              />
+            </>
 
-{isViewModalOpen && viewingProduct && (
-  <Modal>
-    <ModalConteudo>
-      <ModalTitulo>Visualizar Produto</ModalTitulo>
+
+            <GpBotoes>
+              <Botao onClick={handUpdate}>Salvar</Botao>
+              <Botao onClick={() => setEditModalOpen(false)}>Cancelar</Botao>
+            </GpBotoes>
+          </ModalConteudo>
+        </Modal>
+      )}
+
+      {isViewModalOpen && viewingProduct && (
+        <Modal>
+          <ModalConteudo>
+            <ModalTitulo>Visualizar Produto</ModalTitulo>
+            <div>
+              <p><strong>Nome:</strong> {viewingProduct.nome}</p>
+              <p><strong>Código:</strong> {viewingProduct.codigo}</p>
+              <p><strong>Preço:</strong> R$ {viewingProduct.preco}</p>
+              <p><strong>Quantidade em Estoque:</strong> {viewingProduct.qtdEstoque}</p>
+              <p><strong>Descrição Detalhada:</strong> {viewingProduct.descDetalhada}</p>
+              <p><strong>Avaliação:</strong> {viewingProduct.avaliacao}</p>
+            </div>
+            <GpBotoes>
+              <Botao onClick={() => setViewModalOpen(false)}>Fechar</Botao>
+            </GpBotoes>
+          </ModalConteudo>
+        </Modal>
+      )}
+
       <div>
-        <p><strong>Nome:</strong> {viewingProduct.nome}</p>
-        <p><strong>Código:</strong> {viewingProduct.codigo}</p>
-        <p><strong>Preço:</strong> R$ {viewingProduct.preco}</p>
-        <p><strong>Quantidade em Estoque:</strong> {viewingProduct.qtdEstoque}</p>
-        <p><strong>Descrição Detalhada:</strong> {viewingProduct.descDetalhada}</p>
-        <p><strong>Avaliação:</strong> {viewingProduct.avaliacao}</p>
+        {Array.from({ length: totalPages }, (_, index) => (
+          <button
+            key={index + 1}
+            onClick={() => handlePageChange(index + 1)}
+            style={{
+              padding: "5px 10px",
+              margin: "0 5px",
+              backgroundColor: currentPage === index + 1 ? "green" : "lightgray",
+              color: "white",
+              borderRadius: "5px",
+              cursor: "pointer",
+            }}
+          >
+            {index + 1}
+          </button>
+        ))}
       </div>
-      <GpBotoes>
-        <Botao onClick={() => setViewModalOpen(false)}>Fechar</Botao>
-      </GpBotoes>
-    </ModalConteudo>
-  </Modal>
-)}
 
-      
+
     </StyledProdutos>
   );
 }
