@@ -202,17 +202,144 @@ const GpBotoes = styled.div`
 function Produtos(){
   const [isModalOpen, setModalOpen] = useState(false);
   const [isEditModalOpen, setEditModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [products, setProducts] = useState([
-    { id: 1, name: "Produto A", quantity: 10, price: 100, active: true },
-    { id: 2, name: "Produto B", quantity: 5, price: 50, active: false },
-    { id: 3, name: "Produto C", quantity: 8, price: 75, active: true },
-  ]);
+  const [products, setProducts] = useState([]);
+  const [error, setError] = useState("");
+  const [formData, setFormData] = useState({
+    nome: "",
+    codigo:"",
+    preco: "",
+    qtdEstoque: "",
+    descDetalhada: "",
+    avaliacao: "",
+  });
+  const [viewingProduct, setViewingProduct] = useState(null);
+  const [isViewModalOpen, setViewModalOpen] = useState(false);
 
   const filteredProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase())
+    product.nome.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  useEffect(() => {
+    fetchProdutos();
+  }, [searchTerm]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,  
+    }));
+  };
+
+
+  const toggleStatus = async (id, currentStatus) => {
+    try {
+      const newStatus = currentStatus === "Ativo" ? "Inativo" : "Ativo";
+  
+      const response = await fetch(`http://localhost:8081/produto/${id}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+  
+      if (!response.ok) {
+        throw new Error("Erro ao alterar status");
+      }
+  
+      // Atualiza corretamente o estado
+      setProducts((prevProducts) =>
+        prevProducts.map((product) =>
+          product.id === id ? { ...product, status: newStatus } : product
+        )
+      );
+  
+      console.log(`Status do produto ${id} alterado para ${newStatus}`);
+    } catch (error) {
+      console.error("Erro ao alternar status:", error);
+    }
+  };
+  
+
+  const validateFields = () => {
+    let newErrors = {};
+    if (!formData.nome) newErrors.nome = "Campo obrigatório";
+    if (!formData.preco) newErrors.preco = "Campo obrigatório";
+    if (!formData.codigo) newErrors.codigo = "Campo obrigatório";
+    if (!formData.qtdEstoque) newErrors.qtdEstoque = "Campo obrigatório";
+    if (!formData.descDetalhada) newErrors.descDetalhada = "Campo obrigatório";
+    if (!formData.avaliacao) newErrors.avaliacao = "Campo obrigatório";
+
+    setError(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSave = async () => {
+    console.log("handleSave iniciado");
+    
+    if (!validateFields()) {
+      console.log("Validação falhou com os dados:", formData);
+      return; // Se os campos não forem válidos, não faça nada
+    }
+  
+    const productData = {
+      nome: formData.nome,
+      codigo: formData.codigo,
+      preco: formData.preco,
+      qtdEstoque: formData.qtdEstoque,
+      descDetalhada: formData.descDetalhada,
+      avaliacao: formData.avaliacao,
+    };
+  
+    console.log("Dados do produto a ser enviado:", productData);
+  
+    try {
+      const response = await fetch("http://localhost:8081/produto", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(productData),
+      });
+  
+      console.log("Response do servidor:", response);
+  
+      if (!response.ok) {
+        console.error("Erro na resposta do servidor");
+        throw new Error("Erro ao adicionar produto");
+      }
+  
+      const result = await response.json();
+      console.log("Produto adicionado:", result);
+  
+      await fetchProdutos(); // Atualiza a tabela com os produtos do backend
+  
+      setModalOpen(false); // Fecha o modal após o salvamento
+      resetForm(); // Reseta o formulário
+      console.log("Produto salvo e lista atualizada");
+      alert("Produto adicionado com sucesso!");
+    } catch (error) {
+      console.error("Erro ao adicionar produto:", error);
+      setError("Erro ao adicionar produto");
+    }
+  };
+  
+  const resetForm = () => {
+    setError({});
+    setFormData({
+      nome: "",
+      codigo: "",
+      preco: "",
+      qtdEstoque: "",
+      descDetalhada: "",
+      avaliacao: "",
+    });
+  };
+  
+  
   const fetchProdutos = async () => {
     try{
       const response = await fetch(`http://localhost:8081/produto?nome=${searchTerm}`);
@@ -228,165 +355,69 @@ function Produtos(){
     }
   }
 
-  useEffect(() => {
-    fetchProdutos();
-  }, [searchTerm]);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,  
-    }));
+  const handleViewClick = (product) => {
+    setViewingProduct(product); 
+    setViewModalOpen(true);
   };
 
-  const toggleStatus = async (id, currentStatus) => {
-    try {
-      const newStatus = currentStatus === "Ativo" ? "Inativo" : "Ativo"; 
-  
-      const response = await fetch(`http://localhost:8081/produto/${id}/status`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ status: newStatus }), 
-      });
-  
-      if (!response.ok) {
-        throw new Error("Erro ao alterar status");
-      }
-  
-      setUsers(users.map((user) =>
-        user.id === id ? { ...user, status: newStatus } : user
-      ));
-    } catch (error) {
-      console.error("Erro ao alternar status:", error);
-    }
-  };
-
-  const validateFields = () => {
-    let newErrors = {};
-    if (!formData.nome) newErrors.nome = "Campo obrigatório";
-    if (!formData.preco) newErrors.preco = "Campo obrigatório";
-    if (!formData.codigo) newErrors.codigo = "Campo obrigatório";
-    if (!formData.qtdEstoque) newErrors.qtdEstoque = "Campo obrigatório";
-    if (!formData.descDetalhada) newErrors.descDetalhada = "Campo obrigatório";
-    if (!formData.avaliacao) newErrors.avaliacao = "Campo obrigatório";
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSave = async () => {
-    setError("");
-
-    if (!validateFields()) return;
-
-    try {
-      const response = await fetch("http://localhost:8081/produto", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, status: true }),
-      });
-
-      if (response.ok) {
-        handleCloseModal(false);
-        setFormData({
-          nome: "",
-          preco: "",
-          codigo: "",
-          qtdEstoque: "",
-          descDetalhada: "" ,
-          avaliacao: "",
-           
-        });
-        fetchUsers();
-      } else {
-        const errorMessage = await response.text();
-        setError(errorMessage || "Erro ao cadastrar usuário.");
-      }
-    } catch (error) {
-      console.error("Erro ao cadastrar usuário:", error);
-      setError("Erro ao cadastrar usuário.");
-    }
-  };
-
-  const handleAddProduct = () => {
-    setFormData({
-      nome: "",
-      preco: "",
-      codigo: "",
-      qtdEstoque: "",
-      descDetalhada: "" ,
-      avaliacao: "", 
-    });
-    setShowCadastroModal(true); 
-  };
-
-  const resetForm = () => {
-    setErrors({});
-  };
-  const handleCloseEditModal = () => {
-    resetForm();
-    setShowAlterarModal(false); 
-  };
   const handleCloseModal = () => {
     resetForm(); 
-    setShowCadastroModal(false); 
+    setModalOpen(false); 
   };
 
   const handleEditProduct = (product) => {
     setEditingProduct(product);
     setFormData({
       nome: product.nome,
-      preco: product.preco,
       codigo: product.codigo,
+      preco: product.preco,
       qtdEstoque: product.qtdEstoque,
       descDetalhada: product.descDetalhada,
-      avaliacao: product.avaliacao, 
+      avaliacao: product.avaliacao,
     });
-    setShowAlterarModal(true); 
+    setEditModalOpen(true); 
   };
 
   const handUpdate = async () => {
-    setError("");
-
+    setError(""); 
     const updatedData = new URLSearchParams();
-    
-    if(formData.nome) updatedData.append("nome",formData.nome);
-    if(formData.preco) updatedData.append("preco",formData.preco);
-    if(formData.codigo) updatedData.append("codigo",formData.codigo);
-    if(formData.qtdEstoque) updatedData.append("qtdEstoque",formData.qtdEstoque);
-    if(formData.descDetalhada) updatedData.append("descDetalhada",formData.descDetalhada);
-    if(formData.avaliacao)updatedData.append("avaliacao",formData.avaliacao);
-
+  
+    if(formData.nome) updatedData.append("nome", formData.nome);
+    if(formData.preco) updatedData.append("preco", formData.preco);
+    if(formData.codigo) updatedData.append("codigo", formData.codigo);
+    if(formData.qtdEstoque) updatedData.append("qtdEstoque", formData.qtdEstoque);
+    if(formData.descDetalhada) updatedData.append("descDetalhada", formData.descDetalhada);
+    if(formData.avaliacao) updatedData.append("avaliacao", formData.avaliacao);
+  
+    console.log("Dados para atualização:", updatedData.toString());
+  
     try {
       const response = await fetch(`http://localhost:8081/produto/${editingProduct.id}/dados`, {
         method: "PUT",
         headers: {
-          "Content-Type": "application/x-www-form-urlencoded", // Tipo correto para @RequestParam
+          "Content-Type": "application/x-www-form-urlencoded",
         },
-        body: updatedData.toString(), // Envia os dados corretamente
-          "Content-Type": "application/json",
-        },
-      );
+        body: updatedData.toString(), 
+        "Content-Type": "application/json",
+      });
   
       if (!response.ok) {
-        throw new Error("Erro ao atualizar produto");
+        const errorData = await response.json(); // Captura os dados de erro retornados
+        console.error("Erro retornado da API:", errorData); // Exibe o erro completo
+        throw new Error(errorData.error || "Erro ao atualizar produto");
       }
-
-      await fetchProdutos(); 
-      setShowAlterarModal(false);
+  
+      await fetchProdutos(); // Atualiza a lista de produtos após a atualização
+      setEditModalOpen(false); // Fecha o modal de edição
   
       const data = await response.json();
       console.log("Produto atualizado:", data);
     } catch (error) {
-      console.error(error);
-      setError("Erro ao atualizar produto");
+      console.error("Erro ao atualizar produto:", error);
+      setError("Erro ao atualizar produto: " + error.message); // Exibe a mensagem do erro detalhado
     }
-
   };
-
+  
   const handleAtualizaQuantidade = async (id, novaQtd) => {
     try {
       const response = await fetch(`http://localhost:8081/produto/${id}/quantidade`, {
@@ -516,7 +547,7 @@ const fetchImages = async (idProduto) => {
             /> 
             <Botao color="rgb(22, 77, 9)">Buscar</Botao>
           </div>
-          <AddBotoes onClick={() => setModalOpen(true)}>
+          <AddBotoes onClick={() => { resetForm(); setModalOpen(true); }}>
           +
           </AddBotoes>
         </TopBar>
@@ -537,22 +568,35 @@ const fetchImages = async (idProduto) => {
           <tbody>
           {filteredProducts.map((product) => (
               <tr key={product.id}>
-                <Td>{product.id}</Td>
-                <Td>{product.name}</Td>
-                <Td>{product.quantity}</Td>
-                <Td>R$ {product.price}</Td>
+                <Td>{product.codigo}</Td>
+                <Td>{product.nome}</Td>
+                <Td>{product.qtdEstoque}</Td>
+                <Td>R$ {product.preco}</Td>                                
                 <Td>
-                  <Status active={product.active}>
-                    {product.active ? "Ativo" : "Inativo"}
-                  </Status>
+                <Status active={product.status === "Ativo" ? "true" : undefined}>
+                {product.status}
+                </Status>               
                 </Td>
-                <Td>
-                  <Botao color="#007BFF">Alterar</Botao>{() => handleEditClick(product)}
-                  <Botao color="#007BFF">Visualizar</Botao>{" "}
-                  <Botao color={product.active ? "#dc3545" : "#28a745"}>
-                    {product.active ? "Desativar" : "Ativar"}
-                  </Botao>
-                </Td>
+                <td>
+                <Botao color="#007BFF" onClick={() =>handleEditProduct(product)}>
+                  Alterar
+                </Botao>
+                <Botao color="#007BFF" onClick={() => handleViewClick(product)}>
+                  Visualizar
+                </Botao>
+                <Botao
+                  onClick={() => toggleStatus(product.id, product.status)}
+                  style={{
+                    backgroundColor: product.status === "Ativo" ? "green" : "red",
+                    color: "white",
+                    padding: "5px 10px",
+                    borderRadius: "5px",
+                    cursor: "pointer",
+                  }}
+                >
+                  {product.status === "Ativo" ? "Ativo" : "Inativo"}
+                </Botao>
+              </td>
               </tr>
             ))}
           </tbody>
@@ -561,23 +605,133 @@ const fetchImages = async (idProduto) => {
 
       {isModalOpen && (
         <Modal>
-          <ModalConteudo>
+           <ModalConteudo>
             <ModalTitulo>Adicionar Produto</ModalTitulo>
-            <Input type="text" placeholder="Nome do produto" />
-            <Input type="number" placeholder="Preço" />
-            <Input type="number" placeholder="Estoque" />
-            <TextoArea rows="3" placeholder="Descrição detalhada"></TextoArea>
-            <Input type="number" placeholder="Avaliação (1-5)" />
-            <Botao color="#007BFF">Adicionar Imagem</Botao>
+            <Input
+              type="text"
+              name="nome"
+              placeholder="Nome do Produto"
+              value={formData.nome}
+              onChange={handleInputChange}
+            />
+            {/* Novo campo para código */}
+            <Input
+              type="text"
+              name="codigo"
+              placeholder="Código do Produto"
+              value={formData.codigo}
+              onChange={handleInputChange}
+            />
+            <Input
+              type="number"
+              name="preco"
+              placeholder="Preço"
+              value={formData.preco}
+              onChange={handleInputChange}
+            />
+            <Input
+              type="number"
+              name="qtdEstoque"
+              placeholder="Quantidade em Estoque"
+              value={formData.qtdEstoque}
+              onChange={handleInputChange}
+            />
+            <TextoArea
+              name="descDetalhada"
+              placeholder="Descrição Detalhada"
+              value={formData.descDetalhada}
+              onChange={handleInputChange}
+            />
+            <Input
+              type="number"
+              name="avaliacao"
+              placeholder="Avaliação"
+              value={formData.avaliacao}
+              onChange={handleInputChange}
+            />
             <GpBotoes>
-              <Botao color="rgb(22, 77, 9)">Concluir</Botao>
-              <Botao color="#dc3545" onClick={() => setModalOpen(false)}>
-                Cancelar
-              </Botao>
+              <Botao onClick={handleSave}>Salvar</Botao>
+              <Botao onClick={handleCloseModal}>Cancelar</Botao>
             </GpBotoes>
           </ModalConteudo>
         </Modal>
       )}
+
+{isEditModalOpen && (
+  <Modal>
+    <ModalConteudo>
+      <ModalTitulo>Editar Produto</ModalTitulo>
+        <>
+          <Input
+            type="text"
+            name="nome"
+            placeholder="Nome do Produto"
+            value={formData.nome}
+            onChange={handleInputChange}
+          />
+          <Input
+            type="text"
+            name="codigo"
+            placeholder="Código do Produto"
+            value={formData.codigo}
+            onChange={handleInputChange}
+          />
+          <Input
+            type="number"
+            name="preco"
+            placeholder="Preço"
+            value={formData.preco}
+            onChange={handleInputChange}
+          />
+          <Input
+        type="number"
+        name="qtdEstoque"
+        placeholder="Quantidade em Estoque"
+        value={formData.qtdEstoque}
+        onChange={handleInputChange}
+          />
+          <TextoArea
+            name="descDetalhada"
+            placeholder="Descrição Detalhada"
+            value={formData.descDetalhada}
+            onChange={handleInputChange}
+          />
+          <Input
+            type="number"
+            name="avaliacao"
+            placeholder="Avaliação"
+            value={formData.avaliacao}
+            onChange={handleInputChange}
+          />
+        </>
+      
+      
+      <GpBotoes>
+        <Botao onClick={handUpdate}>Salvar</Botao>
+        <Botao onClick={() => setEditModalOpen(false)}>Cancelar</Botao>
+      </GpBotoes>
+    </ModalConteudo>
+  </Modal>
+)}
+
+{isViewModalOpen && viewingProduct && (
+  <Modal>
+    <ModalConteudo>
+      <ModalTitulo>Visualizar Produto</ModalTitulo>
+      <div>
+        <p><strong>Nome:</strong> {viewingProduct.nome}</p>
+        <p><strong>Código:</strong> {viewingProduct.codigo}</p>
+        <p><strong>Preço:</strong> R$ {viewingProduct.preco}</p>
+        <p><strong>Quantidade em Estoque:</strong> {viewingProduct.qtdEstoque}</p>
+        <p><strong>Descrição Detalhada:</strong> {viewingProduct.descDetalhada}</p>
+        <p><strong>Avaliação:</strong> {viewingProduct.avaliacao}</p>
+      </div>
+      <GpBotoes>
+        <Botao onClick={() => setViewModalOpen(false)}>Fechar</Botao>
+      </GpBotoes>
+    </ModalConteudo>
+  </Modal>
+)}
 
       
     </StyledProdutos>
