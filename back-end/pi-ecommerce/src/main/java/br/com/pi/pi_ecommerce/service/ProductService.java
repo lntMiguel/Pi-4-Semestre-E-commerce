@@ -1,15 +1,11 @@
 package br.com.pi.pi_ecommerce.service;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Optional;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -39,18 +35,18 @@ public class ProductService {
        }
     }
 
-    public Produto atualizaProduto(String productID, String nrCodigo,String nome, BigDecimal nrPreco, int nrQuantidade, String dsDescricao,Double avaliacao){
-        Optional<Produto> productOptional = productRepository.findByid(productID);
+    public Produto atualizaProduto(String id, String codigo,String nome, BigDecimal preco, int quantidade, String descricao,Double avaliacao){
+        Optional<Produto> productOptional = productRepository.findByid(id);
 
         if(productOptional.isPresent()){
             Produto produto = productOptional.get();
 
             produto.setAvaliacao(avaliacao);
-            produto.setCodigo(nrCodigo);
-            produto.setDescDetalhada(dsDescricao);
+            produto.setCodigo(codigo);
+            produto.setDescDetalhada(descricao);
             produto.setNome(nome);
-            produto.setPreco(nrPreco);
-            produto.setQtdEstoque(nrQuantidade);
+            produto.setPreco(preco);
+            produto.setQtdEstoque(quantidade);
             
             return productRepository.save(produto); 
         }else {
@@ -88,5 +84,19 @@ public class ProductService {
         return productRepository.save(prod);
     }
 
+    public Produto atualizaQuantidade(String id, int quantidade ){
+        Optional<Produto> produtoOptional = productRepository.findById(id);
+
+        if(produtoOptional.isPresent()){
+            Produto produto = produtoOptional.get();
+
+            produto.setQtdEstoque(quantidade);
+            return productRepository.save(produto);
+        }
+
+        else{
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado");
+        }
+    }
 }
  

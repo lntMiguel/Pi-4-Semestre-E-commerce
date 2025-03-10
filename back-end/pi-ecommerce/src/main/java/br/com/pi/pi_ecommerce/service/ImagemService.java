@@ -31,24 +31,23 @@ public class ImagemService {
     private static final String UPLOAD_DIR = "imagens/";
 
     public ResponseEntity<String> salvarImagens(String idProduto, MultipartFile[] files, String nomeImagemPrincipal) {
-        boolean principalIsPresent = nomeImagemPrincipal == null;
         try {
             for (MultipartFile file : files) {
-                salvarImagemNoSistema(idProduto, file, nomeImagemPrincipal, principalIsPresent);
-                principalIsPresent = false; // Apenas a primeira imagem receberá a marcação de principal
+                salvarImagemNoSistema(idProduto, file, nomeImagemPrincipal);
             }
-
             return ResponseEntity.status(HttpStatus.CREATED).body("Imagens salvas");
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Erro ao salvar imagens");
+            return ResponseEntity.internalServerError().body("Erro ao salvar imagens: " + e.getMessage());
         }
     }
 
-    private void salvarImagemNoSistema(String idProduto, MultipartFile file, String nomeImagemPrincipal, boolean principalIsPresent) throws Exception {
-
+    private void salvarImagemNoSistema(String idProduto, MultipartFile file, String nomeImagemPrincipal) throws Exception {
         try {
-            // Verifica se já existe uma imagem principal para o produto
-            if (verificaPrincipal(idProduto)) {
+            // Verifica se a imagem atual deve ser a principal
+            boolean isPrincipal = nomeImagemPrincipal != null && Objects.equals(file.getOriginalFilename(), nomeImagemPrincipal);
+
+            // Se for principal e já houver outra imagem principal, desmarcar a atual
+            if (isPrincipal && verificaPrincipal(idProduto)) {
                 desmarcarImagemComoPrincipal(idProduto);
             }
 
@@ -59,9 +58,6 @@ public class ImagemService {
             // Copia o arquivo para o diretório
             Files.copy(file.getInputStream(), caminhoArquivo, StandardCopyOption.REPLACE_EXISTING);
 
-            // Define se a imagem será a principal (se não houver nenhuma principal já salva, ou se for a imagem solicitada como principal)
-            boolean isPrincipal = (nomeImagemPrincipal != null && Objects.equals(file.getOriginalFilename(), nomeImagemPrincipal)) || principalIsPresent;
-
             // Salva a imagem no banco de dados
             Imagem imagem = new Imagem(idProduto, caminhoArquivo.toString(), isPrincipal);
             imagemRepository.save(imagem);
@@ -69,6 +65,23 @@ public class ImagemService {
             throw new Exception("Erro ao salvar imagem: " + e.getMessage(), e);
         }
     }
+
+    private boolean verificaPrincipal(String idProduto) {
+        // Verifica se já existe alguma imagem principal para o produto
+        return imagemRepository.findByIdProduto(idProduto).stream().anyMatch(Imagem::isPrincipal);
+    }
+
+    private void desmarcarImagemComoPrincipal(String idProduto) {
+        // Busca a imagem marcada como principal para o produto
+        Optional<Imagem> imagemPrincipal = imagemRepository.findByIdProdutoAndPrincipalTrue(idProduto);
+
+        // Se existir uma imagem principal, desmarque-a
+        imagemPrincipal.ifPresent(imagem -> {
+            imagem.setPrincipal(false);
+            imagemRepository.save(imagem);
+        });
+    }
+
 
     public ResponseEntity<String> excluirImagem(String id){
 
@@ -95,35 +108,6 @@ public class ImagemService {
                     .body("Erro ao excluir a imagem: " + e.getMessage());
         }
 
-    }
-
-    public List<Imagem> listaImagens(String idProduto){
-        List<Imagem> optionalImagens =  imagemRepository.findByIdProduto(idProduto);
-
-        if(optionalImagens.isEmpty()){
-            return Collections.emptyList();
-        }
-
-        return optionalImagens.stream().toList();
-
-
-    }
-
-    private boolean verificaPrincipal(String idProduto){
-        // Verifica se já existe alguma imagem principal para o produto
-        List<Imagem> imagens = imagemRepository.findByIdProduto(idProduto);
-        return imagens.stream().anyMatch(Imagem::isPrincipal);
-    }
-
-    private void desmarcarImagemComoPrincipal(String idProduto) {
-        // Busca a imagem marcada como principal para o produto
-        Optional<Imagem> imagemPrincipal = imagemRepository.findByIdProdutoAndPrincipalTrue(idProduto);
-
-        // Se existir uma imagem principal, desmarque-a
-        imagemPrincipal.ifPresent(imagem -> {
-            imagem.setPrincipal(false); // Marca como não principal
-            imagemRepository.save(imagem); // Salva a imagem atualizada
-        });
     }
 
     public Imagem selecionarPrincipal(String idImagem, String idProduto){
@@ -168,5 +152,18 @@ public class ImagemService {
             throw new IOException("Erro ao excluir a imagem, caminho não encontrado");
         }
     }
+
+    public List<Imagem> listaImagens(String idProduto){
+        List<Imagem> optionalImagens =  imagemRepository.findByIdProduto(idProduto);
+
+        if(optionalImagens.isEmpty()){
+            return Collections.emptyList();
+        }
+
+        return optionalImagens.stream().toList();
+
+
+    }
+
 
 }

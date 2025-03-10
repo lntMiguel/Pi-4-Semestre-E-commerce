@@ -57,4 +57,14 @@ public class ProductController {
         Produto produtoAtualizado = productService.atualizaProduto(id, codigo, nome, preco, quantidade, descricao, avaliacao);
         return ResponseEntity.ok(produtoAtualizado);
     }
+
+    @PutMapping("/{id}/quantidade")
+    public ResponseEntity<Produto> alteraQuantidade(@PathVariable String id, @RequestParam int quantidade){
+
+        Produto produtoAtualizado = productService.alteraQuantidade(id, quantidade);
+        return ResponseEntity.ok(produtoAtualizado);
+
+
+    }
+
 }
