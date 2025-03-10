@@ -387,6 +387,33 @@ function Produtos(){
 
   };
 
+  const handleAtualizaQuantidade = async (id, novaQtd) => {
+    try {
+      const response = await fetch(`http://localhost:8081/produto/${id}/quantidade`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded", // Tipo correto para @RequestParam
+        },
+        body: new URLSearchParams({ quantidade: novaQtd.toString() }),
+      });
+  
+      if (!response.ok) {
+        throw new Error("Erro ao atualizar a quantidade do produto");
+      }
+  
+      const produtoAtualizado = await response.json();
+  
+      // Atualiza a lista de produtos no estado
+      setProducts((prevProducts) =>
+        prevProducts.map((product) =>
+          product.id === id ? { ...product, quantity: produtoAtualizado.quantity } : product
+        )
+      );
+    } catch (error) {
+      console.error("Erro ao atualizar a quantidade:", error);
+    }
+  };
+
  const handleUploadImages = async () => {
   setError(""); // Limpa erros anteriores
 

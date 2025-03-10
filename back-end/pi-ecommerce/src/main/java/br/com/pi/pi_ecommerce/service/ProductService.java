@@ -84,7 +84,7 @@ public class ProductService {
         return productRepository.save(prod);
     }
 
-    public Produto atualizaQuantidade(String id, int quantidade ){
+    public Produto alteraQuantidade(String id, int quantidade ){
         Optional<Produto> produtoOptional = productRepository.findById(id);
 
         if(produtoOptional.isPresent()){
