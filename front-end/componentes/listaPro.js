@@ -1,6 +1,8 @@
 import styled from "styled-components";
 import { createGlobalStyle } from "styled-components";
 import { useEffect, useState } from "react";
+import { useAuth } from "./authContext";
+
 
 const GlobalStyle = createGlobalStyle`
   * {
@@ -214,8 +216,13 @@ function Produtos(){
     descDetalhada: "",
     avaliacao: "",
   });
+  const { grupo } = useAuth();
   const [viewingProduct, setViewingProduct] = useState(null);
   const [isViewModalOpen, setViewModalOpen] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [idProduto, setIdProduto] = useState("");
+  const [nomeImagemPrincipal, setNomeImagemPrincipal] = useState("");
+  const [imagemPrincipalIndex, setImagemPrincipalIndex] = useState(null);
 
   const filteredProducts = products.filter((product) =>
     product.nome.toLowerCase().includes(searchTerm.toLowerCase())
@@ -417,7 +424,7 @@ function Produtos(){
       setError("Erro ao atualizar produto: " + error.message); // Exibe a mensagem do erro detalhado
     }
   };
-  
+   
   const handleAtualizaQuantidade = async (id, novaQtd) => {
     try {
       const response = await fetch(`http://localhost:8081/produto/${id}/quantidade`, {
@@ -445,47 +452,49 @@ function Produtos(){
     }
   };
 
- const handleUploadImages = async () => {
-  setError(""); // Limpa erros anteriores
+  const handleTogglePrincipal = (index) => {
+    setImagemPrincipalIndex((prevIndex) => (prevIndex === index ? null : index));
+  };
+  
+  const handleUploadImages = async () => {
+    setError("");
 
-  if (!selectedFiles.length || !idProduto) {
-    setError("Selecione pelo menos uma imagem e informe o ID do produto.");
-    return;
-  }
-
-  try {
-    const formData = new FormData();
-    formData.append("idProduto", idProduto);
-    
-    // Adiciona todas as imagens ao formData
-    selectedFiles.forEach((file) => {
-      formData.append("files", file);
-    });
-
-    // Se houver uma imagem principal selecionada
-    if (nomeImagemPrincipal) {
-      formData.append("nomeImagemPrincipal", nomeImagemPrincipal);
+    if (!selectedFiles.length || !idProduto) {
+      setError("Selecione pelo menos uma imagem e informe o ID do produto.");
+      return;
     }
 
-    const response = await fetch("http://localhost:8081/imagens", {
-      method: "POST",
-      body: formData, // Envia o FormData
-    });
+    try {
+      const formData = new FormData();
+      formData.append("idProduto", idProduto);
 
-    if (response.ok) {
-      setSelectedFiles([]); // Limpa os arquivos selecionados
-      setIdProduto(""); // Limpa o ID do produto
-      setNomeImagemPrincipal(""); // Limpa o nome da imagem principal
-      fetchImagens(); // Atualiza a lista de imagens (caso tenha uma função para isso)
-    } else {
-      const errorMessage = await response.text();
-      setError(errorMessage || "Erro ao fazer upload das imagens.");
+      selectedFiles.forEach((file, index) => {
+        formData.append("files", file);
+
+        // Enviar o nome da imagem principal junto ao formulário
+        if (index === imagemPrincipalIndex) {
+          formData.append("nomeImagemPrincipal", file.name);
+        }
+      });
+
+      const response = await fetch("http://localhost:8081/imagens", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (response.ok) {
+        setSelectedFiles([]);
+        setIdProduto("");
+        setImagemPrincipalIndex(null);
+      } else {
+        const errorMessage = await response.text();
+        setError(errorMessage || "Erro ao fazer upload das imagens.");
+      }
+    } catch (error) {
+      console.error("Erro ao enviar imagens:", error);
+      setError("Erro ao fazer upload das imagens.");
     }
-  } catch (error) {
-    console.error("Erro ao enviar imagens:", error);
-    setError("Erro ao fazer upload das imagens.");
-  }
-};
+  };
 
 const handleDeleteImages = async (idImagem) => {
   try {
@@ -520,12 +529,59 @@ const fetchImages = async (idProduto) => {
     return [];
   }
 };
+
+const handleFileChange = (event) => {
+  const files = Array.from(event.target.files);
+  setSelectedFiles(files);
+};
+
+const handleSelectPrincipal = (index) => {
+  setImagemPrincipalIndex(index);
+};
+
     
   
 
 
   return (
     <StyledProdutos>
+           <div>
+      <input type="file" multiple accept="image/*" onChange={handleFileChange} />
+
+      {selectedFiles.length > 0 && (
+        <div>
+          {selectedFiles.map((file, index) => (
+            <div key={index} style={{ display: "inline-block", marginRight: "10px" }}>
+              <img
+                src={URL.createObjectURL(file)}
+                alt={`Imagem ${index + 1}`}
+                style={{
+                  width: "100px",
+                  height: "100px",
+                  border: imagemPrincipalIndex === index ? "3px solid blue" : "1px solid gray",
+                  cursor: "pointer"
+                }}
+                onClick={() => handleTogglePrincipal(index)}
+              />
+              <p style={{ textAlign: "center", fontSize: "12px" }}>
+                {imagemPrincipalIndex === index ? "Principal (Clique para remover)" : "Selecionar"}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <input
+        type="text"
+        placeholder="ID do Produto"
+        value={idProduto}
+        onChange={(e) => setIdProduto(e.target.value)}
+      />
+
+      <button onClick={handleUploadImages}>Upload Imagens</button>
+
+      {error && <p style={{ color: "red" }}>{error}</p>}
+    </div>
       <GlobalStyle />
       <Header>
         <Logo src="imagem/logo.png" alt="Logo" />
@@ -551,7 +607,7 @@ const fetchImages = async (idProduto) => {
           +
           </AddBotoes>
         </TopBar>
-
+       
         <Tabela>
           <thead>
            <tr>
