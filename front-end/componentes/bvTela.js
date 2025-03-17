@@ -3,6 +3,7 @@ import { createGlobalStyle } from "styled-components";
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
+
 const GlobalStyle = createGlobalStyle`
   * {
     margin: 0;

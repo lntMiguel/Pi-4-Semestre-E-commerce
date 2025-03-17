@@ -13,7 +13,6 @@ const GlobalStyle = createGlobalStyle`
     padding: 0;
     box-sizing: border-box;
   }
-
   html, body {
     width: 100%;
     height: 100%;
@@ -68,14 +67,6 @@ const Nome = styled.span`
   margin-right: 10px;
 `;
 
-const Sair = styled.button`
-  background-color: red;
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  cursor: pointer;
-  border-radius: 5px;
-`;
 const Container = styled.div`
    width: 90%;
    height: 70%;
@@ -137,7 +128,6 @@ const Tabela = styled.table`
   border-collapse: collapse;
   overflow-y: auto; 
   overflow-x: hidden; 
-  
 `;
 
 const Th = styled.th`
@@ -246,7 +236,6 @@ function Produtos() {
     }));
   };
 
-
   const toggleStatus = async (id, currentStatus) => {
     const confirmacao = window.confirm(
       `Tem certeza que deseja alterar o status do produto para ${currentStatus === "Ativo" ? "Inativo" : "Ativo"}?`
@@ -282,7 +271,6 @@ function Produtos() {
       console.error("Erro ao alternar status:", error);
     }
   };
-
 
   const validateFields = () => {
     let newErrors = {};
@@ -330,7 +318,6 @@ function Produtos() {
       const result = await response.json();
       console.log("Produto adicionado:", result);
   
-      // Agora faça o upload das imagens
       const formDataImages = new FormData();
       formDataImages.append("idProduto", result.id); // Usando o ID do produto recém-criado
   
@@ -371,7 +358,6 @@ function Produtos() {
     setImagemPrincipalIndex(null);  // Limpar a imagem principal selecionada
     setNomeImagemPrincipal("");
   };
-
 
   const fetchProdutos = async () => {
     try {
@@ -601,12 +587,8 @@ const handleSelectPrincipal = (index) => {
   setImagemPrincipalIndex(index);
 };
 
-    
-  
-
   return (
     <StyledProdutos>
-           
       <GlobalStyle />
       <Header>
         <Logo src="imagem/logo.png" alt="Logo" />
