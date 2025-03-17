@@ -335,7 +335,16 @@ function Produtos() {
       }
   
       alert("Produto e imagens adicionados com sucesso!");
-      await fetchProdutos(); // Atualiza a lista de produtos
+      
+      setProducts((prevProducts) => [
+        {
+          ...result,
+          status: "Ativo",
+          qtdEstoque: productData.qtdEstoque,
+        },
+        ...prevProducts,
+      ]);
+
       setModalOpen(false); // Fecha o modal
       resetForm(); // Reseta o formulário
     } catch (error) {
@@ -562,7 +571,6 @@ function Produtos() {
   };
   
   
-
   const [currentPage, setCurrentPage] = useState(1); // Página atual
   const productsPerPage = 10; // Número de produtos por página
 
