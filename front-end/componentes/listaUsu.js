@@ -108,7 +108,6 @@ const AddBotoes = styled.button`
   }
 `;
 
-
 const Tabela = styled.table`
   width: 100%;
   border-collapse: collapse;
@@ -150,7 +149,6 @@ const Tr = styled.tr`
   table-layout: fixed;
 `;
 
-
 const BotaoAcao = styled.button`
   padding: 5px 15px;
   margin: 5px;
@@ -167,12 +165,9 @@ const BotaoAcao = styled.button`
   }
 `;
 
-
-
 const ErrorMessage = styled.p`
   color: red;
 `;
-
 
 function Usuario() {
   const [users, setUsers] = useState([]);
@@ -255,7 +250,6 @@ function Usuario() {
     if (users.some((user) => user.email === formData.email)) {
       newErrors.email = "E-mail já cadastrado";
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -386,32 +380,24 @@ function Usuario() {
               <h2>Cadastrar Usuário</h2>
               <Input name="nome" placeholder="Nome" onChange={handleInputChange} />
               {errors.nome && <ErrorMessage>{errors.nome}</ErrorMessage>}
-
               <Input name="cpf" placeholder="CPF" onChange={handleInputChange} />
               {errors.cpf && <ErrorMessage>{errors.cpf}</ErrorMessage>}
-
               <Input name="email" type="email" placeholder="E-mail" onChange={handleInputChange} />
               {errors.email && <ErrorMessage>{errors.email}</ErrorMessage>}
-
               <Input name="senha" type="password" placeholder="Senha" onChange={handleInputChange} />
               {errors.senha && <ErrorMessage>{errors.senha}</ErrorMessage>}
-
               <Input name="confirmSenha" type="password" placeholder="Confirmar Senha" onChange={handleInputChange} />
               {errors.confirmSenha && <ErrorMessage>{errors.confirmSenha}</ErrorMessage>}
-
               <Select name="grupo" onChange={handleInputChange}>
                 <option value="admin">Admin</option>
                 <option value="estoquista">Estoquista</option>
               </Select>
-
               {error && <ErrorMessage>{error}</ErrorMessage>}
-
               <BotaoAcao onClick={handleSave}>Cadastrar</BotaoAcao>
               <BotaoAcao onClick={() => handleCloseModal()}> Cancelar</BotaoAcao>
             </ModalContent>
           </Modal>
         )}
-
 {showAlterarModal && (
   <Modal>
   <ModalContent>
