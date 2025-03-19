@@ -28,7 +28,7 @@ public class ImagemService {
     @Autowired
     private ImagemRepository imagemRepository;
 
-    private static final String UPLOAD_DIR = "imagens/";
+    private static final String UPLOAD_DIR = "../../front-end/public/imagens/";
 
     public ResponseEntity<String> salvarImagens(String idProduto, MultipartFile[] files, String nomeImagemPrincipal) {
         try {
@@ -50,10 +50,8 @@ public class ImagemService {
             if (isPrincipal && verificaPrincipal(idProduto)) {
                 desmarcarImagemComoPrincipal(idProduto);
             }
-
-            // Gera um novo nome único para o arquivo
-            String novoNome = UUID.randomUUID() + "_" + file.getOriginalFilename();
-            Path caminhoArquivo = Paths.get(UPLOAD_DIR, novoNome);
+            String nomeArquivo = file.getOriginalFilename();
+            Path caminhoArquivo = Paths.get(UPLOAD_DIR, nomeArquivo);
 
             // Copia o arquivo para o diretório
             Files.copy(file.getInputStream(), caminhoArquivo, StandardCopyOption.REPLACE_EXISTING);

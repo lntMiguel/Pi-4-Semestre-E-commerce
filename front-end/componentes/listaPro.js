@@ -516,7 +516,7 @@ function Produtos() {
         setSelectedFiles([]); // Limpa os arquivos selecionados
         setIdProduto(""); // Limpa o ID do produto
         setNomeImagemPrincipal(""); // Limpa o nome da imagem principal
-        fetchImagens(); // Atualiza a lista de imagens (caso tenha uma função para isso)
+        fetchImages(); // Atualiza a lista de imagens (caso tenha uma função para isso)
       } else {
         const errorMessage = await response.text();
         setError(errorMessage || "Erro ao fazer upload das imagens.");
@@ -535,7 +535,7 @@ function Produtos() {
       });
 
       if (response.ok) {
-        fetchImagens(); // Atualiza a lista de imagens após a exclusão
+        fetchImages(); // Atualiza a lista de imagens após a exclusão
       } else {
         const errorMessage = await response.text();
         setError(errorMessage || "Erro ao excluir imagem.");
@@ -630,7 +630,7 @@ const handleSelectPrincipal = (index) => {
     </div>
       <GlobalStyle />
       <Header>
-        <Logo src="imagem/logo.png" alt="Logo" />
+        <Logo src="imagens/logo.png" alt="Logo" />
         <Titulo>Produtos</Titulo>
         <Usuario>
           <Nome>{grupo === "admin" ? "Administrador" : "Estoquista"}</Nome>
