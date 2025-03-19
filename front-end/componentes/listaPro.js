@@ -193,6 +193,23 @@ const GpBotoes = styled.div`
   display: flex;
   justify-content: space-between;
 `;
+const StyledSlider = styled(Slider)`
+  margin-bottom: 25px;  // Adiciona um margin-top ao Slider
+
+  .slick-prev,
+  .slick-next {
+    z-index: 1;
+  }
+
+  .slick-dots {
+    bottom: -30px;
+  }
+
+  img {
+    width: 100%;
+    height: auto;
+  }
+`;
 
 function Produtos() {
   const [isModalOpen, setModalOpen] = useState(false);
@@ -211,6 +228,7 @@ function Produtos() {
     avaliacao: "",
   });
   const [viewingProduct, setViewingProduct] = useState(null);
+  const [viewingProductE, setViewingProductE] = useState(null);
   const [isViewModalOpen, setViewModalOpen] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [nomeImagemPrincipal, setNomeImagemPrincipal] = useState("");
@@ -222,12 +240,9 @@ function Produtos() {
     product.nome.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  
   useEffect(() => {
     fetchProdutos();
   }, [searchTerm]);
-
-  
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -273,15 +288,9 @@ function Produtos() {
     }
   };
 
-
   const handleSave = async () => {
     console.log("handleSave iniciado");
-  
-    /*if (!validateFields()) {
-      console.log("Validação falhou com os dados:", formData);
-      return; // Se os campos não forem válidos, não faça nada
-    }*/
-  
+
     const productData = {
       nome: formData.nome,
       codigo: formData.codigo,
@@ -290,7 +299,6 @@ function Produtos() {
       descDetalhada: formData.descDetalhada,
       avaliacao: formData.avaliacao,
     };
-  
     try {
       const response = await fetch("http://localhost:8081/produto", {
         method: "POST",
@@ -306,7 +314,6 @@ function Produtos() {
   
       const result = await response.json();
       console.log("Produto adicionado:", result);
-  
       const formDataImages = new FormData();
       formDataImages.append("idProduto", result.id); // Usando o ID do produto recém-criado
   
@@ -322,7 +329,7 @@ function Produtos() {
         method: "POST",
         body: formDataImages,
       });
-  
+
       if (!imageUploadResponse.ok) {
         throw new Error("Erro ao enviar imagens");
       }
@@ -366,15 +373,19 @@ function Produtos() {
       const response = await fetch(`http://localhost:8081/produto?nome=${searchTerm}`);
       const data = await response.json();
       console.log(data);
-
-      setProducts(data.map(product => ({
-        ...product,
-        status: product.status === true ? "Ativo" : "Inativo"
-      })))
+  
+      setProducts(
+        data
+          .map(product => ({
+            ...product,
+            status: product.status === true ? "Ativo" : "Inativo"
+          }))
+          .reverse() // <- Aqui inverte!
+      );
     } catch (error) {
       console.error("Erro ao buscar produtos:", error);
     }
-  }
+  };
 
   const handleViewClick = async (product) => {
 
@@ -393,7 +404,7 @@ function Produtos() {
     setModalOpen(false);
   };
 
-  const handleEditProduct = (product) => {
+  const handleEditProduct = async (product) => {
     setEditingProduct(product);
     setFormData({
       nome: product.nome,
@@ -402,6 +413,12 @@ function Produtos() {
       qtdEstoque: product.qtdEstoque,
       descDetalhada: product.descDetalhada,
       avaliacao: product.avaliacao,
+    });
+    const imagens = await fetchImages(product.id);
+
+    setViewingProduct({
+      ...product,
+      imagens, 
     });
     setEditModalOpen(true);
   };
@@ -434,6 +451,23 @@ function Produtos() {
         console.error("Erro retornado da API:", errorData); // Exibe o erro completo
         throw new Error(errorData.error || "Erro ao atualizar produto");
       }
+      const formDataImages = new FormData();
+      formDataImages.append("idProduto", editingProduct.id);
+      selectedFiles.forEach((file) => {
+        formDataImages.append("files", file.file);
+        
+      });
+
+      const imageUploadResponse = await fetch("http://localhost:8081/imagens", {
+        method: "POST",
+        body: formDataImages,
+      });
+
+      if (!imageUploadResponse.ok) {
+        throw new Error("Erro ao enviar imagens");
+      }
+  
+      alert("Produto e imagens adicionados com sucesso!");
 
       await fetchProdutos(); // Atualiza a lista de produtos após a atualização
       setEditModalOpen(false); // Fecha o modal de edição
@@ -446,9 +480,6 @@ function Produtos() {
     }
   };
 
-  
-
-  
   const handleDeleteImages = async (idImagem) => {
     try {
       const response = await fetch(`http://localhost:8081/imagens/${idImagem}`, {
@@ -475,9 +506,7 @@ function Produtos() {
       }
   
       const imagens = await response.json();
-
       const caminhoBase = "http://localhost:8081/";
-
       const imagensComCaminho = imagens.map(imagem => ({
         ...imagem,
         url: `${caminhoBase}${imagem.caminho}`, 
@@ -491,17 +520,13 @@ function Produtos() {
   };
   
   
-  const [currentPage, setCurrentPage] = useState(1); // Página atual
-  const productsPerPage = 10; // Número de produtos por página
-
-  // Calcular os produtos que devem ser exibidos na página atual
+  const [currentPage, setCurrentPage] = useState(1);
+  const productsPerPage = 10;
   const indexOfLastProduct = currentPage * productsPerPage;
   const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
   const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
-
   const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
-
-  // Função para mudar de página
+  
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
@@ -510,23 +535,11 @@ function Produtos() {
     const files = Array.from(event.target.files);
     const filesComPrincipal = files.map((file, index) => ({
       file,
-      isPrincipal: index === 0, // Define a primeira imagem como principal por padrão
+      isPrincipal: index === 0,
     }));
     setSelectedFiles(filesComPrincipal);
 
   };
-  const handleImagemPrincipal = (event) => {
-    const index = parseInt(event.target.value);
-    
-    // Atualizar o estado para definir a imagem principal
-    setSelectedFiles(prevFiles => 
-      prevFiles.map((file, i) => ({
-        ...file,
-        isPrincipal: i === index,
-      }))
-    );
-  };
-
 
 
   return (
@@ -539,7 +552,6 @@ function Produtos() {
           <Nome>{grupo === "admin" ? "Administrador" : "Estoquista"}</Nome>
         </Usuario>
       </Header>
-
       <Container>
         <TopBar>
           <div>
@@ -554,24 +566,20 @@ function Produtos() {
           <AddBotoes onClick={() => { resetForm(); setModalOpen(true); }}>
             +
           </AddBotoes>
-        </TopBar>
-       
+        </TopBar>  
         <Tabela>
           <thead>
             <tr>
-
               <Th style={{ width: "10%" }}>Código</Th>
               <Th style={{ width: "40%" }}>Nome</Th>
               <Th style={{ width: "10%" }}>Quantidade</Th>
               <Th style={{ width: "10%" }}>Preço</Th>
               <Th style={{ width: "10%" }}>Status</Th>
               <Th style={{ width: "20%" }}>Ações</Th>
-
             </tr>
           </thead>
           <tbody>
             {currentProducts.map((product) => (
-              
               <tr key={product.id}>
                 <Td>{product.codigo}</Td>
                 <Td>{product.nome}</Td>
@@ -609,7 +617,6 @@ function Produtos() {
           </tbody>
         </Tabela>
       </Container>
-
       {isModalOpen && (
         <Modal>
           <ModalConteudo>
@@ -661,7 +668,7 @@ function Produtos() {
         onChange={handleFileChange}
         accept="image/*"
       />
-      {selectedFiles.length > 0 && (
+      {selectedFiles.length > 0 && ( 
         <div>
           <h4>Imagens Selecionadas:</h4>
           <ul>
@@ -684,8 +691,7 @@ function Produtos() {
           </ModalConteudo>
         </Modal>
       )}
-
-      {isEditModalOpen && (
+      {isEditModalOpen && viewingProduct &&(
         <Modal>
           <ModalConteudo>
             <ModalTitulo>Editar Produto</ModalTitulo>
@@ -736,9 +742,34 @@ function Produtos() {
                 onChange={handleInputChange}
                 disabled={grupo === "estoquista"}
               />
+
+<h3>Imagens do Produto</h3>
+        {viewingProduct.imagens && viewingProduct.imagens.length > 0 ? (
+          <StyledSlider dots={true} infinite={false} speed={500} slidesToShow={2} slidesToScroll={1}>
+          
+            {viewingProduct.imagens.map((imagem, index) => (
+              <div key={index}>
+                <img 
+                  src={`../` + imagem.caminhoArquivo.slice(22)} 
+                  alt={`Imagem ${index + 1}`} 
+                  style={{ width: "100px", height: "100px", padding: "10px"}}  
+                />
+                <button onClick={() => handleDeleteImages (imagem.id)}>Excluir</button>
+              </div>
+            ))}
+          
+          </StyledSlider>
+        ) : (
+          <p>Sem imagens para exibir.</p>
+        )}
+
+        <input 
+          type="file" 
+          multiple 
+          onChange={handleFileChange} 
+          accept="image/*" 
+        />
             </>
-
-
             <GpBotoes>
               <Botao onClick={handUpdate}>Salvar</Botao>
               <Botao onClick={() => setEditModalOpen(false)}>Cancelar</Botao>
@@ -746,9 +777,7 @@ function Produtos() {
           </ModalConteudo>
         </Modal>
       )}
-
 {isViewModalOpen && viewingProduct && (
-  
   <Modal>
     <ModalConteudo>
       <ModalTitulo>Visualizar Produto</ModalTitulo>
@@ -761,7 +790,7 @@ function Produtos() {
         <p><strong>Avaliação:</strong> {viewingProduct.avaliacao}</p>
         {/* Exibir carrossel de imagens */}
         {viewingProduct.imagens && viewingProduct.imagens.length > 0 ? (
-          <Slider dots={true} infinite={false} speed={500} slidesToShow={1} slidesToScroll={1}>
+          <StyledSlider dots={true} infinite={false} speed={500} slidesToShow={1} slidesToScroll={1}>
             {viewingProduct.imagens.map((imagem, index) => (
               
               <div key={index}>
@@ -772,19 +801,17 @@ function Produtos() {
                 />
               </div>
             ))}
-          </Slider>
+          </StyledSlider>
         ) : (
           <p>Sem imagens disponíveis.</p>
         )}
       </div>
-
       <GpBotoes>
         <Botao onClick={() => setViewModalOpen(false)}>Fechar</Botao>
       </GpBotoes>
     </ModalConteudo>
   </Modal>
 )}
-
       <div>
         {Array.from({ length: totalPages }, (_, index) => (
           <button
@@ -803,7 +830,6 @@ function Produtos() {
           </button>
         ))}
       </div>
-
 
     </StyledProdutos>
   );

@@ -287,7 +287,7 @@ function Usuario() {
       newErrors.email = "E-mail já cadastrado";
     }
 
-    setError(newErrors);
+    setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
