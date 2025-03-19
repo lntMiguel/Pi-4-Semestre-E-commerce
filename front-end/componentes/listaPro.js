@@ -213,20 +213,21 @@ function Produtos() {
   const [viewingProduct, setViewingProduct] = useState(null);
   const [isViewModalOpen, setViewModalOpen] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
-  const [idProduto, setIdProduto] = useState("");
   const [nomeImagemPrincipal, setNomeImagemPrincipal] = useState("");
   const [imagemPrincipalIndex, setImagemPrincipalIndex] = useState(null);
   const { grupo } = useAuth();
-  const [isConfirmPopupOpen, setConfirmPopupOpen] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
+  
 
   const filteredProducts = products.filter((product) =>
     product.nome.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  
   useEffect(() => {
     fetchProdutos();
   }, [searchTerm]);
+
+  
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -272,67 +273,14 @@ function Produtos() {
     }
   };
 
-  const validarCPF = (cpf) => {
-    // Remove caracteres não numéricos
-    cpf = cpf.replace(/[^\d]+/g, "");
-
-    // Verifica se o CPF tem 11 dígitos
-    if (cpf.length !== 11) return false;
-
-    // Impede CPFs com números repetidos como 111.111.111-11
-    if (/^(\d)\1{10}$/.test(cpf)) return false;
-
-    // Validação do primeiro dígito verificador
-    let soma = 0;
-    let peso = 10;
-    for (let i = 0; i < 9; i++) {
-      soma += parseInt(cpf[i]) * peso;
-      peso--;
-    }
-    let digito1 = (soma * 10) % 11;
-    if (digito1 === 10 || digito1 === 11) digito1 = 0;
-    if (digito1 !== parseInt(cpf[9])) return false;
-
-    // Validação do segundo dígito verificador
-    soma = 0;
-    peso = 11;
-    for (let i = 0; i < 10; i++) {
-      soma += parseInt(cpf[i]) * peso;
-      peso--;
-    }
-    let digito2 = (soma * 10) % 11;
-    if (digito2 === 10 || digito2 === 11) digito2 = 0;
-    if (digito2 !== parseInt(cpf[10])) return false;
-
-    return true;
-  };
-
-  const validateFields = () => {
-    let newErrors = {};
-
-    if (!formData.nome) newErrors.nome = "Campo obrigatório";
-    if (!formData.cpf) newErrors.cpf = "Campo obrigatório";
-    else if (!validarCPF(formData.cpf)) newErrors.cpf = "CPF inválido";
-    if (!formData.email) newErrors.email = "Campo obrigatório";
-    if (!formData.senha) newErrors.senha = "Campo obrigatório";
-    if (!formData.confirmSenha) newErrors.confirmSenha = "Campo obrigatório";
-    else if (formData.senha !== formData.confirmSenha) newErrors.confirmSenha = "As senhas não coincidem";
-
-    if (users.some((user) => user.email === formData.email)) {
-      newErrors.email = "E-mail já cadastrado";
-    }
-
-    setError(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
 
   const handleSave = async () => {
     console.log("handleSave iniciado");
   
-    if (!validateFields()) {
+    /*if (!validateFields()) {
       console.log("Validação falhou com os dados:", formData);
       return; // Se os campos não forem válidos, não faça nada
-    }
+    }*/
   
     const productData = {
       nome: formData.nome,
@@ -363,7 +311,11 @@ function Produtos() {
       formDataImages.append("idProduto", result.id); // Usando o ID do produto recém-criado
   
       selectedFiles.forEach((file) => {
-        formDataImages.append("files", file);
+        formDataImages.append("files", file.file);
+        if (file.isPrincipal) {
+          console.log(file.file.name)
+          formDataImages.append("nomeImagemPrincipal", file.file.name); // Adiciona a imagem principal
+        }
       });
   
       const imageUploadResponse = await fetch("http://localhost:8081/imagens", {
@@ -425,15 +377,15 @@ function Produtos() {
   }
 
   const handleViewClick = async (product) => {
-    setViewingProduct(product);
-    setViewModalOpen(true);
 
-    const imagens = await fetchImages(product.id);
-    setViewingProduct((prevProduct) => ({
-      ...prevProduct,
-      imagens,  
+    setViewModalOpen(true); // Abre o modal primeiro
+  
+    const imagens = await fetchImages(product.id); // Busca as imagens antes de atualizar o estado
 
-    }));
+    setViewingProduct({
+      ...product,
+      imagens, 
+    });
   };
 
   const handleCloseModal = () => {
@@ -494,100 +446,9 @@ function Produtos() {
     }
   };
 
-  const handleAtualizaQuantidade = async (id, novaQtd) => {
-    try {
-      const response = await fetch(`http://localhost:8081/produto/${id}/quantidade`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded", // Tipo correto para @RequestParam
-        },
-        body: new URLSearchParams({ quantidade: novaQtd.toString() }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Erro ao atualizar a quantidade do produto");
-      }
-
-      const produtoAtualizado = await response.json();
-
-      // Atualiza a lista de produtos no estado
-      setProducts((prevProducts) =>
-        prevProducts.map((product) =>
-          product.id === id ? { ...product, quantity: produtoAtualizado.quantity } : product
-        )
-      );
-    } catch (error) {
-      console.error("Erro ao atualizar a quantidade:", error);
-    }
-  };
-
-  const handleTogglePrincipal = (index) => {
-    setImagemPrincipalIndex((prevIndex) => (prevIndex === index ? null : index));
-  };
   
-  const handleUploadImages = async () => {
-    setError(""); // Limpa erros anteriores
 
-    if (!selectedFiles.length || !idProduto) {
-      setError("Selecione pelo menos uma imagem e informe o ID do produto.");
-      return;
-    }
-
-    try {
-      const formData = new FormData();
-      formData.append("idProduto", idProduto);
-
-      selectedFiles.forEach((file, index) => {
-        formData.append("files", file);
-
-        // Enviar o nome da imagem principal junto ao formulário
-        if (index === imagemPrincipalIndex) {
-          formData.append("nomeImagemPrincipal", file.name);
-        }
-      });
-
-      const response = await fetch("http://localhost:8081/imagens", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (response.ok) {
-        setSelectedFiles([]);
-        setIdProduto("");
-        setImagemPrincipalIndex(null);
-
-      // Adiciona todas as imagens ao formData
-      selectedFiles.forEach((file) => {
-        formData.append("files", file);
-      });
-
-      
-      if (nomeImagemPrincipal) {
-        formData.append("nomeImagemPrincipal", nomeImagemPrincipal);
-      }
-
-      const response = await fetch("http://localhost:8081/imagens", {
-        method: "POST",
-        body: formData, 
-      });
-
-      if (response.ok) {
-
-        setSelectedFiles([]); 
-        setIdProduto("");
-        setNomeImagemPrincipal("");
-        fetchImagens(); 
-      } else {
-        const errorMessage = await response.text();
-        setError(errorMessage || "Erro ao fazer upload das imagens.");
-      }
-    }
-  } catch (error) {
-      console.error("Erro ao enviar imagens:", error);
-      setError("Erro ao fazer upload das imagens.");
-    }
-  };
-
+  
   const handleDeleteImages = async (idImagem) => {
     try {
       const response = await fetch(`http://localhost:8081/imagens/${idImagem}`, {
@@ -614,7 +475,7 @@ function Produtos() {
       }
   
       const imagens = await response.json();
-  
+
       const caminhoBase = "http://localhost:8081/";
 
       const imagensComCaminho = imagens.map(imagem => ({
@@ -647,12 +508,26 @@ function Produtos() {
 
   const handleFileChange = (event) => {
     const files = Array.from(event.target.files);
-    setSelectedFiles(files);
+    const filesComPrincipal = files.map((file, index) => ({
+      file,
+      isPrincipal: index === 0, // Define a primeira imagem como principal por padrão
+    }));
+    setSelectedFiles(filesComPrincipal);
+
+  };
+  const handleImagemPrincipal = (event) => {
+    const index = parseInt(event.target.value);
+    
+    // Atualizar o estado para definir a imagem principal
+    setSelectedFiles(prevFiles => 
+      prevFiles.map((file, i) => ({
+        ...file,
+        isPrincipal: i === index,
+      }))
+    );
   };
 
-const handleSelectPrincipal = (index) => {
-  setImagemPrincipalIndex(index);
-};
+
 
   return (
     <StyledProdutos>
@@ -696,6 +571,7 @@ const handleSelectPrincipal = (index) => {
           </thead>
           <tbody>
             {currentProducts.map((product) => (
+              
               <tr key={product.id}>
                 <Td>{product.codigo}</Td>
                 <Td>{product.nome}</Td>
@@ -790,7 +666,13 @@ const handleSelectPrincipal = (index) => {
           <h4>Imagens Selecionadas:</h4>
           <ul>
             {selectedFiles.map((file, index) => (
-              <li key={index}>{file.name}</li>
+              <li key={index}>{file.file.name}<input 
+              type="radio" 
+              name="principal" 
+              value={index}
+              onChange={handleImagemPrincipal}
+              checked={selectedFiles[index].isPrincipal} 
+            />Principal</li>
             ))}
           </ul>
         </div>
@@ -866,6 +748,7 @@ const handleSelectPrincipal = (index) => {
       )}
 
 {isViewModalOpen && viewingProduct && (
+  
   <Modal>
     <ModalConteudo>
       <ModalTitulo>Visualizar Produto</ModalTitulo>
@@ -876,14 +759,14 @@ const handleSelectPrincipal = (index) => {
         <p><strong>Quantidade em Estoque:</strong> {viewingProduct.qtdEstoque}</p>
         <p><strong>Descrição Detalhada:</strong> {viewingProduct.descDetalhada}</p>
         <p><strong>Avaliação:</strong> {viewingProduct.avaliacao}</p>
-
         {/* Exibir carrossel de imagens */}
         {viewingProduct.imagens && viewingProduct.imagens.length > 0 ? (
-          <Slider dots={true} infinite={true} speed={500} slidesToShow={1} slidesToScroll={1}>
+          <Slider dots={true} infinite={false} speed={500} slidesToShow={1} slidesToScroll={1}>
             {viewingProduct.imagens.map((imagem, index) => (
+              
               <div key={index}>
                 <img 
-                  src={"../../../" + imagem.caminhoArquivo} 
+                  src={`../` + imagem.caminhoArquivo.slice(22)} 
                   alt={`Imagem ${index + 1}`} 
                   style={{ width: "100%", height: "auto"}} 
                 />

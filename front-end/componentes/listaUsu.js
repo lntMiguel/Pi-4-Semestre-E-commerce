@@ -237,11 +237,47 @@ function Usuario() {
       console.error("Erro ao alternar status:", error);
     }
   };
+  const validarCPF = (cpf) => {
+    // Remove caracteres não numéricos
+    cpf = cpf.replace(/[^\d]+/g, "");
+
+    // Verifica se o CPF tem 11 dígitos
+    if (cpf.length !== 11) return false;
+
+    // Impede CPFs com números repetidos como 111.111.111-11
+    if (/^(\d)\1{10}$/.test(cpf)) return false;
+
+    // Validação do primeiro dígito verificador
+    let soma = 0;
+    let peso = 10;
+    for (let i = 0; i < 9; i++) {
+      soma += parseInt(cpf[i]) * peso;
+      peso--;
+    }
+    let digito1 = (soma * 10) % 11;
+    if (digito1 === 10 || digito1 === 11) digito1 = 0;
+    if (digito1 !== parseInt(cpf[9])) return false;
+
+    // Validação do segundo dígito verificador
+    soma = 0;
+    peso = 11;
+    for (let i = 0; i < 10; i++) {
+      soma += parseInt(cpf[i]) * peso;
+      peso--;
+    }
+    let digito2 = (soma * 10) % 11;
+    if (digito2 === 10 || digito2 === 11) digito2 = 0;
+    if (digito2 !== parseInt(cpf[10])) return false;
+
+    return true;
+  };
 
   const validateFields = () => {
     let newErrors = {};
+
     if (!formData.nome) newErrors.nome = "Campo obrigatório";
     if (!formData.cpf) newErrors.cpf = "Campo obrigatório";
+    else if (!validarCPF(formData.cpf)) newErrors.cpf = "CPF inválido";
     if (!formData.email) newErrors.email = "Campo obrigatório";
     if (!formData.senha) newErrors.senha = "Campo obrigatório";
     if (!formData.confirmSenha) newErrors.confirmSenha = "Campo obrigatório";
@@ -250,10 +286,12 @@ function Usuario() {
     if (users.some((user) => user.email === formData.email)) {
       newErrors.email = "E-mail já cadastrado";
     }
-    setErrors(newErrors);
+
+    setError(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
+  
   const handleSave = async () => {
     setError("");
 
