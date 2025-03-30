@@ -95,40 +95,63 @@ const Cards = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
+  justify-content: center;
+  padding: 20px;
 `;
 
 const CardP = styled.div`
-  width: 200px;
+  width: 230px;
   border: 1px solid #ddd;
   border-radius: 10px;
   padding: 15px;
   text-align: center;
-  box-shadow: 0px 0px 5px rgba(0,0,0,0.1);
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: #fff;
+  transition: transform 0.2s, box-shadow 0.2s;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.15);
+  }
+`;
+
+const ImgProduto = styled.img`
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 10px;
 `;
 
 const NomeP = styled.h3`
   font-size: 18px;
+  color: #333;
+  font-weight: bold;
+  margin-bottom: 8px;
 `;
 
 const PrecoP = styled.p`
-  font-size: 16px;
+  font-size: 20px;
+  color: #ff6600;
+  font-weight: bold;
   margin: 10px 0;
 `;
 
 const DetalheB = styled.button`
-  padding: 8px 12px;
+  padding: 10px 15px;
   border: none;
   background-color: #007bff;
   color: white;
   border-radius: 5px;
   cursor: pointer;
-`;
+  font-size: 16px;
+  font-weight: bold;
+  width: 100%;
+  transition: background 0.3s;
 
-const ModalContent = styled.div`
-  background-color: white;
-  padding: 20px;
-  border-radius: 10px;
-  width: 400px;
+  &:hover {
+    background-color: #0056b3;
+  }
 `;
 
 const ModalBackground = styled.div`
@@ -138,33 +161,211 @@ const ModalBackground = styled.div`
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
-  display: ${props => (props.show === "true" ? 'flex' : 'none')};
+  display: ${props => (props.show === "true" ? "flex" : "none")};
   justify-content: center;
   align-items: center;
+  z-index: 1000;
 `;
 
-const CarrinhoTitle = styled.h3`
-  margin-bottom: 10px;
+const ModalContent = styled.div`
+  background: #fff;
+  padding: 25px;
+  border-radius: 12px;
+  width: 500px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  position: relative;
+`;
+
+const CloseButton = styled.button`
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  border: none;
+  background: transparent;
+  font-size: 20px;
+  cursor: pointer;
+  color: #333;
+
+  &:hover {
+    color: #ff0000;
+  }
+`;
+
+const CarrinhoTitle = styled.h2`
+  font-size: 22px;
+  color: #333;
+  margin-bottom: 15px;
 `;
 
 const CarrinhoList = styled.ul`
   list-style: none;
   padding: 0;
+  max-height: 250px;
+  overflow-y: auto;
 `;
 
 const CarrinhoItem = styled.li`
-  padding: 5px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
 `;
 
+const ItemInfo = styled.div`
+  display: flex;
+  align-items: center;
+  text-align: left;
+`;
 
-const Botao = styled.button`
-    padding: 5px 10px;
-    margin-left: 5px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-    background-color: #f1f1f1;
-    border: 1px solid #ddd;
+const ItemImage = styled.img`
+  width: 50px;
+  height: 50px;
+  border-radius: 5px;
+  margin-right: 10px;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+`;
+
+const ItemName = styled.p`
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+`;
+
+const ItemPrice = styled.p`
+  font-size: 14px;
+  color: #007bff;
+`;
+
+const QuantityControls = styled.div`
+  display: flex;
+  align-items: center;
+`;
+
+const QuantityButton = styled.button`
+  border: none;
+  background: #007bff;
+  color: white;
+  padding: 5px 10px;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 5px;
+  margin: 0 5px;
+  transition: all 0.2s;
+
+  &:hover {
+    background: #0056b3;
+  }
+`;
+
+const RemoveButton = styled.button`
+  border: none;
+  background: #ff4d4d;
+  color: white;
+  padding: 5px 10px;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: all 0.2s;
+
+  &:hover {
+    background: #cc0000;
+  }
+`;
+
+const ResumoPedido = styled.div`
+  margin-top: 20px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  text-align: center;
+`;
+
+const Total = styled.h3`
+  font-size: 20px;
+  color: #333;
+`;
+
+const BotaoFinalizar = styled.button`
+  width: 100%;
+  padding: 12px;
+  border: none;
+  background: linear-gradient(135deg, #28a745, #218838);
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: all 0.3s;
+
+  &:hover {
+    background: linear-gradient(135deg, #218838, #1e7e34);
+  }
+`;
+
+const ProductName = styled.h2`
+  font-size: 22px;
+  color: #333;
+  margin-bottom: 10px;
+`;
+
+const ProductDescription = styled.p`
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 15px;
+  padding: 0 15px;
+`;
+
+const ProductPrice = styled.p`
+  font-size: 20px;
+  font-weight: bold;
+  color: #007bff;
+  margin-bottom: 15px;
+`;
+
+const ButtonGroup = styled.div`
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+`;
+
+const ActionButton = styled.button`
+  padding: 12px 18px;
+  border: none;
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+
+  &:hover {
+    background: linear-gradient(135deg, #0056b3, #003f80);
+    transform: translateY(-2px);
+  }
+
+  &:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+`;
+const SuccessMessage = styled.p`
+  background-color: #28a745;
+  color: white;
+  padding: 10px;
+  border-radius: 5px;
+  margin-top: 10px;
+  font-weight: bold;
+  text-align: center;
+  opacity: 1;
+  transition: opacity 0.5s ease-in-out;
 `;
 
 function Principal() {
@@ -197,7 +398,7 @@ function Principal() {
         const selectedProduct = produtos.find(produto => produto.id === id);
         setProductDetails(selectedProduct);
         setShowModal(true);
-        setAddedMessage(''); 
+        setAddedMessage('');
     };
 
     const handleCloseModal = () => {
@@ -246,7 +447,7 @@ function Principal() {
             }
         });
         setShowModal(false);
-        setShowCarrinho(true); 
+        setShowCarrinho(true);
     };
 
     const handleCarrinhoClick = () => {
@@ -290,7 +491,7 @@ function Principal() {
         <StyledMain>
             <GlobalStyle />
             <Header>
-                <Logo src="imagem/logo.png" alt="Logo" />
+                <Logo src="imagem/logo.png" alt="Logo"/>
                 <Titulo>Turn on the beck</Titulo>
                 <Usuario>
                     <Carrinho title="Carrinho" onClick={handleCarrinhoClick}>🛒</Carrinho>
@@ -300,94 +501,101 @@ function Principal() {
             <Container>
                 <TopBar />
                 <Cards>
-                    {produtos.map((produto) => (
-                        <CardP key={produto.id}>
-                            <NomeP>{produto.nome}</NomeP>
-                            <PrecoP>R$ {produto.preco}</PrecoP>
-                            <DetalheB onClick={() => handleDetail(produto.id)}>
-                                Detalhes
-                            </DetalheB>
-                        </CardP>
-                    ))}
+                    {produtos.map((produto) => {
+                        
+
+                        return (
+                            <CardP key={produto.id}>
+                                
+                                <NomeP>{produto.nome}</NomeP>
+                                <PrecoP>R$ {produto.preco.toFixed(2)}</PrecoP>
+                                <DetalheB onClick={() => handleDetail(produto.id)}>
+                                    Ver Detalhes
+                                </DetalheB>
+                            </CardP>
+                        );
+                    })}
                 </Cards>
             </Container>
             {showCarrinho && (
                 <ModalBackground show={showCarrinho.toString()}>
                     <ModalContent>
-                        <CarrinhoTitle>Carrinho</CarrinhoTitle>
+                        <CloseButton onClick={() => setShowCarrinho(false)}>✖</CloseButton>
+                        <CarrinhoTitle>🛒 Carrinho de Compras</CarrinhoTitle>
                         <CarrinhoList>
                             {carrinho.length === 0 ? (
-                                <ul><li>O carrinho está vazio</li></ul>
+                                <p>O carrinho está vazio</p>
                             ) : (
                                 carrinho.map((item, index) => (
                                     <CarrinhoItem key={index}>
-                                        {item.nome} - R$ {item.preco} x {item.quantidade}
-                                        <Botao onClick={() => handleIncreaseQuantity(item.id)}>+</Botao>
-                                        <Botao onClick={() => handleRemoveUnit(item.id)}>-</Botao>
-                                        <Botao onClick={() => handleRemoveItem(item.id)}>Limpar</Botao>
+                                        <ItemInfo>
+                                            
+                                            <div>
+                                                <ItemName>{item.nome}</ItemName>
+                                                <ItemPrice>R$ {item.preco.toFixed(2)}</ItemPrice>
+                                            </div>
+                                        </ItemInfo>
+                                        <QuantityControls>
+                                            <QuantityButton onClick={() => handleIncreaseQuantity(item.id)}>+</QuantityButton>
+                                            {item.quantidade}
+                                            <QuantityButton onClick={() => handleRemoveUnit(item.id)}>-</QuantityButton>
+                                        </QuantityControls>
+                                        <RemoveButton onClick={() => handleRemoveItem(item.id)}>🗑️</RemoveButton>
                                     </CarrinhoItem>
                                 ))
                             )}
                         </CarrinhoList>
+
                         {carrinho.length !== 0 && (
-                            <>
+                            <ResumoPedido>
                                 <h4>Selecione o tipo de frete:</h4>
                                 <div>
                                     <label>
-                                        <input
-                                            type="checkbox"
-                                            checked={frete === 'normal'}
-                                            onChange={() => handleFreteChange('normal')}
-                                        />
+                                        <input type="radio" name="frete" checked={frete === "normal"} onChange={() => handleFreteChange("normal")} />
                                         Frete Normal - R$10,00
                                     </label>
                                 </div>
                                 <div>
                                     <label>
-                                        <input
-                                            type="checkbox"
-                                            checked={frete === 'rapida'}
-                                            onChange={() => handleFreteChange('rapida')}
-                                        />
-                                        Frete Rápida - R$20,00
+                                        <input type="radio" name="frete" checked={frete === "rapida"} onChange={() => handleFreteChange("rapida")} />
+                                        Frete Rápido - R$20,00
                                     </label>
                                 </div>
                                 <div>
                                     <label>
-                                        <input
-                                            type="checkbox"
-                                            checked={frete === 'retirada'}
-                                            onChange={() => handleFreteChange('retirada')}
-                                        />
+                                        <input type="radio" name="frete" checked={frete === "retirada"} onChange={() => handleFreteChange("retirada")} />
                                         Retirada na Loja - Grátis
                                     </label>
                                 </div>
-                            </>
+
+                                <Total>Total: R$ {total.toFixed(2)}</Total>
+                                <BotaoFinalizar>Finalizar Compra 💳</BotaoFinalizar>
+                            </ResumoPedido>
                         )}
-                        <h3>Total: R$ {total.toFixed(2)}</h3>
-                        <Botao onClick={() => setShowCarrinho(false)}>Fechar</Botao>
-                        <Botao onClick={handleClearCarrinho}>Limpar Carrinho</Botao>
                     </ModalContent>
                 </ModalBackground>
+
             )}
-            {/* Detalhes do Produto Modal */}
             <ModalBackground show={showModal.toString()}>
                 <ModalContent>
+                    <CloseButton onClick={handleCloseModal}>✖</CloseButton>
                     {productDetails && (
                         <>
-                            <h2>{productDetails.nome}</h2>
-                            <p><strong>Descrição:</strong> {productDetails.descDetalhada}</p>
-                            <p><strong>Preço:</strong> R$ {productDetails.preco}</p>
-                            <p><strong>Avaliação:</strong> {productDetails.avaliacao}</p>
-                            <Botao onClick={handleAddToCart}>Adicionar ao Carrinho</Botao>
-                            <p>{addedMessage}</p>
-                            <Botao onClick={handleBuy}>Comprar</Botao>
-                            <Botao onClick={handleCloseModal}>Fechar</Botao>
+                            
+                            <ProductName>{productDetails.nome}</ProductName>
+                            <ProductDescription>{productDetails.descDetalhada}</ProductDescription>
+                            <ProductPrice>R$ {productDetails.preco.toFixed(2)}</ProductPrice>
+                            <p><strong>Avaliação:</strong> ⭐ {productDetails.avaliacao}</p>
+
+                            <ButtonGroup>
+                                <ActionButton onClick={handleAddToCart}>Adicionar ao Carrinho 🛒</ActionButton>
+                                {addedMessage && <SuccessMessage>{addedMessage}</SuccessMessage>}
+                                <ActionButton onClick={handleBuy}>Comprar Agora 💳</ActionButton>
+                            </ButtonGroup>
                         </>
                     )}
                 </ModalContent>
             </ModalBackground>
-
         </StyledMain>
     );
 }
