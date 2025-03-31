@@ -154,60 +154,137 @@ const Modal = styled.div`
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 1000;
 `;
 
 const ModalConteudo = styled.div`
-  background: white;
-  padding: 20px;
-  width: 400px;
-  border-radius: 10px;
-  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+  background: #fff;
+  padding: 25px;
+  width: 450px;
+  border-radius: 12px;
+  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+  text-align: center;
 `;
 
 const ModalTitulo = styled.h3`
-  margin-bottom: 10px;
+  margin-bottom: 15px;
+  font-size: 22px;
+  color: #333;
+  font-weight: bold;
+`;
+
+const ProdutoInfo = styled.p`
+  font-size: 16px;
+  color: #555;
+  margin-bottom: 8px;
 `;
 
 const Input = styled.input`
   width: 100%;
-  padding: 8px;
-  margin-bottom: 10px;
+  padding: 10px;
+  margin-bottom: 12px;
   border: 1px solid #ccc;
-  border-radius: 5px;
-`;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: border 0.3s;
 
-const TextoArea = styled.textarea`
-  width: 100%;
-  padding: 8px;
-  margin-bottom: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  resize: none;
+  &:focus {
+    border-color: #007bff;
+    outline: none;
+  }
+
+  &:disabled {
+    background: #f4f4f4;
+    cursor: not-allowed;
+  }
 `;
 
 const GpBotoes = styled.div`
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
+  margin-top: 15px;
 `;
-const StyledSlider = styled(Slider)`
-  margin-bottom: 25px;  // Adiciona um margin-top ao Slider
 
-  .slick-prev,
-  .slick-next {
+const TextoArea = styled.textarea`
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 16px;
+  resize: none;
+  height: 80px;
+  transition: border 0.3s;
+
+  &:focus {
+    border-color: #007bff;
+    outline: none;
+  }
+
+  &:disabled {
+    background: #f4f4f4;
+    cursor: not-allowed;
+  }
+`;
+
+const BotaoSalvar = styled.button`
+  background: #28a745;
+  color: #fff;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s;
+
+  &:hover {
+    background: #218838;
+  }
+
+  &:disabled {
+    background: #b0b0b0;
+    cursor: not-allowed;
+  }
+`;
+
+const BotaoCancelar = styled.button`
+  background: #dc3545;
+  color: #fff;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s;
+
+  &:hover {
+    background: #c82333;
+  }
+`;
+
+// Estilo do carrossel
+const StyledSlider = styled(Slider)`
+  margin: 15px 0;
+  margin-bottom: 30px;
+
+  .slick-prev, .slick-next {
     z-index: 1;
+    color: #333;
   }
 
   .slick-dots {
-    bottom: -30px;
+    bottom: -25px;
   }
 
   img {
     width: 100%;
-    height: auto;
+    height: 250px;
+    object-fit: contain;
+    border-radius: 8px;
   }
 `;
 
@@ -228,7 +305,6 @@ function Produtos() {
     avaliacao: "",
   });
   const [viewingProduct, setViewingProduct] = useState(null);
-  const [viewingProductE, setViewingProductE] = useState(null);
   const [isViewModalOpen, setViewModalOpen] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [nomeImagemPrincipal, setNomeImagemPrincipal] = useState("");
@@ -426,59 +502,61 @@ function Produtos() {
   const handUpdate = async () => {
     setError("");
     const updatedData = new URLSearchParams();
-
+  
     if (formData.nome) updatedData.append("nome", formData.nome);
     if (formData.preco) updatedData.append("preco", formData.preco);
     if (formData.codigo) updatedData.append("codigo", formData.codigo);
     if (formData.qtdEstoque) updatedData.append("qtdEstoque", formData.qtdEstoque);
     if (formData.descDetalhada) updatedData.append("descDetalhada", formData.descDetalhada);
     if (formData.avaliacao) updatedData.append("avaliacao", formData.avaliacao);
-
+  
     console.log("Dados para atualização:", updatedData.toString());
-
+  
     try {
+      // Atualizando os dados do produto
       const response = await fetch(`http://localhost:8081/produto/${editingProduct.id}/dados`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
         },
         body: updatedData.toString(),
-        "Content-Type": "application/json",
       });
-
+  
       if (!response.ok) {
-        const errorData = await response.json(); // Captura os dados de erro retornados
-        console.error("Erro retornado da API:", errorData); // Exibe o erro completo
+        const errorData = await response.json();
+        console.error("Erro retornado da API:", errorData);
         throw new Error(errorData.error || "Erro ao atualizar produto");
       }
-      const formDataImages = new FormData();
-      formDataImages.append("idProduto", editingProduct.id);
-      selectedFiles.forEach((file) => {
-        formDataImages.append("files", file.file);
-        
-      });
-
-      const imageUploadResponse = await fetch("http://localhost:8081/imagens", {
-        method: "POST",
-        body: formDataImages,
-      });
-
-      if (!imageUploadResponse.ok) {
-        throw new Error("Erro ao enviar imagens");
+  
+      // Se houver imagens selecionadas, faz o upload
+      if (selectedFiles.length > 0) {
+        const formDataImages = new FormData();
+        formDataImages.append("idProduto", editingProduct.id);
+        selectedFiles.forEach((file) => {
+          formDataImages.append("files", file.file);
+        });
+  
+        const imageUploadResponse = await fetch("http://localhost:8081/imagens", {
+          method: "POST",
+          body: formDataImages,
+        });
+  
+        if (!imageUploadResponse.ok) {
+          throw new Error("Erro ao enviar imagens");
+        }
       }
   
-      alert("Produto e imagens adicionados com sucesso!");
-
+      alert("Produto atualizado com sucesso!");
+  
       await fetchProdutos(); // Atualiza a lista de produtos após a atualização
       setEditModalOpen(false); // Fecha o modal de edição
-
-      const data = await response.json();
-      console.log("Produto atualizado:", data);
+  
     } catch (error) {
       console.error("Erro ao atualizar produto:", error);
-      setError("Erro ao atualizar produto: " + error.message); // Exibe a mensagem do erro detalhado
+      setError("Erro ao atualizar produto: " + error.message); // Exibe a mensagem de erro detalhado
     }
   };
+  
 
   const handleDeleteImages = async (idImagem) => {
     try {
@@ -693,55 +771,55 @@ function Produtos() {
       )}
       {isEditModalOpen && viewingProduct &&(
         <Modal>
-          <ModalConteudo>
-            <ModalTitulo>Editar Produto</ModalTitulo>
-            <>
-              <Input
-                type="text"
-                name="nome"
-                placeholder="Nome do Produto"
-                value={formData.nome}
-                onChange={handleInputChange}
-                disabled={grupo === "estoquista"}
-              />
-              <Input
-                type="text"
-                name="codigo"
-                placeholder="Código do Produto"
-                value={formData.codigo}
-                onChange={handleInputChange}
-                disabled={grupo === "estoquista"}
-              />
-              <Input
-                type="number"
-                name="preco"
-                placeholder="Preço"
-                value={formData.preco}
-                onChange={handleInputChange}
-                disabled={grupo === "estoquista"}
-              />
-              <Input
-                type="number"
-                name="qtdEstoque"
-                placeholder="Quantidade em Estoque"
-                value={formData.qtdEstoque}
-                onChange={handleInputChange}
-              />
-              <TextoArea
-                name="descDetalhada"
-                placeholder="Descrição Detalhada"
-                value={formData.descDetalhada}
-                onChange={handleInputChange}
-                disabled={grupo === "estoquista"}
-              />
-              <Input
-                type="number"
-                name="avaliacao"
-                placeholder="Avaliação"
-                value={formData.avaliacao}
-                onChange={handleInputChange}
-                disabled={grupo === "estoquista"}
-              />
+        <ModalConteudo>
+          <ModalTitulo>Editar Produto</ModalTitulo>
+          <>
+            <Input
+              type="text"
+              name="nome"
+              placeholder="Nome do Produto"
+              value={formData.nome}
+              onChange={handleInputChange}
+              disabled={grupo === "estoquista"}
+            />
+            <Input
+              type="text"
+              name="codigo"
+              placeholder="Código do Produto"
+              value={formData.codigo}
+              onChange={handleInputChange}
+              disabled={grupo === "estoquista"}
+            />
+            <Input
+              type="number"
+              name="preco"
+              placeholder="Preço"
+              value={formData.preco}
+              onChange={handleInputChange}
+              disabled={grupo === "estoquista"}
+            />
+            <Input
+              type="number"
+              name="qtdEstoque"
+              placeholder="Quantidade em Estoque"
+              value={formData.qtdEstoque}
+              onChange={handleInputChange}
+            />
+            <TextoArea
+              name="descDetalhada"
+              placeholder="Descrição Detalhada"
+              value={formData.descDetalhada}
+              onChange={handleInputChange}
+              disabled={grupo === "estoquista"}
+            />
+            <Input
+              type="number"
+              name="avaliacao"
+              placeholder="Avaliação"
+              value={formData.avaliacao}
+              onChange={handleInputChange}
+              disabled={grupo === "estoquista"}
+            />
 
 <h3>Imagens do Produto</h3>
         {viewingProduct.imagens && viewingProduct.imagens.length > 0 ? (
@@ -771,46 +849,43 @@ function Produtos() {
         />
             </>
             <GpBotoes>
-              <Botao onClick={handUpdate}>Salvar</Botao>
-              <Botao onClick={() => setEditModalOpen(false)}>Cancelar</Botao>
-            </GpBotoes>
-          </ModalConteudo>
+          <BotaoSalvar onClick={handUpdate} disabled={grupo === "estoquista"}>Salvar</BotaoSalvar>
+          <BotaoCancelar onClick={() => setEditModalOpen(false)}>Cancelar</BotaoCancelar>
+        </GpBotoes>
+      </ModalConteudo>
         </Modal>
       )}
 {isViewModalOpen && viewingProduct && (
   <Modal>
-    <ModalConteudo>
-      <ModalTitulo>Visualizar Produto</ModalTitulo>
-      <div>
-        <p><strong>Nome:</strong> {viewingProduct.nome}</p>
-        <p><strong>Código:</strong> {viewingProduct.codigo}</p>
-        <p><strong>Preço:</strong> R$ {viewingProduct.preco}</p>
-        <p><strong>Quantidade em Estoque:</strong> {viewingProduct.qtdEstoque}</p>
-        <p><strong>Descrição Detalhada:</strong> {viewingProduct.descDetalhada}</p>
-        <p><strong>Avaliação:</strong> {viewingProduct.avaliacao}</p>
-        {/* Exibir carrossel de imagens */}
-        {viewingProduct.imagens && viewingProduct.imagens.length > 0 ? (
-          <StyledSlider dots={true} infinite={false} speed={500} slidesToShow={1} slidesToScroll={1}>
-            {viewingProduct.imagens.map((imagem, index) => (
-              
-              <div key={index}>
-                <img 
-                  src={`../` + imagem.caminhoArquivo.slice(22)} 
-                  alt={`Imagem ${index + 1}`} 
-                  style={{ width: "100%", height: "auto"}} 
-                />
-              </div>
-            ))}
-          </StyledSlider>
-        ) : (
-          <p>Sem imagens disponíveis.</p>
-        )}
-      </div>
-      <GpBotoes>
-        <Botao onClick={() => setViewModalOpen(false)}>Fechar</Botao>
-      </GpBotoes>
-    </ModalConteudo>
-  </Modal>
+  <ModalConteudo>
+    <ModalTitulo>Detalhes do Produto</ModalTitulo>
+    <ProdutoInfo><strong>Nome:</strong> {viewingProduct.nome}</ProdutoInfo>
+    <ProdutoInfo><strong>Código:</strong> {viewingProduct.codigo}</ProdutoInfo>
+    <ProdutoInfo><strong>Preço:</strong> R$ {viewingProduct.preco}</ProdutoInfo>
+    <ProdutoInfo><strong>Quantidade em Estoque:</strong> {viewingProduct.qtdEstoque}</ProdutoInfo>
+    <ProdutoInfo><strong>Descrição:</strong> {viewingProduct.descDetalhada}</ProdutoInfo>
+    <ProdutoInfo><strong>Avaliação:</strong> {viewingProduct.avaliacao} ⭐</ProdutoInfo>
+
+    {viewingProduct.imagens && viewingProduct.imagens.length > 0 ? (
+      <StyledSlider dots={true} infinite={false} speed={500} slidesToShow={1} slidesToScroll={1}>
+        {viewingProduct.imagens.map((imagem, index) => (
+          <div key={index}>
+            <img 
+              src={`../` + imagem.caminhoArquivo.slice(22)} 
+              alt={`Imagem ${index + 1}`} 
+            />
+          </div>
+        ))}
+      </StyledSlider>
+    ) : (
+      <ProdutoInfo>Sem imagens disponíveis.</ProdutoInfo>
+    )}
+
+    <GpBotoes>
+      <BotaoCancelar onClick={() => setViewModalOpen(false)}>Fechar</BotaoCancelar>
+    </GpBotoes>
+  </ModalConteudo>
+</Modal>
 )}
       <div>
         {Array.from({ length: totalPages }, (_, index) => (

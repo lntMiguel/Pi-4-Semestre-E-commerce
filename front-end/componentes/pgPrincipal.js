@@ -2,6 +2,9 @@ import styled from "styled-components";
 import { createGlobalStyle } from "styled-components";
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import Slider from "react-slick";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
 
 const GlobalStyle = createGlobalStyle`
   * {
@@ -368,236 +371,302 @@ const SuccessMessage = styled.p`
   transition: opacity 0.5s ease-in-out;
 `;
 
+const StyledSlider = styled(Slider)`
+    margin: 15px 0;
+  margin-bottom: 30px;
+
+  .slick-prev, .slick-next {
+    z-index: 1;
+    color: #333;
+  }
+
+  .slick-dots {
+    bottom: -25px;
+  }
+
+  img {
+    width: 100%;
+    height: 250px;
+    object-fit: contain;
+    border-radius: 8px;
+  }
+`;
+
 function Principal() {
-    const [produtos, setProdutos] = useState([]);
-    const [showModal, setShowModal] = useState(false);
-    const [productDetails, setProductDetails] = useState(null);
-    const [carrinho, setCarrinho] = useState([]);
-    const [showCarrinho, setShowCarrinho] = useState(false);
-    const [addedMessage, setAddedMessage] = useState('');
-    const [total, setTotal] = useState(0);
-    const [frete, setFrete] = useState(null);
-    const [valorFrete, setValorFrete] = useState(0);
+  const [produtos, setProdutos] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [productDetails, setProductDetails] = useState(null);
+  const [carrinho, setCarrinho] = useState([]);
+  const [showCarrinho, setShowCarrinho] = useState(false);
+  const [addedMessage, setAddedMessage] = useState('');
+  const [total, setTotal] = useState(0);
+  const [frete, setFrete] = useState(null);
+  const [valorFrete, setValorFrete] = useState(0);
+  const [viewingProduct, setViewingProduct] = useState(null);
 
-    useEffect(() => {
-        axios.get('http://localhost:8081/produto')
-            .then(response => {
-                setProdutos(response.data);
-            })
-            .catch(error => {
-                console.error('Erro ao buscar produtos:', error);
-            });
-    }, []);
+  useEffect(() => {
+    axios.get('http://localhost:8081/produto')
+      .then(response => {
+        setProdutos(response.data);
+      })
+      .catch(error => {
+        console.error('Erro ao buscar produtos:', error);
 
-    useEffect(() => {
-        const totalProdutos = carrinho.reduce((acc, item) => acc + (item.preco * item.quantidade), 0);
-        setTotal(totalProdutos + valorFrete);
-    }, [carrinho, valorFrete]);
+        setCount(1);
+      });
+  }, []);
 
-    const handleDetail = (id) => {
-        const selectedProduct = produtos.find(produto => produto.id === id);
-        setProductDetails(selectedProduct);
-        setShowModal(true);
-        setAddedMessage('');
-    };
+  const fetchImages = async (idProduto) => {
+    try {
+      const response = await fetch(`http://localhost:8081/imagens/${idProduto}`);
+      if (!response.ok) {
+        throw new Error("Erro ao buscar imagens");
+      }
+      const imagens = await response.json();
+      const caminhoBase = "http://localhost:8081/";
+      const imagensComCaminho = imagens.map(imagem => ({
+        ...imagem,
+        url: `${caminhoBase}${imagem.caminho}`,
+      }));
+      return imagensComCaminho;
+    } catch (error) {
+      console.error("Erro ao buscar imagens:", error);
+      return [];
+    }
+  };
 
-    const handleCloseModal = () => {
-        setShowModal(false);
-    };
+  useEffect(() => {
+    const totalProdutos = carrinho.reduce((acc, item) => acc + (item.preco * item.quantidade), 0);
+    setTotal(totalProdutos + valorFrete);
+  }, [carrinho, valorFrete]);
 
-    const handleFreteChange = (tipo) => {
-        if (tipo === 'normal') {
-            setValorFrete(10);
-            setFrete('normal');
-        } else if (tipo === 'rapida') {
-            setValorFrete(20);
-            setFrete('rapida');
-        } else if (tipo === 'retirada') {
-            setValorFrete(0);
-            setFrete('retirada');
+  const handleDetail = async (id) => {
+    const selectedProduct = produtos.find(produto => produto.id === id);
+    setProductDetails(selectedProduct);
+    setViewingProduct(selectedProduct);
+    setShowModal(true);
+    setAddedMessage('');
+    try {
+      const imagens = await fetchImages(selectedProduct.id);
+      setViewingProduct(prev => ({
+        ...prev,
+        imagens,
+      }));
+    } catch (error) {
+      console.error("Erro ao buscar imagens:", error);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+  };
+
+  const handleFreteChange = (tipo) => {
+    if (tipo === 'normal') {
+      setValorFrete(10);
+      setFrete('normal');
+    } else if (tipo === 'rapida') {
+      setValorFrete(20);
+      setFrete('rapida');
+    } else if (tipo === 'retirada') {
+      setValorFrete(0);
+      setFrete('retirada');
+    }
+  };
+
+  const handleAddToCart = () => {
+    setCarrinho(prevCarrinho => {
+      const existingProductIndex = prevCarrinho.findIndex(item => item.id === productDetails.id);
+
+      if (existingProductIndex !== -1) {
+        const updatedCarrinho = [...prevCarrinho];
+        updatedCarrinho[existingProductIndex].quantidade += 1;
+        return updatedCarrinho;
+      } else {
+        return [...prevCarrinho, { ...productDetails, quantidade: 1 }];
+      }
+    });
+    setAddedMessage('Produto adicionado ao carrinho!');
+    setTimeout(() => setAddedMessage(''), 2000);
+  };
+
+  const handleBuy = () => {
+    setCarrinho(prevCarrinho => {
+      const existingProductIndex = prevCarrinho.findIndex(item => item.id === productDetails.id);
+
+      if (existingProductIndex !== -1) {
+        const updatedCarrinho = [...prevCarrinho];
+        updatedCarrinho[existingProductIndex].quantidade += 1;
+        return updatedCarrinho;
+      } else {
+        return [...prevCarrinho, { ...productDetails, quantidade: 1 }];
+      }
+    });
+    setShowModal(false);
+    setShowCarrinho(true);
+  };
+
+  const handleCarrinhoClick = () => {
+    setShowCarrinho(!showCarrinho);
+  };
+
+  const handleIncreaseQuantity = (id) => {
+    setCarrinho(prevCarrinho => {
+      const updatedCarrinho = prevCarrinho.map(item => {
+        if (item.id === id) {
+          return { ...item, quantidade: item.quantidade + 1 };
         }
-    };
+        return item;
+      });
+      return updatedCarrinho;
+    });
+  };
 
-    const handleAddToCart = () => {
-        setCarrinho(prevCarrinho => {
-            const existingProductIndex = prevCarrinho.findIndex(item => item.id === productDetails.id);
+  const handleRemoveUnit = (id) => {
+    setCarrinho(prevCarrinho => {
+      const updatedCarrinho = [...prevCarrinho];
+      const existingProductIndex = updatedCarrinho.findIndex(item => item.id === id);
+      if (existingProductIndex !== -1 && updatedCarrinho[existingProductIndex].quantidade > 1) {
+        updatedCarrinho[existingProductIndex].quantidade -= 1;
+      } else {
+        updatedCarrinho.splice(existingProductIndex, 1);
+      }
+      return updatedCarrinho;
+    });
+  };
 
-            if (existingProductIndex !== -1) {
-                const updatedCarrinho = [...prevCarrinho];
-                updatedCarrinho[existingProductIndex].quantidade += 1;
-                return updatedCarrinho;
-            } else {
-                return [...prevCarrinho, { ...productDetails, quantidade: 1 }];
-            }
-        });
-        setAddedMessage('Produto adicionado ao carrinho!');
-        setTimeout(() => setAddedMessage(''), 2000);
-    };
+  const handleRemoveItem = (id) => {
+    setCarrinho(prevCarrinho => prevCarrinho.filter(item => item.id !== id));
+  };
 
-    const handleBuy = () => {
-        setCarrinho(prevCarrinho => {
-            const existingProductIndex = prevCarrinho.findIndex(item => item.id === productDetails.id);
+  const handleClearCarrinho = () => {
+    setCarrinho([]);
+  };
 
-            if (existingProductIndex !== -1) {
-                const updatedCarrinho = [...prevCarrinho];
-                updatedCarrinho[existingProductIndex].quantidade += 1;
-                return updatedCarrinho;
-            } else {
-                return [...prevCarrinho, { ...productDetails, quantidade: 1 }];
-            }
-        });
-        setShowModal(false);
-        setShowCarrinho(true);
-    };
+  const settings = {
+    dots: true,
+    infinite: false,
+    speed: 500,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    adaptiveHeight: true,
+  };
 
-    const handleCarrinhoClick = () => {
-        setShowCarrinho(!showCarrinho);
-    };
+  return (
+    <StyledMain>
+      <GlobalStyle />
+      <Header>
+        <Logo src="imagens/logo.png" alt="Logo" />
+        <Titulo>Turn on the beck</Titulo>
+        <Usuario>
+          <Carrinho title="Carrinho" onClick={handleCarrinhoClick}>🛒</Carrinho>
+          <BotaoLogin>Login</BotaoLogin>
+        </Usuario>
+      </Header>
+      <Container>
+        <TopBar />
+        <Cards>
+          {produtos.map((produto) => (
+            <CardP key={produto.id}>
+              <NomeP>{produto.nome}</NomeP>
+              <PrecoP>R$ {produto.preco.toFixed(2)}</PrecoP>
+              <DetalheB onClick={() => handleDetail(produto.id)}>Ver Detalhes</DetalheB>
+            </CardP>
+          ))}
+        </Cards>
+      </Container>
+      {showCarrinho && (
+        <ModalBackground show={showCarrinho.toString()}>
+          <ModalContent>
+            <CloseButton onClick={() => setShowCarrinho(false)}>✖</CloseButton>
+            <CarrinhoTitle>🛒 Carrinho de Compras</CarrinhoTitle>
+            <CarrinhoList>
+              {carrinho.length === 0 ? (
+                <p>O carrinho está vazio</p>
+              ) : (
+                carrinho.map((item, index) => (
+                  <CarrinhoItem key={index}>
+                    <ItemInfo>
+                      <div>
+                        <ItemName>{item.nome}</ItemName>
+                        <ItemPrice>R$ {item.preco.toFixed(2)}</ItemPrice>
+                      </div>
+                    </ItemInfo>
+                    <QuantityControls>
+                      <QuantityButton onClick={() => handleIncreaseQuantity(item.id)}>+</QuantityButton>
+                      {item.quantidade}
+                      <QuantityButton onClick={() => handleRemoveUnit(item.id)}>-</QuantityButton>
+                    </QuantityControls>
+                    <RemoveButton onClick={() => handleRemoveItem(item.id)}>🗑️</RemoveButton>
+                  </CarrinhoItem>
+                ))
+              )}
+            </CarrinhoList>
 
-    const handleIncreaseQuantity = (id) => {
-        setCarrinho(prevCarrinho => {
-            const updatedCarrinho = prevCarrinho.map(item => {
-                if (item.id === id) {
-                    return { ...item, quantidade: item.quantidade + 1 };
-                }
-                return item;
-            });
-            return updatedCarrinho;
-        });
-    };
+            {carrinho.length !== 0 && (
+              <ResumoPedido>
+                <h4>Selecione o tipo de frete:</h4>
+                <div>
+                  <label>
+                    <input type="radio" name="frete" checked={frete === "normal"} onChange={() => handleFreteChange("normal")} />
+                    Frete Normal - R$10,00
+                  </label>
+                </div>
+                <div>
+                  <label>
+                    <input type="radio" name="frete" checked={frete === "rapida"} onChange={() => handleFreteChange("rapida")} />
+                    Frete Rápido - R$20,00
+                  </label>
+                </div>
+                <div>
+                  <label>
+                    <input type="radio" name="frete" checked={frete === "retirada"} onChange={() => handleFreteChange("retirada")} />
+                    Retirada na Loja - Grátis
+                  </label>
+                </div>
 
-    const handleRemoveUnit = (id) => {
-        setCarrinho(prevCarrinho => {
-            const updatedCarrinho = [...prevCarrinho];
-            const existingProductIndex = updatedCarrinho.findIndex(item => item.id === id);
-            if (existingProductIndex !== -1 && updatedCarrinho[existingProductIndex].quantidade > 1) {
-                updatedCarrinho[existingProductIndex].quantidade -= 1;
-            } else {
-                updatedCarrinho.splice(existingProductIndex, 1);
-            }
-            return updatedCarrinho;
-        });
-    };
-
-    const handleRemoveItem = (id) => {
-        setCarrinho(prevCarrinho => prevCarrinho.filter(item => item.id !== id));
-    };
-
-    const handleClearCarrinho = () => {
-        setCarrinho([]);
-    };
-
-    return (
-        <StyledMain>
-            <GlobalStyle />
-            <Header>
-                <Logo src="imagem/logo.png" alt="Logo"/>
-                <Titulo>Turn on the beck</Titulo>
-                <Usuario>
-                    <Carrinho title="Carrinho" onClick={handleCarrinhoClick}>🛒</Carrinho>
-                    <BotaoLogin>Login</BotaoLogin>
-                </Usuario>
-            </Header>
-            <Container>
-                <TopBar />
-                <Cards>
-                    {produtos.map((produto) => {
-                        
-
-                        return (
-                            <CardP key={produto.id}>
-                                
-                                <NomeP>{produto.nome}</NomeP>
-                                <PrecoP>R$ {produto.preco.toFixed(2)}</PrecoP>
-                                <DetalheB onClick={() => handleDetail(produto.id)}>
-                                    Ver Detalhes
-                                </DetalheB>
-                            </CardP>
-                        );
-                    })}
-                </Cards>
-            </Container>
-            {showCarrinho && (
-                <ModalBackground show={showCarrinho.toString()}>
-                    <ModalContent>
-                        <CloseButton onClick={() => setShowCarrinho(false)}>✖</CloseButton>
-                        <CarrinhoTitle>🛒 Carrinho de Compras</CarrinhoTitle>
-                        <CarrinhoList>
-                            {carrinho.length === 0 ? (
-                                <p>O carrinho está vazio</p>
-                            ) : (
-                                carrinho.map((item, index) => (
-                                    <CarrinhoItem key={index}>
-                                        <ItemInfo>
-                                            
-                                            <div>
-                                                <ItemName>{item.nome}</ItemName>
-                                                <ItemPrice>R$ {item.preco.toFixed(2)}</ItemPrice>
-                                            </div>
-                                        </ItemInfo>
-                                        <QuantityControls>
-                                            <QuantityButton onClick={() => handleIncreaseQuantity(item.id)}>+</QuantityButton>
-                                            {item.quantidade}
-                                            <QuantityButton onClick={() => handleRemoveUnit(item.id)}>-</QuantityButton>
-                                        </QuantityControls>
-                                        <RemoveButton onClick={() => handleRemoveItem(item.id)}>🗑️</RemoveButton>
-                                    </CarrinhoItem>
-                                ))
-                            )}
-                        </CarrinhoList>
-
-                        {carrinho.length !== 0 && (
-                            <ResumoPedido>
-                                <h4>Selecione o tipo de frete:</h4>
-                                <div>
-                                    <label>
-                                        <input type="radio" name="frete" checked={frete === "normal"} onChange={() => handleFreteChange("normal")} />
-                                        Frete Normal - R$10,00
-                                    </label>
-                                </div>
-                                <div>
-                                    <label>
-                                        <input type="radio" name="frete" checked={frete === "rapida"} onChange={() => handleFreteChange("rapida")} />
-                                        Frete Rápido - R$20,00
-                                    </label>
-                                </div>
-                                <div>
-                                    <label>
-                                        <input type="radio" name="frete" checked={frete === "retirada"} onChange={() => handleFreteChange("retirada")} />
-                                        Retirada na Loja - Grátis
-                                    </label>
-                                </div>
-
-                                <Total>Total: R$ {total.toFixed(2)}</Total>
-                                <BotaoFinalizar>Finalizar Compra 💳</BotaoFinalizar>
-                            </ResumoPedido>
-                        )}
-                    </ModalContent>
-                </ModalBackground>
-
+                <Total>Total: R$ {total.toFixed(2)}</Total>
+                <BotaoFinalizar>Finalizar Compra 💳</BotaoFinalizar>
+              </ResumoPedido>
             )}
-            <ModalBackground show={showModal.toString()}>
-                <ModalContent>
-                    <CloseButton onClick={handleCloseModal}>✖</CloseButton>
-                    {productDetails && (
-                        <>
-                            
-                            <ProductName>{productDetails.nome}</ProductName>
-                            <ProductDescription>{productDetails.descDetalhada}</ProductDescription>
-                            <ProductPrice>R$ {productDetails.preco.toFixed(2)}</ProductPrice>
-                            <p><strong>Avaliação:</strong> ⭐ {productDetails.avaliacao}</p>
-
-                            <ButtonGroup>
-                                <ActionButton onClick={handleAddToCart}>Adicionar ao Carrinho 🛒</ActionButton>
-                                {addedMessage && <SuccessMessage>{addedMessage}</SuccessMessage>}
-                                <ActionButton onClick={handleBuy}>Comprar Agora 💳</ActionButton>
-                            </ButtonGroup>
-                        </>
-                    )}
-                </ModalContent>
-            </ModalBackground>
-        </StyledMain>
-    );
+          </ModalContent>
+        </ModalBackground>
+      )}
+      <ModalBackground show={showModal.toString()}>
+        <ModalContent>
+          <CloseButton onClick={handleCloseModal}>✖</CloseButton>
+          {productDetails && viewingProduct && (
+            <>
+              {viewingProduct.imagens && viewingProduct.imagens.length > 0 ? (
+                <StyledSlider {...settings}>
+                  {viewingProduct.imagens.map((imagem, index) => (
+                    <div key={index}>
+                      <img
+                        src={`../` + imagem.caminhoArquivo.slice(22)}
+                        alt={`Imagem ${index + 1}`}
+                        style={{ width: "100px", height: "auto", maxHeight: "300px", objectFit: "contain" }}
+                      />
+                    </div>
+                  ))}
+                </StyledSlider>
+              ) : (
+                <p>Sem imagens para exibir.</p>
+              )}
+              <ProductName>{productDetails.nome}</ProductName>
+              <ProductDescription>{productDetails.descDetalhada}</ProductDescription>
+              <ProductPrice>R$ {productDetails.preco.toFixed(2)}</ProductPrice>
+              <p><strong>Avaliação:</strong> ⭐ {productDetails.avaliacao}</p>
+              <ButtonGroup>
+                <ActionButton onClick={handleAddToCart}>Adicionar ao Carrinho 🛒</ActionButton>
+                {addedMessage && <SuccessMessage>{addedMessage}</SuccessMessage>}
+                <ActionButton onClick={handleBuy}>Comprar Agora 💳</ActionButton>
+              </ButtonGroup>
+            </>
+          )}
+        </ModalContent>
+      </ModalBackground>
+    </StyledMain>
+  );
 }
 
 export default Principal;

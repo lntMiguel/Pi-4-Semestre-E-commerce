@@ -204,7 +204,7 @@ function Usuario() {
 
   useEffect(() => {
     fetchUsers();
-  }, [searchTerm]); 
+    }, [searchTerm]); 
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -212,6 +212,7 @@ function Usuario() {
       ...prevData,
       [name]: value,  
     }));
+    setCount(1);
   };
 
   const toggleStatus = async (id, currentStatus) => {
