@@ -477,15 +477,22 @@ function Principal() {
   const handleAddToCart = () => {
     setCarrinho(prevCarrinho => {
       const existingProductIndex = prevCarrinho.findIndex(item => item.id === productDetails.id);
-
+  
       if (existingProductIndex !== -1) {
-        const updatedCarrinho = [...prevCarrinho];
-        updatedCarrinho[existingProductIndex].quantidade += 1;
+        // Se o produto já existe, incrementa a quantidade
+        const updatedCarrinho = prevCarrinho.map((item, index) => {
+          if (index === existingProductIndex) {
+            return { ...item, quantidade: item.quantidade + 1 };
+          }
+          return item;
+        });
         return updatedCarrinho;
       } else {
+        // Se o produto não existe, adiciona-o com quantidade 1
         return [...prevCarrinho, { ...productDetails, quantidade: 1 }];
       }
     });
+  
     setAddedMessage('Produto adicionado ao carrinho!');
     setTimeout(() => setAddedMessage(''), 2000);
   };
@@ -524,13 +531,13 @@ function Principal() {
 
   const handleRemoveUnit = (id) => {
     setCarrinho(prevCarrinho => {
-      const updatedCarrinho = [...prevCarrinho];
-      const existingProductIndex = updatedCarrinho.findIndex(item => item.id === id);
-      if (existingProductIndex !== -1 && updatedCarrinho[existingProductIndex].quantidade > 1) {
-        updatedCarrinho[existingProductIndex].quantidade -= 1;
-      } else {
-        updatedCarrinho.splice(existingProductIndex, 1);
-      }
+      const updatedCarrinho = prevCarrinho.map(item => {
+        if (item.id === id && item.quantidade > 1) {
+          return { ...item, quantidade: item.quantidade - 1 };
+        }
+        return item;
+      }).filter(item => item.quantidade > 0); // Remove qualquer produto com quantidade 0
+  
       return updatedCarrinho;
     });
   };
