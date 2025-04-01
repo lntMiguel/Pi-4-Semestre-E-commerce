@@ -19,7 +19,18 @@ const GlobalStyle = createGlobalStyle`
     font-family: Arial, sans-serif;
   }
 `;
-
+const Modal = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+`;
 const StyledMain = styled.div`
   display: flex;
   justify-content: center;
@@ -121,7 +132,7 @@ const CardP = styled.div`
 const ImgProduto = styled.img`
   width: 100%;
   height: 180px;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 8px;
   margin-bottom: 10px;
 `;
@@ -164,7 +175,7 @@ const ModalBackground = styled.div`
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
-  display: ${props => (props.show === "true" ? "flex" : "none")};
+  display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
@@ -175,9 +186,6 @@ const ModalContent = styled.div`
   padding: 25px;
   border-radius: 12px;
   width: 500px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
   text-align: center;
   position: relative;
@@ -372,7 +380,7 @@ const SuccessMessage = styled.p`
 `;
 
 const StyledSlider = styled(Slider)`
-    margin: 15px 0;
+  margin: 15px 0;
   margin-bottom: 30px;
 
   .slick-prev, .slick-next {
@@ -395,7 +403,6 @@ const StyledSlider = styled(Slider)`
 function Principal() {
   const [produtos, setProdutos] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [productDetails, setProductDetails] = useState(null);
   const [carrinho, setCarrinho] = useState([]);
   const [showCarrinho, setShowCarrinho] = useState(false);
   const [addedMessage, setAddedMessage] = useState('');
@@ -406,12 +413,20 @@ function Principal() {
 
   useEffect(() => {
     axios.get('http://localhost:8081/produto')
-      .then(response => {
-        setProdutos(response.data);
+      .then(async (response) => {
+        const produtosComImagens = await Promise.all(response.data.map(async (produto) => {
+          const imagens = await fetchImages(produto.id);
+          console.log(imagens)
+          const imagemPrincipal = imagens.find(img => img.principal) || imagens[0]; // Pega a principal ou a primeira disponível
+          return {
+            ...produto,
+            imagemPrincipal: imagemPrincipal ? imagemPrincipal.caminhoArquivo : 'url_da_imagem_padrao.jpg',
+          };
+        }));
+        setProdutos(produtosComImagens);
       })
       .catch(error => {
         console.error('Erro ao buscar produtos:', error);
-
         setCount(1);
       });
   }, []);
@@ -440,24 +455,20 @@ function Principal() {
     setTotal(totalProdutos + valorFrete);
   }, [carrinho, valorFrete]);
 
-  const handleDetail = async (id) => {
-    const selectedProduct = produtos.find(produto => produto.id === id);
-    setProductDetails(selectedProduct);
-    setViewingProduct(selectedProduct);
-    setShowModal(true);
+  const handleDetail = async (produto) => {
+   
     setAddedMessage('');
-    try {
-      const imagens = await fetchImages(selectedProduct.id);
-      setViewingProduct(prev => ({
-        ...prev,
+    const imagens = await fetchImages(produto.id); // Busca as imagens antes de atualizar o estado
+ 
+      setViewingProduct({
+        ...produto,
         imagens,
-      }));
-    } catch (error) {
-      console.error("Erro ao buscar imagens:", error);
-    }
+      });
+      setShowModal(true);
   };
 
   const handleCloseModal = () => {
+
     setShowModal(false);
   };
 
@@ -476,14 +487,14 @@ function Principal() {
 
   const handleAddToCart = () => {
     setCarrinho(prevCarrinho => {
-      const existingProductIndex = prevCarrinho.findIndex(item => item.id === productDetails.id);
+      const existingProductIndex = prevCarrinho.findIndex(item => item.id === viewingProduct.id);
 
       if (existingProductIndex !== -1) {
         const updatedCarrinho = [...prevCarrinho];
         updatedCarrinho[existingProductIndex].quantidade += 1;
         return updatedCarrinho;
       } else {
-        return [...prevCarrinho, { ...productDetails, quantidade: 1 }];
+        return [...prevCarrinho, { ...viewingProduct, quantidade: 1 }];
       }
     });
     setAddedMessage('Produto adicionado ao carrinho!');
@@ -492,14 +503,14 @@ function Principal() {
 
   const handleBuy = () => {
     setCarrinho(prevCarrinho => {
-      const existingProductIndex = prevCarrinho.findIndex(item => item.id === productDetails.id);
+      const existingProductIndex = prevCarrinho.findIndex(item => item.id === viewingProduct.id);
 
       if (existingProductIndex !== -1) {
         const updatedCarrinho = [...prevCarrinho];
         updatedCarrinho[existingProductIndex].quantidade += 1;
         return updatedCarrinho;
       } else {
-        return [...prevCarrinho, { ...productDetails, quantidade: 1 }];
+        return [...prevCarrinho, { ...viewingProduct, quantidade: 1 }];
       }
     });
     setShowModal(false);
@@ -570,7 +581,8 @@ function Principal() {
             <CardP key={produto.id}>
               <NomeP>{produto.nome}</NomeP>
               <PrecoP>R$ {produto.preco.toFixed(2)}</PrecoP>
-              <DetalheB onClick={() => handleDetail(produto.id)}>Ver Detalhes</DetalheB>
+              <ImgProduto src = {produto.imagemPrincipal.slice(22)}></ImgProduto>
+              <DetalheB onClick={() => handleDetail(produto)}>Ver Detalhes</DetalheB>
             </CardP>
           ))}
         </Cards>
@@ -632,19 +644,22 @@ function Principal() {
           </ModalContent>
         </ModalBackground>
       )}
-      <ModalBackground show={showModal.toString()}>
+      
+      {showModal && viewingProduct &&(
+      <Modal>
         <ModalContent>
           <CloseButton onClick={handleCloseModal}>✖</CloseButton>
-          {productDetails && viewingProduct && (
+        
             <>
               {viewingProduct.imagens && viewingProduct.imagens.length > 0 ? (
-                <StyledSlider {...settings}>
+                <StyledSlider dots={true} infinite={false} speed={500} slidesToShow={2} slidesToScroll={1}>
                   {viewingProduct.imagens.map((imagem, index) => (
                     <div key={index}>
                       <img
                         src={`../` + imagem.caminhoArquivo.slice(22)}
                         alt={`Imagem ${index + 1}`}
-                        style={{ width: "100px", height: "auto", maxHeight: "300px", objectFit: "contain" }}
+                        style={{ width: "100px", height: "auto", maxHeight: "300px", objectFit: "contain" }}  
+
                       />
                     </div>
                   ))}
@@ -652,19 +667,20 @@ function Principal() {
               ) : (
                 <p>Sem imagens para exibir.</p>
               )}
-              <ProductName>{productDetails.nome}</ProductName>
-              <ProductDescription>{productDetails.descDetalhada}</ProductDescription>
-              <ProductPrice>R$ {productDetails.preco.toFixed(2)}</ProductPrice>
-              <p><strong>Avaliação:</strong> ⭐ {productDetails.avaliacao}</p>
+              <ProductName>{viewingProduct.nome}</ProductName>
+              <ProductDescription>{viewingProduct.descDetalhada}</ProductDescription>
+              <ProductPrice>R$ {viewingProduct.preco.toFixed(2)}</ProductPrice>
+              <p><strong>Avaliação:</strong> ⭐ {viewingProduct.avaliacao}</p>
               <ButtonGroup>
                 <ActionButton onClick={handleAddToCart}>Adicionar ao Carrinho 🛒</ActionButton>
                 {addedMessage && <SuccessMessage>{addedMessage}</SuccessMessage>}
                 <ActionButton onClick={handleBuy}>Comprar Agora 💳</ActionButton>
               </ButtonGroup>
             </>
-          )}
+          
         </ModalContent>
-      </ModalBackground>
+      </Modal>
+    )}
     </StyledMain>
   );
 }

@@ -317,7 +317,12 @@ function Produtos() {
   );
 
   useEffect(() => {
-    fetchProdutos();
+    try{fetchProdutos();
+
+    } catch(error) {
+        console.error('Erro ao buscar produtos:', error);
+        setCount(1);
+      };
   }, [searchTerm]);
 
   const handleInputChange = (e) => {
@@ -769,6 +774,7 @@ function Produtos() {
           </ModalConteudo>
         </Modal>
       )}
+      
       {isEditModalOpen && viewingProduct &&(
         <Modal>
         <ModalConteudo>
