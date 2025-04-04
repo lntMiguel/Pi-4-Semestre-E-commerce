@@ -36,4 +36,18 @@ public class EnderecoCliente {
     @Field("CEP")
     private long cep;
 
+    @Field("TG_Padrao")
+    private boolean padrao;
+
+    public void setPadrao(boolean padrao) {
+        this.padrao = padrao;
+    }
+
+    public boolean isPadrao() {
+        return padrao;
+    }
+
+    public String getIdCliente() {
+        return idCliente;
+    }
 }
