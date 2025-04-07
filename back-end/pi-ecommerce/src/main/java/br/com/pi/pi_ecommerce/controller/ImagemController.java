@@ -45,6 +45,11 @@ public class ImagemController {
         return imagemService.listaImagens(idProduto);
     }
 
+    @PutMapping
+    public Imagem atualizaImagem(@RequestParam String idImagem, @RequestParam String idProduto){
+        return imagemService.selecionarPrincipal(idImagem, idProduto);
+
+    }
 
 
 }

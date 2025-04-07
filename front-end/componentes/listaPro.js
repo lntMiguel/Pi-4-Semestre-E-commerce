@@ -310,6 +310,11 @@ function Produtos() {
   const [nomeImagemPrincipal, setNomeImagemPrincipal] = useState("");
   const [imagemPrincipalIndex, setImagemPrincipalIndex] = useState(null);
   const { grupo } = useAuth();
+  const [imagemPrincipal, setImagemPrincipal] =  useState(() => {
+    const principal = viewingProduct?.imagens?.find(img => img.principal);
+    return principal ? principal.id : null;
+  }); // imagemPrincipalId deve vir do backend
+
   
 
   const filteredProducts = products.filter((product) =>
@@ -473,11 +478,18 @@ function Produtos() {
     setViewModalOpen(true); // Abre o modal primeiro
   
     const imagens = await fetchImages(product.id); // Busca as imagens antes de atualizar o estado
-
+    
     setViewingProduct({
       ...product,
       imagens, 
     });
+
+    const imagemPrincipal = imagens.find(img => img.principal === true);
+    if (imagemPrincipal) {
+      setImagemPrincipal(imagemPrincipal.id);
+    } else {
+      setImagemPrincipal(null); // limpa caso não tenha principal
+    }
   };
 
   const handleCloseModal = () => {
@@ -549,6 +561,12 @@ function Produtos() {
         if (!imageUploadResponse.ok) {
           throw new Error("Erro ao enviar imagens");
         }
+      }
+
+      if (imagemPrincipal) {
+        await fetch(`http://localhost:8081/imagens?idProduto=${editingProduct.id}&idImagem=${imagemPrincipal}`, {
+          method: "PUT",
+        });
       }
   
       alert("Produto atualizado com sucesso!");
@@ -828,25 +846,59 @@ function Produtos() {
             />
 
 <h3>Imagens do Produto</h3>
-        {viewingProduct.imagens && viewingProduct.imagens.length > 0 ? (
-          <StyledSlider dots={true} infinite={false} speed={500} slidesToShow={2} slidesToScroll={1}>
-          
-            {viewingProduct.imagens.map((imagem, index) => (
-              <div key={index}>
-                <img 
-                  src={`../` + imagem.caminhoArquivo.slice(22)} 
-                  alt={`Imagem ${index + 1}`} 
-                  style={{ width: "100px", height: "100px", padding: "10px"}}  
-                />
-                <button onClick={() => handleDeleteImages (imagem.id)}>Excluir</button>
-              </div>
-            ))}
-          
-          </StyledSlider>
-        ) : (
-          <p>Sem imagens para exibir.</p>
-        )}
+{viewingProduct.imagens && viewingProduct.imagens.length > 0 ? (
+  <StyledSlider dots={true} infinite={false} speed={500} slidesToShow={2} slidesToScroll={1}>
+    {viewingProduct.imagens.map((imagem, index) => (
+      <div key={index}>
+        {/* Container relativo para cada slide */}
+        <div style={{ position: "relative", padding: "10px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <img 
+            src={`../${imagem.caminhoArquivo.slice(22)}`} 
+            alt={`Imagem ${index + 1}`} 
+            style={{
+              width: "100px",
+              height: "100px",
+              border: imagem.id === imagemPrincipal ? "3px solid green" : "1px solid #ccc",
+              borderRadius: "8px",
+              objectFit: "cover"
+            }}
+          />
 
+          {/* Tag "Principal" — só aparece se for a principal */}
+          {imagem.id === imagemPrincipal && (
+            <div style={{
+              position: "absolute",
+              top: 5,
+              left: 5,
+              backgroundColor: "green",
+              color: "white",
+              padding: "2px 6px",
+              fontSize: "12px",
+              borderRadius: "4px",
+              zIndex: 10
+            }}>
+              Principal
+            </div>
+          )}
+
+          {/* Botões */}
+          <div style={{ marginTop: "5px", display: "flex", gap: "5px" }}>
+            {imagem.id !== imagemPrincipal && (
+              <button onClick={() => setImagemPrincipal(imagem.id)}>
+                Definir como Principal
+              </button>
+            )}
+            <button onClick={() => handleDeleteImages(imagem.id)}>
+              Excluir
+            </button>
+          </div>
+        </div>
+      </div>
+    ))}
+  </StyledSlider>
+) : (
+  <p>Sem imagens para exibir.</p>
+)}
         <input 
           type="file" 
           multiple 
