@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.mindrot.jbcrypt.BCrypt;
+import br.com.pi.pi_ecommerce.utils.Encriptador;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,9 +25,6 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private Validator validator;
-
     public ResponseEntity<Map<String, String>> login(String email, String password) {
 
         Optional<User> userOptional = userRepository.findByEmail(email);
@@ -44,7 +41,7 @@ public class UserService {
                     .body(Collections.singletonMap("message", "Usuário inativo"));
         }
     
-        if (!BCrypt.checkpw(password, user.getSenha())) {
+        if (!Encriptador.validarSenha(password, user.getSenha())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Collections.singletonMap("message", "Senha Incorreta"));
         }
@@ -75,16 +72,15 @@ public class UserService {
 
     public User salvar(User user) {
 
-        if (validator.isCpfExistente(user.getCpf())) {
+        if (Validator.isCpfExistente(user.getCpf())) {
             throw new IllegalArgumentException("CPF já cadastrado!");
         }
 
-        if (validator.isEmailExistente(user.getEmail())) {
+        if (Validator.isEmailExistente(user.getEmail())) {
             throw new IllegalArgumentException("E-mail já cadastrado!");
         }
         
-        String senhaHash = BCrypt.hashpw(user.getSenha(), BCrypt.gensalt());
-        user.setSenha(senhaHash);
+        user.setSenha(Encriptador.encriptar(user.getSenha()));
 
         return userRepository.save(user);
     }
@@ -100,8 +96,7 @@ public class UserService {
             user.setCpf(cpf);
 
             if (senha != null && !senha.isEmpty()) {  // Verifica se a senha foi fornecida
-                String senhaHash = BCrypt.hashpw(senha, BCrypt.gensalt());
-                user.setSenha(senhaHash);
+                user.setSenha(Encriptador.encriptar(senha));
             }
             if (grupo != null && !grupo.isEmpty()) {
                 user.setGrupo(grupo);  
