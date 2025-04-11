@@ -18,7 +18,7 @@ const GlobalStyle = createGlobalStyle`
   }
 `;
 
-const StyledLogin = styled.div`
+const StyledLoginFun = styled.div`
  display: flex;
   justify-content: center;
   align-items: center;
@@ -94,7 +94,7 @@ const Botao = styled.button`
   }
 `;
 
-function Login() {
+function LoginFun() {
 
 const [email, setEmail] = useState("");
 const [password, setPassword] = useState("");
@@ -104,12 +104,6 @@ const { setUser, setGrupo } = useAuth();
 const [usuarioErro, setUsuarioErro] = useState(false);
 const [senhaErro, setSenhaErro] = useState(false);
 
-const handleRedirectP = () => {
-  router.push('/cadastro');
-};
-const handleRedirectF = () => {
-  router.push('/loginFun');
-};
 
 const handleLogin = async (e) => {
   e.preventDefault();
@@ -160,7 +154,7 @@ const handleLogin = async (e) => {
     setGrupo(errorText.grupo); 
     localStorage.setItem("user", JSON.stringify(errorText));
 
-    router.push("/pgPrincipal"); 
+    router.push("/main"); 
   } catch (error) {
     setError(error.message || "Erro ao fazer login");
   }
@@ -173,10 +167,10 @@ const enterAcionado = (e) => {
   }
 };
   return (
-    <StyledLogin>
+    <StyledLoginFun>
       <GlobalStyle />
       <Box>
-        <Titulo>Login</Titulo>
+        <Titulo>Login Funcionario</Titulo>
         <InputWrapper>
           <Input
             type="text"
@@ -202,11 +196,9 @@ const enterAcionado = (e) => {
         </InputWrapper>
         {error && <p style={{ color: "red" }}>{error}</p>}
         <Botao onClick={handleLogin}>Entrar</Botao>
-        <Botao onClick={handleRedirectP}>Cadrastrar</Botao>
-        <Botao onClick={handleRedirectF}>Funcionario</Botao>
       </Box>
-    </StyledLogin>
+    </StyledLoginFun>
   );
 }
 
-export default Login;
+export default LoginFun;

@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import { createGlobalStyle } from "styled-components";
 import { useEffect, useState } from 'react';
+import { useRouter } from "next/navigation";
 import axios from 'axios';
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
@@ -81,9 +82,12 @@ const Carrinho = styled.div`
 
 const BotaoLogin = styled.button`
   background-color: #30f003;
+  display: flex;
+  flex-direction: column;
   color: white;
   border: none;
-  padding: 10px 15px;
+  margin-top: 3px;
+  padding: 10px 13px;
   border-radius: 8px;
   cursor: pointer;
   font-weight: bold;
@@ -410,6 +414,14 @@ function Principal() {
   const [frete, setFrete] = useState(null);
   const [valorFrete, setValorFrete] = useState(0);
   const [viewingProduct, setViewingProduct] = useState(null);
+  const router = useRouter();
+
+  const handleRedirect = () => {
+    router.push('/cadastro');
+  };
+  const handleRedirectL = () => {
+    router.push('/login');
+  };
 
   useEffect(() => {
     axios.get('http://localhost:8081/produto')
@@ -487,7 +499,7 @@ function Principal() {
 
   const handleAddToCart = () => {
     setCarrinho(prevCarrinho => {
-      const existingProductIndex = prevCarrinho.findIndex(item => item.id === productDetails.id);
+      const existingProductIndex = prevCarrinho.findIndex(item => item.id === viewingProduct.id);
   
       if (existingProductIndex !== -1) {
         // Se o produto já existe, incrementa a quantidade
@@ -500,13 +512,14 @@ function Principal() {
         return updatedCarrinho;
       } else {
         // Se o produto não existe, adiciona-o com quantidade 1
-        return [...prevCarrinho, { ...productDetails, quantidade: 1 }];
+        return [...prevCarrinho, { ...viewingProduct, quantidade: 1 }];
       }
     });
   
     setAddedMessage('Produto adicionado ao carrinho!');
     setTimeout(() => setAddedMessage(''), 2000);
   };
+  
 
   const handleBuy = () => {
     setCarrinho(prevCarrinho => {
@@ -578,7 +591,10 @@ function Principal() {
         <Titulo>Turn on the beck</Titulo>
         <Usuario>
           <Carrinho title="Carrinho" onClick={handleCarrinhoClick}>🛒</Carrinho>
-          <BotaoLogin>Login</BotaoLogin>
+          <div>
+          <BotaoLogin onClick={handleRedirectL}>Login</BotaoLogin>
+          <BotaoLogin onClick={handleRedirect}>Cadastrar</BotaoLogin>
+          </div>
         </Usuario>
       </Header>
       <Container>

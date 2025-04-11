@@ -1,11 +1,11 @@
 'use client'
 
-import LoginTela from '@/components/loginTela';
+import LoginFun from "../../../componentes/loginFun";
 
 export default function Home() {
     return (
       <main>
-        <LoginTela />
+        <LoginFun/>
       </main>
     );
   }

@@ -90,8 +90,12 @@ function Bemvindo() {
   const router = useRouter();
 
   const handleRedirect = useCallback(() => {
+    router.push('/pgPrincipal');
+  }, [router]);
+  const handleRedirectL = useCallback(() => {
     router.push('/login');
   }, [router]);
+
 
   useEffect(() => {
     let isMounted = true;
@@ -116,7 +120,8 @@ function Bemvindo() {
       <GlobalStyle />
       <Box>
       <Mensagem>{texto}{mostrarCursos && <Cursor>|</Cursor>}</Mensagem>
-        <Botao onClick={handleRedirect}>Ir para Login</Botao>
+        <Botao onClick={handleRedirect}>Produtos</Botao>
+        <Botao onClick={handleRedirectL}>Logar</Botao>
       </Box>
     </StyledBemvindo>
   );
