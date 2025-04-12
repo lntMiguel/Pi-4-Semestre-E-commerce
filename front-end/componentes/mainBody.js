@@ -65,12 +65,30 @@ const Botao = styled.button`
 function Main() {
     const router = useRouter();
     const { grupo } = useAuth();
+    const { setUser, setGrupo} = useAuth();
+
     const handleRedirect = () => {
         router.push('/usuarios');
       };
-      const handleRedirectP = () => {
-        router.push('/produtos');
+    const handleRedirectP = () => {
+      router.push('/produtos');
+    };
+
+    const handleRedirectL = () => {
+      router.push('/login');
+    };
+    
+      const handleLogout = () => {
+        localStorage.removeItem("user"); // limpa do localStorage
+        setUser(null); // limpa o estado
+        setGrupo(null);
+        console.log(user);
+
+    
+        // redireciona para login ou home
+        handleRedirectL();
       };
+
   return (
     <StyledMain>
       <GlobalStyle />
@@ -79,6 +97,7 @@ function Main() {
         <Botao onClick={handleRedirectP} >Listar Produtos</Botao>
         {grupo === "admin" && <Botao onClick={handleRedirect}>Listar Usuários</Botao>}        
         {grupo === "estoquista" && <Botao onClick={handleRedirect}>Listar Pedidos</Botao>}   
+        <Botao onClick={handleLogout}>Sair</Botao>
       </Box>
     </StyledMain>
   );

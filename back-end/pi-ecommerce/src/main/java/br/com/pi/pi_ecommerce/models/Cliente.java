@@ -1,5 +1,6 @@
 package br.com.pi.pi_ecommerce.models;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -16,9 +17,6 @@ public class Cliente {
 
     @Field("DS_NOME")
     private String nome;
-
-    @Field("DS_SOBRENOME")
-    private String sobreNome;
 
     @Field("DataNasc")
     private Date dataNasc;
@@ -67,14 +65,6 @@ public class Cliente {
         this.nome = nome;
     }
 
-    public String getSobreNome() {
-        return sobreNome;
-    }
-
-    public void setSobreNome(String sobreNome) {
-        this.sobreNome = sobreNome;
-    }
-
     public Date getDataNasc() {
         return dataNasc;
     }
@@ -99,10 +89,9 @@ public class Cliente {
         this.senha = senha;
     }
 
-    public Cliente(String nome, String sobreNome, Date dataNasc, String genero, String senha,
+    public Cliente(String nome, Date dataNasc, String genero, String senha,
                    Long cpf, String email) {
         this.nome = nome;
-        this.sobreNome = sobreNome;
         this.dataNasc = dataNasc;
         this.genero = genero;
         this.senha = senha;

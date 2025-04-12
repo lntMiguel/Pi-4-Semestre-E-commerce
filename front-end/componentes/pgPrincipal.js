@@ -6,6 +6,7 @@ import axios from 'axios';
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+import { useAuth } from "./authContext";
 
 const GlobalStyle = createGlobalStyle`
   * {
@@ -405,6 +406,8 @@ const StyledSlider = styled(Slider)`
 `;
 
 function Principal() {
+  const { user } = useAuth();
+  const { setUser, setGrupo } = useAuth();
   const [produtos, setProdutos] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [carrinho, setCarrinho] = useState([]);
@@ -574,6 +577,16 @@ function Principal() {
     setCarrinho([]);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("user"); // limpa do localStorage
+    setUser(null); // limpa o estado
+    setGrupo(null);
+    console.log(user);
+    // redireciona para login ou home
+    window.location.reload()  
+  };
+
+  
   const settings = {
     dots: true,
     infinite: false,
@@ -591,10 +604,18 @@ function Principal() {
         <Titulo>Turn on the beck</Titulo>
         <Usuario>
           <Carrinho title="Carrinho" onClick={handleCarrinhoClick}>🛒</Carrinho>
-          <div>
-          <BotaoLogin onClick={handleRedirectL}>Login</BotaoLogin>
-          <BotaoLogin onClick={handleRedirect}>Cadastrar</BotaoLogin>
-          </div>
+          {user ? (
+            <div>
+              <span>Olá, {user.nome}!</span>
+              <BotaoLogin onClick={handleLogout}>Sair</BotaoLogin>
+            </div>
+          ) : (
+            <div>
+              <BotaoLogin onClick={handleRedirectL}>Login</BotaoLogin>
+              <BotaoLogin onClick={handleRedirect}>Cadastrar</BotaoLogin>
+            </div>
+          )}
+
         </Usuario>
       </Header>
       <Container>

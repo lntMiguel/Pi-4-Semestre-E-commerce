@@ -227,8 +227,14 @@ function Cadastro() {
     nome: '',
     email: '',
     cpf: '',
-    nascimento: '',
+    dataNasc: '',
     genero: '',
+    senha: '',
+    confirmSenha: '',
+    
+  });
+
+  const [formEndereco, setFormEndereco] = useState({
     cepFaturamento: '',
     logradouro: '',
     numero: '',
@@ -236,8 +242,11 @@ function Cadastro() {
     bairro: '',
     cidade: '',
     uf: '',
+    faturamento: true,
     enderecosEntrega: [],
-  });
+  })
+
+  
   const router = useRouter();
 
   const handleRedirectP = () => {
@@ -249,7 +258,14 @@ function Cadastro() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    
     setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleChangeEndereco = (e) => {
+    const { name, value } = e.target;
+    
+    setFormEndereco((prev) => ({ ...prev, [name]: value }));
   };
 
   const validateNome = (nome) => {
@@ -275,41 +291,44 @@ function Cadastro() {
     return rev === parseInt(cpf.charAt(10));
   };
 
-  const buscarCep = async () => {
-    const cep = form.cepFaturamento.replace(/\D/g, '');
+  const buscarCep = async (cep, atualizarCampos, setErro) => {
+    cep = cep.replace(/\D/g, '');
     if (cep.length !== 8) return;
-
+  
     try {
       const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
       const data = await res.json();
       if (!data.erro) {
-        setForm((prev) => ({
-          ...prev,
+        atualizarCampos({
           logradouro: data.logradouro,
           bairro: data.bairro,
           cidade: data.localidade,
           uf: data.uf,
-        }));
-        setErrors((prev) => ({ ...prev, cepFaturamento: '' }));
+        });
+        setErro('');
       } else {
-        setErrors((prev) => ({ ...prev, cepFaturamento: 'CEP inválido' }));
+        setErro('CEP inválido');
       }
     } catch (err) {
-      setErrors((prev) => ({ ...prev, cepFaturamento: 'Erro ao buscar CEP' }));
+      setErro('Erro ao buscar CEP');
     }
   };
+  
 
   const copiarFaturamento = () => {
     const novo = {
-      cep: form.cepFaturamento,
-      logradouro: form.logradouro,
-      numero: form.numero,
-      complemento: form.complemento,
-      bairro: form.bairro,
-      cidade: form.cidade,
-      uf: form.uf,
+      cep: formEndereco.cepFaturamento,
+      logradouro: formEndereco.logradouro,
+      numero: formEndereco.numero,
+      complemento: formEndereco.complemento,
+      bairro: formEndereco.bairro,
+      cidade: formEndereco.cidade,
+      uf: formEndereco.uf,
+      padrao: true
     };
-    setEntregas([...entregas, novo]);
+  
+    const novas = entregas.map((e) => ({ ...e, padrao: false }));
+    setEntregas([...novas, novo]);
   };
 
   const adicionarEntregaVazia = () => {
@@ -320,13 +339,26 @@ function Cadastro() {
       complemento: '',
       bairro: '',
       cidade: '',
-      uf: ''
+      uf: '',
+      padrao: '',
+      faturamento: false
     }]);
   };
 
   const handleEntregaChange = (index, field, value) => {
     const novas = [...entregas];
-    novas[index][field] = value;
+  
+    if (field === 'padrao') {
+      // Zera os outros como não padrão
+      novas.forEach((e, i) => {
+        novas[i].padrao = false;
+      });
+      // Marca o atual como padrão
+      novas[index].padrao = true;
+    } else {
+      novas[index][field] = value;
+    }
+  
     setEntregas(novas);
   };
 
@@ -342,23 +374,93 @@ function Cadastro() {
     if (!validateNome(form.nome)) e.nome = 'Nome inválido';
     if (!validateCPF(form.cpf)) e.cpf = 'CPF inválido';
     if (!form.email) e.email = 'Email obrigatório';
-    if (!form.cepFaturamento || !form.logradouro || !form.numero || !form.bairro || !form.cidade || !form.uf) {
+    if (!formEndereco.cepFaturamento || !formEndereco.logradouro || !formEndereco.numero || !formEndereco.bairro || !formEndereco.cidade || !formEndereco.uf) {
       e.endereco = 'Endereço de faturamento incompleto';
     }
+    if (!form.senha) e.senha = "Campo obrigatório";
+    if (!form.confirmSenha) e.confirmSenha = "Campo obrigatório";
+    if(form.senha !== form.confirmSenha) e.senha = 'Senhas não Coincidem';
     if (entregas.length === 0) e.entrega = 'Adicione ao menos um endereço de entrega';
-
+    if (!entregas.some((e) => e.padrao)) {
+      e.entrega = 'Selecione um endereço de entrega como padrão';
+    }
     setErrors(e);
     return Object.keys(e).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validarFormulario()) return;
 
     const dados = { ...form, enderecosEntrega: entregas };
-    console.log('Cliente cadastrado:', dados);
-    alert("Cliente cadastrado com sucesso!");
-  };
+    try {
+      const response = await fetch("http://localhost:8081/cliente", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form}),
+      });
+      const result = await response.json();
+      
+      const responseEnderecoFaturamento = await fetch(`http://localhost:8081/endereco?idCliente=${result.id}`,{
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...formEndereco}),
+      });
+
+      for (const endereco of entregas) {
+        const resposta = await fetch(`http://localhost:8081/endereco?idCliente=${result.id}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(endereco),
+        });
+      
+        if (resposta.ok) {
+          console.log("endereço salvo com sucesso");
+          setEntregas([]);
+
+        } else {
+          console.log("erro ao salvar endereço");
+        }
+      }
+
+      if (response.ok) {
+        setForm({
+          nome: '',
+          email: '',
+          cpf: '',
+          dataNasc: '',
+          genero: '',
+          senha: '',
+          confirmSenha: '',
+        
+        })
+        console.log('Cliente cadastrado:', dados);
+        alert("Cliente cadastrado com sucesso!");
+      }
+      else {
+        const errorMessage = await response.text();
+        setError(errorMessage || "Erro ao cadastrar usuário.");
+      }
+        if(responseEnderecoFaturamento){
+          setFormEndereco({
+            cepFaturamento: '',
+            logradouro: '',
+            numero: '',
+            complemento: '',
+            bairro: '',
+            cidade: '',
+            uf: '',
+            enderecosEntrega: []
+          })
+      }
+      handleRedirectP();
+      
+        
+  }catch (error) {
+    console.error("Erro ao cadastrar usuário:", error);
+    setError("Erro ao cadastrar usuário.");
+  }
+};
 
   return (
     <StyledCadastro>
@@ -382,7 +484,7 @@ function Cadastro() {
               </Field>
               <Field flex={1}>
                 <Label>CPF</Label>
-                <Input name="cpf" value={form.cpf} onChange={handleChange} placeholder="000.000.000-00" />
+                <Input name="cpf" value={form.cpf} onChange={handleChange} placeholder="00000000000" />
                 {errors.cpf && <Error>{errors.cpf}</Error>}
               </Field>
             </FormRow>
@@ -390,7 +492,7 @@ function Cadastro() {
             <FormRow>
               <Field>
                 <Label>Data de Nascimento</Label>
-                <Input type="date" name="nascimento" value={form.nascimento} onChange={handleChange} />
+                <Input type="date" name="dataNasc" value={form.dataNasc} onChange={handleChange} />
               </Field>
               <Field>
                 <Label>Gênero</Label>
@@ -402,6 +504,20 @@ function Cadastro() {
                 </Select>
               </Field>
             </FormRow>
+
+            <FormRow>
+              <Field flex={1}>
+                <Label>Senha</Label>
+                <Input name="senha" type="password" value={form.senha} onChange={handleChange}/>
+                {errors.senha && <Error>{errors.senha}</Error>}
+              </Field>
+              <Field flex={1}>
+                <Label>Confirmar Senha</Label>
+                <Input name="confirmSenha" type="password" value={form.confirmSenha} onChange={handleChange}  />
+                {errors.confirmSenha && <Error>{errors.confirmSenha}</Error>}
+              </Field>
+            </FormRow>
+
           </FormSection>
 
           <Divider />
@@ -411,38 +527,44 @@ function Cadastro() {
             <FormRow>
               <Field flex={1}>
                 <Label>CEP</Label>
-                <Input name="cepFaturamento" value={form.cepFaturamento} onChange={handleChange} onBlur={buscarCep} placeholder="00000-000" />
+                <Input name="cepFaturamento" value={formEndereco.cepFaturamento} onChange={handleChangeEndereco} onBlur={(e) =>
+    buscarCep(
+      e.target.value,
+      (dados) => setFormEndereco((prev) => ({ ...prev, ...dados })),
+      (msg) => setErrors((prev) => ({ ...prev, cepFaturamento: msg }))
+    )
+  } placeholder="00000-000" />
                 {errors.cepFaturamento && <Error>{errors.cepFaturamento}</Error>}
               </Field>
               <Field flex={2}>
                 <Label>Logradouro</Label>
-                <Input name="logradouro" value={form.logradouro} onChange={handleChange} placeholder="Rua, Avenida, etc." />
+                <Input name="logradouro" value={formEndereco.logradouro} onChange={handleChangeEndereco} placeholder="Rua, Avenida, etc." />
               </Field>
             </FormRow>
             
             <FormRow>
               <Field flex={1}>
                 <Label>Número</Label>
-                <Input name="numero" value={form.numero} onChange={handleChange} placeholder="Nº" />
+                <Input name="numero" value={formEndereco.numero} onChange={handleChangeEndereco} placeholder="Nº" />
               </Field>
               <Field flex={2}>
                 <Label>Complemento</Label>
-                <Input name="complemento" value={form.complemento} onChange={handleChange} placeholder="Apto, Bloco, etc." />
+                <Input name="complemento" value={formEndereco.complemento} onChange={handleChangeEndereco} placeholder="Apto, Bloco, etc." />
               </Field>
             </FormRow>
             
             <FormRow>
               <Field>
                 <Label>Bairro</Label>
-                <Input name="bairro" value={form.bairro} onChange={handleChange} placeholder="Bairro" />
+                <Input name="bairro" value={formEndereco.bairro} onChange={handleChangeEndereco} placeholder="Bairro" />
               </Field>
               <Field>
                 <Label>Cidade</Label>
-                <Input name="cidade" value={form.cidade} onChange={handleChange} placeholder="Cidade" />
+                <Input name="cidade" value={formEndereco.cidade} onChange={handleChangeEndereco} placeholder="Cidade" />
               </Field>
               <Field flex={0.5}>
                 <Label>UF</Label>
-                <Input name="uf" value={form.uf} onChange={handleChange} maxLength={2} placeholder="UF" />
+                <Input name="uf" value={formEndereco.uf} onChange={handleChangeEndereco} maxLength={2} placeholder="UF" />
               </Field>
             </FormRow>
             {errors.endereco && <Error>{errors.endereco}</Error>}
@@ -472,7 +594,18 @@ function Cadastro() {
                     <Label>CEP</Label>
                     <Input 
                       value={end.cep} 
-                      onChange={(e) => handleEntregaChange(i, 'cep', e.target.value)} 
+                      onChange={(e) => handleEntregaChange(i, 'cep', e.target.value)}
+                      onBlur={(e) =>
+                        buscarCep(
+                          e.target.value,
+                          (dados) => {
+                            const novas = [...entregas];
+                            novas[i] = { ...novas[i], ...dados };
+                            setEntregas(novas);
+                          },
+                          (msg) => setErrors((prev) => ({ ...prev, [`cepEntrega${i}`]: msg }))
+                        )
+                      }
                       placeholder="00000-000"
                     />
                   </Field>
@@ -526,6 +659,16 @@ function Cadastro() {
                     />
                   </Field>
                 </FormGrid>
+                <Field>
+                    <label>
+                    <input
+                      type="checkbox"
+                      checked={end.padrao || false}
+                      onChange={(e) => handleEntregaChange(i, 'padrao', e.target.checked)}
+                    />
+                    Endereço de entrega padrão
+                  </label>
+                </Field>
               </EnderecoCard>
             ))}
             
@@ -539,7 +682,7 @@ function Cadastro() {
             </BotoesContainer>
           </FormSection>
 
-          <BotaoPrimario onClick={handleRedirectP} type="submit">Cadastrar</BotaoPrimario>
+          <BotaoPrimario onClick={handleSubmit} type="submit">Cadastrar</BotaoPrimario>
         </form>
       </Box>
     </StyledCadastro>

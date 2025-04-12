@@ -100,7 +100,7 @@ const [email, setEmail] = useState("");
 const [password, setPassword] = useState("");
 const [error, setError] = useState("");
 const router = useRouter();
-const { setUser, setGrupo } = useAuth();
+const { setUser, setGrupo} = useAuth();
 const [usuarioErro, setUsuarioErro] = useState(false);
 const [senhaErro, setSenhaErro] = useState(false);
 
@@ -132,7 +132,7 @@ const handleLogin = async (e) => {
   }
 
   try {
-    const response = await fetch("http://localhost:8081/users/login", {
+    const response = await fetch("http://localhost:8081/cliente/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -140,25 +140,25 @@ const handleLogin = async (e) => {
       body: JSON.stringify({ email, password }),
     });
 
-    const errorText = await response.json();  // Lê a resposta uma vez
+    const text = await response.json();  // Lê a resposta uma vez
 
     // Depuração: logar a resposta
     console.log("Response status:", response.status);
-    console.log("Response message:", errorText.message);
+    console.log("Response message:", text.message);
 
     if (!response.ok) {
-      if (response.status === 403 && errorText.message === "Usuário inativo") {
+      if (response.status === 403 && text.message === "Usuário inativo") {
         setError("Seu usuário está inativo. Contate o suporte.");
       } else {
-        setError(errorText.message || "Credenciais inválidas");
+        setError(text.message || "Credenciais inválidas");
       }
       return;
     }
 
     // Se login for bem-sucedido
-    setUser(errorText);
-    setGrupo(errorText.grupo); 
-    localStorage.setItem("user", JSON.stringify(errorText));
+    setUser(text);
+    setGrupo(null);
+    localStorage.setItem("user", JSON.stringify(text));
 
     router.push("/pgPrincipal"); 
   } catch (error) {
@@ -180,7 +180,7 @@ const enterAcionado = (e) => {
         <InputWrapper>
           <Input
             type="text"
-            placeholder="Nome de usuário"
+            placeholder="Nome de usuário (email)"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             onKeyDown={enterAcionado}

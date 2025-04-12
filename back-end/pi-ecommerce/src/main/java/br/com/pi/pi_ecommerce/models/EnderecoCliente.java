@@ -39,6 +39,9 @@ public class EnderecoCliente {
     @Field("TG_Padrao")
     private boolean padrao;
 
+    @Field("TG_Faturamento")
+    private boolean faturamento;
+
     public void setPadrao(boolean padrao) {
         this.padrao = padrao;
     }
@@ -49,5 +52,9 @@ public class EnderecoCliente {
 
     public String getIdCliente() {
         return idCliente;
+    }
+
+    public void setIdCliente(String idCliente) {
+        this.idCliente = idCliente;
     }
 }

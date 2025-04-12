@@ -18,7 +18,8 @@ public class EnderecoController {
     private EnderecoService enderecoService;
 
     @PostMapping
-    public ResponseEntity<?> salvar(@RequestBody EnderecoCliente enderecoCliente){
+    public ResponseEntity<?> salvar(@RequestParam String idCliente, @RequestBody EnderecoCliente enderecoCliente){
+        enderecoCliente.setIdCliente(idCliente);
         try{
             EnderecoCliente novoEnd = enderecoService.salvarEndereco(enderecoCliente);
             return ResponseEntity.ok(novoEnd);
