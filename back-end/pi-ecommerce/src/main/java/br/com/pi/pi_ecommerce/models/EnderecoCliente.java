@@ -15,8 +15,8 @@ public class EnderecoCliente {
     @Field("IdCliente")
     private String idCliente;
 
-    @Field("Logadouro")
-    private String logadouro;
+    @Field("logradouro")
+    private String logradouro;
 
     @Field("Numero")
     private int numero;
@@ -34,7 +34,7 @@ public class EnderecoCliente {
     private String uf;
 
     @Field("CEP")
-    private long cep;
+    private String cep;
 
     @Field("TG_Padrao")
     private boolean padrao;

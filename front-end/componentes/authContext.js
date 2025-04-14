@@ -7,6 +7,7 @@ const AuthContext = createContext();
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [grupo, setGrupo] = useState(null);
+  const [dados, setDados] = useState(null);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -16,6 +17,7 @@ export function AuthProvider({ children }) {
       const parsedUser = JSON.parse(storedUser);
       setUser(parsedUser);
       setGrupo(parsedUser.grupo);
+      setDados(parsedUser.dados)
     }
   }, []);
 
@@ -24,7 +26,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, setUser, grupo, setGrupo }}>
+    <AuthContext.Provider value={{ user, setUser, grupo, setGrupo, dados, setDados }}>
       {children}
     </AuthContext.Provider>
   );

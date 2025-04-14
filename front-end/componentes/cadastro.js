@@ -231,7 +231,6 @@ function Cadastro() {
     genero: '',
     senha: '',
     confirmSenha: '',
-    
   });
 
   const [formEndereco, setFormEndereco] = useState({
@@ -243,29 +242,60 @@ function Cadastro() {
     cidade: '',
     uf: '',
     faturamento: true,
-    enderecosEntrega: [],
-  })
+  });
 
-  
-  const router = useRouter();
-
-  const handleRedirectP = () => {
-    router.push('/login');
-  };
-
-  const [errors, setErrors] = useState({});
   const [entregas, setEntregas] = useState([]);
+  const [errors, setErrors] = useState({});
+  const router = useRouter();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleChangeEndereco = (e) => {
     const { name, value } = e.target;
-    
     setFormEndereco((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const buscarCep = async (cep, atualizarCampos, setErro) => {
+    cep = cep.replace(/\D/g, '');
+    if (cep.length !== 8) return;
+
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const data = await res.json();
+      if (!data.erro) {
+        atualizarCampos({
+          logradouro: data.logradouro,
+          bairro: data.bairro,
+          cidade: data.localidade,
+          uf: data.uf,
+        });
+        setErro('');
+      } else {
+        setErro('CEP inválido');
+      }
+    } catch (err) {
+      setErro('Erro ao buscar CEP');
+    }
+  };
+
+  const copiarFaturamento = () => {
+    const novo = {
+      cep: formEndereco.cepFaturamento.replace(/\D/g, ''),
+      logradouro: formEndereco.logradouro,
+      numero: formEndereco.numero,
+      complemento: formEndereco.complemento,
+      bairro: formEndereco.bairro,
+      cidade: formEndereco.cidade,
+      uf: formEndereco.uf,
+      padrao: true,
+      faturamento: false,
+    };
+
+    const novas = entregas.map((e) => ({ ...e, padrao: false }));
+    setEntregas([...novas, novo]);
   };
 
   const validateNome = (nome) => {
@@ -291,83 +321,6 @@ function Cadastro() {
     return rev === parseInt(cpf.charAt(10));
   };
 
-  const buscarCep = async (cep, atualizarCampos, setErro) => {
-    cep = cep.replace(/\D/g, '');
-    if (cep.length !== 8) return;
-  
-    try {
-      const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-      const data = await res.json();
-      if (!data.erro) {
-        atualizarCampos({
-          logradouro: data.logradouro,
-          bairro: data.bairro,
-          cidade: data.localidade,
-          uf: data.uf,
-        });
-        setErro('');
-      } else {
-        setErro('CEP inválido');
-      }
-    } catch (err) {
-      setErro('Erro ao buscar CEP');
-    }
-  };
-  
-
-  const copiarFaturamento = () => {
-    const novo = {
-      cep: formEndereco.cepFaturamento,
-      logradouro: formEndereco.logradouro,
-      numero: formEndereco.numero,
-      complemento: formEndereco.complemento,
-      bairro: formEndereco.bairro,
-      cidade: formEndereco.cidade,
-      uf: formEndereco.uf,
-      padrao: true
-    };
-  
-    const novas = entregas.map((e) => ({ ...e, padrao: false }));
-    setEntregas([...novas, novo]);
-  };
-
-  const adicionarEntregaVazia = () => {
-    setEntregas([...entregas, {
-      cep: '',
-      logradouro: '',
-      numero: '',
-      complemento: '',
-      bairro: '',
-      cidade: '',
-      uf: '',
-      padrao: '',
-      faturamento: false
-    }]);
-  };
-
-  const handleEntregaChange = (index, field, value) => {
-    const novas = [...entregas];
-  
-    if (field === 'padrao') {
-      // Zera os outros como não padrão
-      novas.forEach((e, i) => {
-        novas[i].padrao = false;
-      });
-      // Marca o atual como padrão
-      novas[index].padrao = true;
-    } else {
-      novas[index][field] = value;
-    }
-  
-    setEntregas(novas);
-  };
-
-  const removerEndereco = (index) => {
-    const novas = [...entregas];
-    novas.splice(index, 1);
-    setEntregas(novas);
-  };
-
   const validarFormulario = () => {
     const e = {};
 
@@ -388,79 +341,89 @@ function Cadastro() {
     return Object.keys(e).length === 0;
   };
 
+  const adicionarEntregaVazia = () => {
+    setEntregas([...entregas, {
+      cep: '',
+      logradouro: '',
+      numero: '',
+      complemento: '',
+      bairro: '',
+      cidade: '',
+      uf: '',
+      padrao: '',
+      faturamento: false
+    }]);
+  };
+
+  const handleEntregaChange = (index, field, value) => {
+    const novas = [...entregas];
+    if (field === 'padrao') {
+      novas.forEach((e, i) => (novas[i].padrao = false));
+      novas[index].padrao = true;
+    } else {
+      novas[index][field] = field === 'cep' ? value.replace(/\D/g, '') : value;
+    }
+    setEntregas(novas);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validarFormulario()) return;
 
-    const dados = { ...form, enderecosEntrega: entregas };
     try {
       const response = await fetch("http://localhost:8081/cliente", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form}),
+        body: JSON.stringify(form),
       });
-      const result = await response.json();
+      if (!response.ok) {
+        const errorText = await response.text(); 
+        alert("Erro ao cadastrar: " + errorText);
+        return;
+      }
       
-      const responseEnderecoFaturamento = await fetch(`http://localhost:8081/endereco?idCliente=${result.id}`,{
+      const result = await response.json(); 
+
+      
+      const enderecoFaturamento = {
+        cep: formEndereco.cepFaturamento.replace(/\D/g, ''),
+        logradouro: formEndereco.logradouro,
+        numero: parseInt(formEndereco.numero),
+        complemento: formEndereco.complemento,
+        bairro: formEndereco.bairro,
+        cidade: formEndereco.cidade,
+        uf: formEndereco.uf,
+        padrao: false,
+        faturamento: true,
+        idCliente: result.id
+      };
+
+      await fetch(`http://localhost:8081/endereco?idCliente=${result.id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formEndereco}),
+        body: JSON.stringify(enderecoFaturamento),
       });
 
       for (const endereco of entregas) {
-        const resposta = await fetch(`http://localhost:8081/endereco?idCliente=${result.id}`, {
+        const payload = {
+          ...endereco,
+          cep: endereco.cep.replace(/\D/g, ''),
+          numero: parseInt(endereco.numero),
+          idCliente: result.id,
+        };
+        await fetch(`http://localhost:8081/endereco?idCliente=${result.id}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(endereco),
+          body: JSON.stringify(payload),
         });
-      
-        if (resposta.ok) {
-          console.log("endereço salvo com sucesso");
-          setEntregas([]);
-
-        } else {
-          console.log("erro ao salvar endereço");
-        }
       }
 
-      if (response.ok) {
-        setForm({
-          nome: '',
-          email: '',
-          cpf: '',
-          dataNasc: '',
-          genero: '',
-          senha: '',
-          confirmSenha: '',
-        
-        })
-        console.log('Cliente cadastrado:', dados);
-        alert("Cliente cadastrado com sucesso!");
-      }
-      else {
-        const errorMessage = await response.text();
-        setError(errorMessage || "Erro ao cadastrar usuário.");
-      }
-        if(responseEnderecoFaturamento){
-          setFormEndereco({
-            cepFaturamento: '',
-            logradouro: '',
-            numero: '',
-            complemento: '',
-            bairro: '',
-            cidade: '',
-            uf: '',
-            enderecosEntrega: []
-          })
-      }
-      handleRedirectP();
-      
-        
-  }catch (error) {
-    console.error("Erro ao cadastrar usuário:", error);
-    setError("Erro ao cadastrar usuário.");
-  }
-};
+      alert("Cliente cadastrado com sucesso!");
+      router.push('/login');
+    } catch (error) {
+      console.error("Erro ao cadastrar usuário:", error);
+    }
+  };
 
   return (
     <StyledCadastro>

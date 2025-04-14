@@ -3,6 +3,7 @@ import { createGlobalStyle } from "styled-components";
 import { useState, useEffect } from "react";
 import { useAuth } from "./authContext";
 
+
 const GlobalStyle = createGlobalStyle`
   * {
     margin: 0;
@@ -305,48 +306,28 @@ const BotoesContainer = styled.div`
 function Perfil() {
   // Estado para as abas
   const [activeTab, setActiveTab] = useState('dados');
-  
+  const {dados} = useAuth();
+
+  const dataFormatada = new Date(dados.dataNasc).toISOString().slice(0, 10);
+
   // Estado para o formulário de dados pessoais
   const [dadosPessoais, setDadosPessoais] = useState({
-    nome: 'João da Silva',
-    email: 'joao.silva@email.com',
-    cpf: '123.456.789-00',
-    nascimento: '1990-05-15',
-    genero: 'masculino',
+    nome: dados.nome,
+    email: dados.email,
+    cpf: dados.cpf,
+    nascimento: dataFormatada,
+    genero: dados.genero,
   });
   
   // Estado para o formulário de senha
   const [senha, setSenha] = useState({
-    atual: '',
+    
     nova: '',
     confirmar: '',
   });
   
   // Estado para endereços de entrega
-  const [enderecos, setEnderecos] = useState([
-    {
-      id: 1,
-      cep: '01234-567',
-      logradouro: 'Rua das Flores',
-      numero: '123',
-      complemento: 'Apto 45',
-      bairro: 'Jardim Primavera',
-      cidade: 'São Paulo',
-      uf: 'SP',
-      principal: true
-    },
-    {
-      id: 2,
-      cep: '09876-543',
-      logradouro: 'Avenida Central',
-      numero: '789',
-      complemento: '',
-      bairro: 'Centro',
-      cidade: 'São Paulo',
-      uf: 'SP',
-      principal: false
-    }
-  ]);
+  const [enderecos, setEnderecos] = useState([]);
   
   // Estado para novo endereço
   const [novoEndereco, setNovoEndereco] = useState({
@@ -357,7 +338,7 @@ function Perfil() {
     bairro: '',
     cidade: '',
     uf: '',
-    principal: false
+    padrao: false
   });
   
   // Estado para mensagens
@@ -378,7 +359,37 @@ function Perfil() {
   const changeTab = (tab) => {
     setActiveTab(tab);
   };
+
+
+  useEffect(() => {
+    if (activeTab === 'enderecos') {
+      fetchEnderecos();
+    }
+  }, [activeTab]);
+    
   
+
+  const fetchEnderecos = async () => {
+
+    try{
+      const response = await fetch(`http://localhost:8081/endereco/${dados.id}`);
+
+      if(!response.ok){
+        throw new Error("Erro ao buscar enderecos");
+
+      }
+      const enderecosCliente = await response.json();
+      setEnderecos(enderecosCliente);
+      console.log(enderecos);
+
+    }catch (error) {
+      console.error("Erro ao buscar enderecos:", error);
+      return [];
+    }
+
+
+  }
+
   // Função para atualizar dados pessoais
   const handleDadosChange = (e) => {
     const { name, value } = e.target;
@@ -432,26 +443,45 @@ function Perfil() {
   };
 
   // Salvar dados pessoais
-  const salvarDadosPessoais = (e) => {
-    e.preventDefault();
-    // Simulação de salvamento
-    setTimeout(() => {
-      setFeedback({...feedback, dados: 'Dados pessoais atualizados com sucesso!'});
-      // Remover feedback após 3 segundos
-      setTimeout(() => {
-        setFeedback({...feedback, dados: ''});
-      }, 3000);
-    }, 500);
+  const salvarDadosPessoais = async (e) => {
+    e.preventDefault(); // Para evitar reload da página
+  
+    setFeedback({ ...feedback, dados: '' });
+    setErrors({ ...errors, dados: {} });
+  
+    const updatedData = new URLSearchParams();
+    if (dadosPessoais.nome) updatedData.append("nome", dadosPessoais.nome);
+    if (dadosPessoais.nascimento) updatedData.append("dataNasc", dadosPessoais.nascimento);
+    if (dadosPessoais.genero) updatedData.append("genero", dadosPessoais.genero);
+  
+    try {
+      const response = await fetch(`http://localhost:8081/cliente/${dados.id}/dados`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: updatedData.toString(),
+      });
+  
+      if (!response.ok) {
+        throw new Error("Erro ao atualizar cliente");
+      }
+  
+      setFeedback({ ...feedback, dados: "Dados atualizados com sucesso!" });
+  
+    } catch (error) {
+      console.error(error);
+      setFeedback({ ...feedback, dados: "Erro ao atualizar cliente" });
+    }
   };
   
-  // Validar e salvar nova senha
-  const salvarSenha = (e) => {
-    e.preventDefault();
+ 
+  const salvarSenha = async (e) => {
+    e.preventDefault(); // Para evitar reload da página
+
     const errorsObj = {};
     
-    if (!senha.atual) errorsObj.atual = 'Senha atual é obrigatória';
     if (!senha.nova) errorsObj.nova = 'Nova senha é obrigatória';
-    if (senha.nova.length < 6) errorsObj.nova = 'A senha deve ter pelo menos 6 caracteres';
     if (senha.nova !== senha.confirmar) errorsObj.confirmar = 'As senhas não coincidem';
     
     if (Object.keys(errorsObj).length > 0) {
@@ -459,64 +489,104 @@ function Perfil() {
       return;
     }
     
-    // Simulação de salvamento
-    setTimeout(() => {
-      setSenha({atual: '', nova: '', confirmar: ''});
-      setErrors({...errors, senha: {}});
-      setFeedback({...feedback, senha: 'Senha alterada com sucesso!'});
-      
-      // Remover feedback após 3 segundos
-      setTimeout(() => {
-        setFeedback({...feedback, senha: ''});
-      }, 3000);
-    }, 500);
+  
+    setFeedback({ ...feedback, dados: '' });
+    setErrors({ ...errors, dados: {} });
+  
+    try {
+      const senhaData = new URLSearchParams();
+      senhaData.append("senha", senha.nova);
+      const response = await fetch(`http://localhost:8081/cliente/${dados.id}/senha`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: senhaData.toString(),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        if (errorData.errors) {
+          setErrors({ ...errors, senha: errorData.errors });
+        }
+        throw new Error("Erro ao atualizar senha");
+      }
+      alert("Senha atualizada!");
+    }catch (error) {
+      console.error('Erro ao atualizar senha:', error);
+      alert('Erro ao atualizar senha!');
+    }
   };
+ 
   
   // Adicionar novo endereço
-  const adicionarEndereco = (e) => {
+  const adicionarEndereco = async (e) => {
     e.preventDefault();
-    const errorsObj = {};
-    
-    if (!novoEndereco.cep) errorsObj.cep = 'CEP é obrigatório';
-    if (!novoEndereco.logradouro) errorsObj.logradouro = 'Logradouro é obrigatório';
-    if (!novoEndereco.numero) errorsObj.numero = 'Número é obrigatório';
-    if (!novoEndereco.bairro) errorsObj.bairro = 'Bairro é obrigatório';
-    if (!novoEndereco.cidade) errorsObj.cidade = 'Cidade é obrigatória';
-    if (!novoEndereco.uf) errorsObj.uf = 'UF é obrigatória';
-    
-    if (Object.keys(errorsObj).length > 0) {
-      setErrors({...errors, endereco: errorsObj});
-      return;
-    }
-    
-    // Adicionar endereço com ID único
-    const novoId = Math.max(...enderecos.map(e => e.id), 0) + 1;
-    const endereco = {...novoEndereco, id: novoId};
-    
-    setEnderecos([...enderecos, endereco]);
-    setNovoEndereco({
-      cep: '',
-      logradouro: '',
-      numero: '',
-      complemento: '',
-      bairro: '',
-      cidade: '',
-      uf: '',
-      principal: false
-    });
-    setErrors({...errors, endereco: {}});
-    setFeedback({...feedback, enderecos: 'Endereço adicionado com sucesso!'});
-    
-    // Remover feedback após 3 segundos
-    setTimeout(() => {
-      setFeedback({...feedback, enderecos: ''});
-    }, 3000);
-  };
+    const payload = {
+      cep: novoEndereco.cep,
+      logradouro: novoEndereco.logradouro,
+      numero: novoEndereco.numero,
+      complemento: novoEndereco.complemento,
+      bairro: novoEndereco.bairro,
+      cidade: novoEndereco.cidade,
+      uf: novoEndereco.uf,
+      padrao: novoEndereco.padrao,
+    };
   
-  // Remover endereço
-  const removerEndereco = (id) => {
-    setEnderecos(enderecos.filter(e => e.id !== id));
-  };
+    try {
+      const response = await fetch(`http://localhost:8081/endereco?idCliente=${dados.id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+  
+      if (!response.ok) {
+        alert("erro ao cadastrar Endereço")
+        throw new Error("Erro ao cadastrar endereço");
+      }
+  
+      // Limpar o formulário após o cadastro
+      setNovoEndereco({
+        cep: '',
+        logradouro: '',
+        numero: '',
+        complemento: '',
+        bairro: '',
+        cidade: '',
+        uf: '',
+        padrao: false,
+      });
+      alert("Endereço cadastrado")
+    fetchEnderecos()
+  } catch (error) {
+      alert("erro ao cadastrar Endereço")
+
+        console.error("Erro ao cadastrar endereco:", error);
+      }
+    };
+  
+    const deletarEndereco = async (endereco) => {
+      try {
+        const response = await fetch('http://localhost:8081/endereco', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(endereco) // o corpo da requisição DELETE
+        });
+    
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText);
+        }
+    
+        const mensagem = await response.text();
+        alert("Endereço excluído com sucesso: " + mensagem);
+      } catch (error) {
+        console.error("Erro ao excluir endereço:", error);
+        alert("Erro ao excluir endereço: " + error.message);
+      }
+    };
   
   // Definir endereço como principal
   const definirPrincipal = (id) => {
@@ -532,6 +602,7 @@ function Perfil() {
   };
 
   return (
+    
     <StyledPerfil>
       <GlobalStyle />
       <Box>
@@ -639,17 +710,7 @@ function Perfil() {
         <TabContent active={activeTab === 'senha'}>
           <form onSubmit={salvarSenha}>
             <FormSection>
-              <Field>
-                <Label>Senha Atual</Label>
-                <Input 
-                  type="password" 
-                  name="atual" 
-                  value={senha.atual} 
-                  onChange={handleSenhaChange} 
-                  placeholder="Digite sua senha atual" 
-                />
-                {errors.senha?.atual && <Error>{errors.senha.atual}</Error>}
-              </Field>
+             
               
               <Field>
                 <Label>Nova Senha</Label>
@@ -690,60 +751,66 @@ function Perfil() {
             <SectionTitle>Meus Endereços</SectionTitle>
             
             {enderecos.map((endereco) => (
-              <EnderecoCard key={endereco.id}>
-                <EnderecoTitulo>
-                  <span>
-                    {endereco.principal && 
-                      <span style={{ color: '#28c702', marginRight: '5px' }}>★</span>
-                    }
-                    {endereco.logradouro}, {endereco.numero}
-                  </span>
-                  <div>
-                    {!endereco.principal && (
-                      <BotaoSecundario 
-                        type="button" 
-                        onClick={() => definirPrincipal(endereco.id)}
-                        style={{padding: "4px 8px", fontSize: "0.8rem", marginRight: "5px"}}
-                      >
-                        Definir como Principal
-                      </BotaoSecundario>
-                    )}
-                    <BotaoSecundario 
-                      type="button" 
-                      onClick={() => removerEndereco(endereco.id)}
-                      style={{padding: "4px 8px", fontSize: "0.8rem", backgroundColor: "#666"}}
-                    >
-                      Remover
-                    </BotaoSecundario>
-                  </div>
-                </EnderecoTitulo>
-                
-                <EnderecoGrid>
-                  <EnderecoInfo>
-                    <EnderecoLabel>CEP:</EnderecoLabel>
-                    <EnderecoValue>{endereco.cep}</EnderecoValue>
-                  </EnderecoInfo>
-                  <EnderecoInfo>
-                    <EnderecoLabel>Bairro:</EnderecoLabel>
-                    <EnderecoValue>{endereco.bairro}</EnderecoValue>
-                  </EnderecoInfo>
-                  <EnderecoInfo>
-                    <EnderecoLabel>Cidade:</EnderecoLabel>
-                    <EnderecoValue>{endereco.cidade}</EnderecoValue>
-                  </EnderecoInfo>
-                  <EnderecoInfo>
-                    <EnderecoLabel>UF:</EnderecoLabel>
-                    <EnderecoValue>{endereco.uf}</EnderecoValue>
-                  </EnderecoInfo>
-                  {endereco.complemento && (
-                    <EnderecoInfo>
-                      <EnderecoLabel>Complemento:</EnderecoLabel>
-                      <EnderecoValue>{endereco.complemento}</EnderecoValue>
-                    </EnderecoInfo>
-                  )}
-                </EnderecoGrid>
-              </EnderecoCard>
-            ))}
+  <EnderecoCard key={endereco.id}>
+    <EnderecoTitulo>
+      <span>
+        {endereco.padrao && (
+          <span style={{ color: '#28c702', marginRight: '5px' }}>★ Principal</span>
+        )}
+        {endereco.faturamento && (
+          <span style={{ color: '#007bff', marginRight: '5px' }}>📄 Faturamento</span>
+        )}
+        {endereco.logradouro}, {endereco.numero}
+      </span>
+      <div>
+        {!endereco.padrao && !endereco.faturamento && (
+          <BotaoSecundario 
+            type="button" 
+            onClick={() => definirPrincipal(endereco.id)}
+            style={{padding: "4px 8px", fontSize: "0.8rem", marginRight: "5px"}}
+          >
+            Definir como Principal
+          </BotaoSecundario>
+        )}
+        {/* Exibe o botão de remover apenas se o endereço não for de faturamento */}
+        {!endereco.faturamento && (
+          <BotaoSecundario 
+            type="button" 
+            onClick={() => deletarEndereco(endereco)}
+            style={{padding: "4px 8px", fontSize: "0.8rem", backgroundColor: "#666"}}
+          >
+            Remover
+          </BotaoSecundario>
+        )}
+      </div>
+    </EnderecoTitulo>
+
+    <EnderecoGrid>
+      <EnderecoInfo>
+        <EnderecoLabel>CEP:</EnderecoLabel>
+        <EnderecoValue>{endereco.cep}</EnderecoValue>
+      </EnderecoInfo>
+      <EnderecoInfo>
+        <EnderecoLabel>Bairro:</EnderecoLabel>
+        <EnderecoValue>{endereco.bairro}</EnderecoValue>
+      </EnderecoInfo>
+      <EnderecoInfo>
+        <EnderecoLabel>Cidade:</EnderecoLabel>
+        <EnderecoValue>{endereco.cidade}</EnderecoValue>
+      </EnderecoInfo>
+      <EnderecoInfo>
+        <EnderecoLabel>UF:</EnderecoLabel>
+        <EnderecoValue>{endereco.uf}</EnderecoValue>
+      </EnderecoInfo>
+      {endereco.complemento && (
+        <EnderecoInfo>
+          <EnderecoLabel>Complemento:</EnderecoLabel>
+          <EnderecoValue>{endereco.complemento}</EnderecoValue>
+        </EnderecoInfo>
+      )}
+    </EnderecoGrid>
+  </EnderecoCard>
+))}
             
             <Divider />
             
@@ -835,8 +902,8 @@ function Perfil() {
                     type="checkbox"
                     id="enderecoPrincipal"
                     name="principal"
-                    checked={novoEndereco.principal}
-                    onChange={(e) => setNovoEndereco({...novoEndereco, principal: e.target.checked})}
+                    checked={novoEndereco.padrao}
+                    onChange={(e) => setNovoEndereco({...novoEndereco, padrao: e.target.checked})}
                     style={{ marginRight: '8px' }}
                   />
                   <label htmlFor="enderecoPrincipal">Definir como endereço principal</label>

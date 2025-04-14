@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 
 
 @CrossOrigin(origins = "http://localhost:3000")
@@ -50,4 +51,18 @@ public class EnderecoController {
 
     }
 
+    @GetMapping("/{idCliente}/faturamento")
+    public EnderecoCliente faturamento(@PathVariable String idCliente){
+        return enderecoService.retornaFaturamento(idCliente);
+    }
+
+    @GetMapping("/{idCliente}/principal")
+    public EnderecoCliente principal(@PathVariable String idCliente){
+        return enderecoService.retornaPrincipal(idCliente);
+    }
+
+    @GetMapping("/{idCliente}")
+    public List<EnderecoCliente> retornaTodos(@PathVariable String idCliente){
+        return enderecoService.retornaTodos(idCliente);
+    }
 }

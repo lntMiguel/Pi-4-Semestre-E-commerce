@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -53,5 +54,32 @@ public class EnderecoService {
         return enderecoRepository.save(enderecoCliente);
     }
 
+    public EnderecoCliente retornaPrincipal(String idCliente){
+        Optional<EnderecoCliente> optional = enderecoRepository.findByIdClienteAndPadraoTrue(idCliente);
 
+        if(optional.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Erro: Nenhum endereco padrao encontrado!");
+        }
+        return optional.get();
+    }
+
+    public EnderecoCliente retornaFaturamento(String idCliente){
+        Optional<EnderecoCliente> optional = enderecoRepository.findByIdClienteAndFaturamentoTrue(idCliente);
+
+        if(optional.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Erro: Nenhum endereco de faturamento encontrado!");
+        }
+        return optional.get();
+    }
+
+
+    public List<EnderecoCliente> retornaTodos(String idCliente) {
+        List<EnderecoCliente> optional = enderecoRepository.findByIdCliente(idCliente);
+
+        if(optional.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Erro: Nenhum endereco encontrado!");
+        }
+        return optional.stream().toList();
+
+    }
 }

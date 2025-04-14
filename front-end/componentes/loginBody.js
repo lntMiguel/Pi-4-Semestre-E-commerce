@@ -100,7 +100,7 @@ const [email, setEmail] = useState("");
 const [password, setPassword] = useState("");
 const [error, setError] = useState("");
 const router = useRouter();
-const { setUser, setGrupo} = useAuth();
+const { setUser, setGrupo, setDados} = useAuth();
 const [usuarioErro, setUsuarioErro] = useState(false);
 const [senhaErro, setSenhaErro] = useState(false);
 
@@ -158,6 +158,7 @@ const handleLogin = async (e) => {
     // Se login for bem-sucedido
     setUser(text);
     setGrupo(null);
+    setDados(text.dados);
     localStorage.setItem("user", JSON.stringify(text));
 
     router.push("/pgPrincipal"); 

@@ -19,7 +19,7 @@ public class ClienteService {
     @Autowired
     private ClienteRepository clienteRepository;
 
-    public ResponseEntity<Map<String, String>> login(String email, String senha) {
+    public ResponseEntity<Map<String, Object>> login(String email, String senha) {
         Optional<Cliente> clienteOptional = clienteRepository.findByEmail(email);
 
         if (clienteOptional.isEmpty()) {
@@ -34,8 +34,20 @@ public class ClienteService {
                     .body(Collections.singletonMap("message", "Senha Incorreta"));
         }
 
-        Map<String, String> response = new HashMap<>();
+        Map<String, Object> response = new HashMap<>();
+
         response.put("message", "Login feito com sucesso");
+
+        Map<String, Object> dadosCliente = new HashMap<>();
+
+        dadosCliente.put("id", cliente.getId());
+        dadosCliente.put("nome", cliente.getNome());
+        dadosCliente.put("email", cliente.getEmail());
+        dadosCliente.put("dataNasc", cliente.getDataNasc());
+        dadosCliente.put("cpf", cliente.getCpf());
+        dadosCliente.put("genero", cliente.getGenero());
+
+        response.put("dados", dadosCliente);
 
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
     }
@@ -49,34 +61,65 @@ public class ClienteService {
         return clienteRepository.save(cliente);
     }
 
-    public Cliente atualizarDadosCliente(String id, String nome, String dataNascStr, String senha) {
+    public ResponseEntity<Map<String, String>> atualizarDadosCliente(String id, String nome, Date dataNasc, String genero) {
         Optional<Cliente> clienteOptional = clienteRepository.findById(id);
 
         if (clienteOptional.isPresent()) {
             Cliente cliente = clienteOptional.get();
 
-            cliente.setNome(nome);
 
-            if (dataNascStr != null && !dataNascStr.isEmpty()) {
-                try {
-                    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-                    Date dataNasc = formatter.parse(dataNascStr);
-                    cliente.setDataNasc(dataNasc);
-                } catch (ParseException e) {
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Data inválida");
-                }
+            if(nome != null){
+                cliente.setNome(nome);
             }
+
+            if(genero != null){
+                cliente.setGenero(genero);
+            }
+
+            if (dataNasc != null) {
+                cliente.setDataNasc(dataNasc);
+            }
+
+            clienteRepository.save(cliente);
+            return  ResponseEntity.status(HttpStatus.OK)
+                    .body(Collections.singletonMap("message", "Dados Atualizados!"));
+        } else {
+            return  ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Collections.singletonMap("message", "Cliente não encontrado!"));
+        }
+    }
+
+    public ResponseEntity<Map<String, String>> atualizaSenha(String idCliente, String senha){
+        Optional<Cliente> clienteOptional = clienteRepository.findById(idCliente);
+
+        if (clienteOptional.isPresent()) {
+            Cliente cliente = clienteOptional.get();
 
             if (senha != null && !senha.isEmpty()) {
                 cliente.setSenha(Encriptador.encriptar(senha));
             }
 
-            return clienteRepository.save(cliente);
-        } else {
+            clienteRepository.save(cliente);
+
+            return  ResponseEntity.status(HttpStatus.OK)
+                        .body(Collections.singletonMap("message", "Senha Atualizada!"));
+
+
+
+        }
+        else return  ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Collections.singletonMap("message", "Cliente nao encontrado!"));
+    }
+    public Cliente retornaCliente(String id){
+        Optional<Cliente> clienteOptional = clienteRepository.findById(id);
+
+        if(clienteOptional.isPresent()){
+            return clienteOptional.get();
+        }
+        else {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente não encontrado");
         }
     }
-
 
     public List<Cliente> listarTodos() {
         return clienteRepository.findAll();

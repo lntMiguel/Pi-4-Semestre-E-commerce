@@ -407,7 +407,7 @@ const StyledSlider = styled(Slider)`
 
 function Principal() {
   const { user } = useAuth();
-  const { setUser, setGrupo } = useAuth();
+  const { setUser, setGrupo, setDados } = useAuth();
   const [produtos, setProdutos] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [carrinho, setCarrinho] = useState([]);
@@ -432,6 +432,8 @@ function Principal() {
         const produtosComImagens = await Promise.all(response.data.map(async (produto) => {
           const imagens = await fetchImages(produto.id);
           console.log(imagens)
+          
+
           const imagemPrincipal = imagens.find(img => img.principal) || imagens[0]; // Pega a principal ou a primeira disponível
           return {
             ...produto,
@@ -581,6 +583,8 @@ function Principal() {
     localStorage.removeItem("user"); // limpa do localStorage
     setUser(null); // limpa o estado
     setGrupo(null);
+    setDados(null);
+
     console.log(user);
     // redireciona para login ou home
     window.location.reload()  
