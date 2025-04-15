@@ -108,9 +108,9 @@ const Tab = styled.button`
   padding: 10px 20px;
   background: transparent;
   border: none;
-  border-bottom: 3px solid ${props => props.active ? '#30f003' : 'transparent'};
-  color: ${props => props.active ? '#164d09' : '#666'};
-  font-weight: ${props => props.active ? 'bold' : 'normal'};
+  border-bottom: 3px solid ${props => props.$active ? '#30f003' : 'transparent'};
+  color: ${props => props.$active ? '#164d09' : '#666'};
+  font-weight: ${props => props.$active ? 'bold' : 'normal'};
   cursor: pointer;
   transition: all 0.2s ease;
   font-size: 1rem;
@@ -121,7 +121,7 @@ const Tab = styled.button`
 `;
 
 const TabContent = styled.div`
-  display: ${props => props.active ? 'block' : 'none'};
+  display: ${props => props.$active ? 'block' : 'none'};
 `;
 
 const FormSection = styled.div`
@@ -616,19 +616,19 @@ function Perfil() {
         
         <TabsContainer>
           <Tab 
-            active={activeTab === 'dados'} 
+            $active={activeTab === 'dados'} 
             onClick={() => changeTab('dados')}
           >
             Dados Pessoais
           </Tab>
           <Tab 
-            active={activeTab === 'senha'} 
+            $active={activeTab === 'senha'} 
             onClick={() => changeTab('senha')}
           >
             Alterar Senha
           </Tab>
           <Tab 
-            active={activeTab === 'enderecos'} 
+            $active={activeTab === 'enderecos'} 
             onClick={() => changeTab('enderecos')}
           >
             Endereços de Entrega
@@ -636,7 +636,7 @@ function Perfil() {
         </TabsContainer>
         
         {/* Aba de Dados Pessoais */}
-        <TabContent active={activeTab === 'dados'}>
+        <TabContent $active={activeTab === 'dados'}>
           <form onSubmit={salvarDadosPessoais}>
             <FormSection>
               <Field>
@@ -707,7 +707,7 @@ function Perfil() {
         </TabContent>
         
         {/* Aba de Alterar Senha */}
-        <TabContent active={activeTab === 'senha'}>
+        <TabContent $active={activeTab === 'senha'}>
           <form onSubmit={salvarSenha}>
             <FormSection>
              
@@ -746,7 +746,7 @@ function Perfil() {
         </TabContent>
         
         {/* Aba de Endereços de Entrega */}
-        <TabContent active={activeTab === 'enderecos'}>
+        <TabContent $active={activeTab === 'enderecos'}>
           <FormSection>
             <SectionTitle>Meus Endereços</SectionTitle>
             
