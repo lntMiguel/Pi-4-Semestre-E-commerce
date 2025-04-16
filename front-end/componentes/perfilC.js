@@ -390,6 +390,24 @@ function Perfil() {
 
   }
 
+  const togglePrincipal = async (idEndereco, idCliente) => {
+    try {
+      const response = await fetch(`http://localhost:8081/endereco?idEndereco=${idEndereco}&idCliente=${idCliente}`, {
+        method: 'PUT',
+      });
+  
+      if (!response.ok) {
+        throw new Error("Erro ao definir endereço como principal");
+      }
+  
+      const msg = await response.text();
+      console.log(msg); // ou setFeedback(msg);
+    } catch (error) {
+      console.error("Erro ao atualizar endereço principal:", error);
+    }
+    fetchEnderecos();
+  }
+
   // Função para atualizar dados pessoais
   const handleDadosChange = (e) => {
     const { name, value } = e.target;
@@ -766,7 +784,7 @@ function Perfil() {
         {!endereco.padrao && !endereco.faturamento && (
           <BotaoSecundario 
             type="button" 
-            onClick={() => definirPrincipal(endereco.id)}
+            onClick={() => togglePrincipal(endereco.id, dados.id)}
             style={{padding: "4px 8px", fontSize: "0.8rem", marginRight: "5px"}}
           >
             Definir como Principal

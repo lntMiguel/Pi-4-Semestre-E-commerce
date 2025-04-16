@@ -407,7 +407,7 @@ const StyledSlider = styled(Slider)`
 
 function Principal() {
   const { user } = useAuth();
-  const { setUser, setGrupo, setDados } = useAuth();
+  const { setUser, setGrupo, setDados, dados } = useAuth();
   const [produtos, setProdutos] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [carrinho, setCarrinho] = useState([]);
@@ -425,6 +425,10 @@ function Principal() {
   const handleRedirectL = () => {
     router.push('/login');
   };
+
+  const handleRedirectPerfil = () => {
+    router.push('/perfil');
+  }
 
   useEffect(() => {
     axios.get('http://localhost:8081/produto')
@@ -610,7 +614,8 @@ function Principal() {
           <Carrinho title="Carrinho" onClick={handleCarrinhoClick}>🛒</Carrinho>
           {user ? (
             <div>
-              <span>Olá, {user.nome}!</span>
+              <span>Olá, {dados.nome}!</span>
+              <BotaoLogin onClick={handleRedirectPerfil}>Perfil</BotaoLogin>
               <BotaoLogin onClick={handleLogout}>Sair</BotaoLogin>
             </div>
           ) : (
