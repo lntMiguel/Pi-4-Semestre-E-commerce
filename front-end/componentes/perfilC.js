@@ -606,14 +606,6 @@ function Perfil() {
       }
     };
   
-  // Definir endereço como principal
-  const definirPrincipal = (id) => {
-    setEnderecos(enderecos.map(e => ({
-      ...e,
-      principal: e.id === id
-    })));
-  };
-  
   // Obter primeira letra do nome para o avatar
   const getInitial = () => {
     return dadosPessoais.nome.charAt(0).toUpperCase();

@@ -407,15 +407,13 @@ const StyledSlider = styled(Slider)`
 
 function Principal() {
   const { user } = useAuth();
-  const { setUser, setGrupo, setDados, dados } = useAuth();
+  const { setUser, setGrupo, setDados, dados,frete, setFrete, valorFrete, setValorFrete } = useAuth();
   const [produtos, setProdutos] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [carrinho, setCarrinho] = useState([]);
+  const {carrinho, setCarrinho} = useAuth();
   const [showCarrinho, setShowCarrinho] = useState(false);
   const [addedMessage, setAddedMessage] = useState('');
   const [total, setTotal] = useState(0);
-  const [frete, setFrete] = useState(null);
-  const [valorFrete, setValorFrete] = useState(0);
   const [viewingProduct, setViewingProduct] = useState(null);
   const router = useRouter();
 
@@ -430,12 +428,25 @@ function Principal() {
     router.push('/perfil');
   }
 
+  const handleFinalizarCompra = () => {
+    if (!frete) {
+      alert("Por favor, selecione uma opção de frete antes de finalizar a compra.");
+      return;
+    }
+
+    if (!user) {
+      // Se não houver usuário logado, redireciona para a página de login
+      router.push("/login");
+    } else {
+      router.push("/checkout");
+    }
+  };
+
   useEffect(() => {
     axios.get('http://localhost:8081/produto')
       .then(async (response) => {
         const produtosComImagens = await Promise.all(response.data.map(async (produto) => {
           const imagens = await fetchImages(produto.id);
-          console.log(imagens)
           
 
           const imagemPrincipal = imagens.find(img => img.principal) || imagens[0]; // Pega a principal ou a primeira disponível
@@ -493,58 +504,71 @@ function Principal() {
     setShowModal(false);
   };
 
-  const handleFreteChange = (tipo) => {
-    if (tipo === 'normal') {
-      setValorFrete(10);
-      setFrete('normal');
-    } else if (tipo === 'rapida') {
-      setValorFrete(20);
-      setFrete('rapida');
-    } else if (tipo === 'retirada') {
-      setValorFrete(0);
-      setFrete('retirada');
+ const handleFreteChange = (tipo) => {
+  let valor = 0;
+  if (tipo === 'normal') {
+    valor = 10;
+  } else if (tipo === 'rapida') {
+    valor = 20;
+  } else if (tipo === 'retirada') {
+    valor = 0;
+  }
+
+  setValorFrete(valor);
+  setFrete(tipo);
+
+  localStorage.setItem("frete", JSON.stringify(tipo));
+  localStorage.setItem("valorFrete", JSON.stringify(valor));
+
+};
+
+const handleAddToCart = () => {
+  setCarrinho(prevCarrinho => {
+    const existingProductIndex = prevCarrinho.findIndex(item => item.id === viewingProduct.id);
+    
+    let updatedCarrinho;
+    if (existingProductIndex !== -1) {
+      updatedCarrinho = [...prevCarrinho];
+      updatedCarrinho[existingProductIndex].quantidade += 1;
+    } else {
+      updatedCarrinho = [...prevCarrinho, { ...viewingProduct, quantidade: 1 }];
     }
-  };
+    
+    // Para usuário não logado, salvamos o carrinho no localStorage com chave 'carrinho_guest'
+    const carrinhoKey = user ? `carrinho_${user.id}` : 'carrinho_guest';
+    localStorage.setItem(carrinhoKey, JSON.stringify(updatedCarrinho));
 
-  const handleAddToCart = () => {
-    setCarrinho(prevCarrinho => {
-      const existingProductIndex = prevCarrinho.findIndex(item => item.id === viewingProduct.id);
-  
-      if (existingProductIndex !== -1) {
-        // Se o produto já existe, incrementa a quantidade
-        const updatedCarrinho = prevCarrinho.map((item, index) => {
-          if (index === existingProductIndex) {
-            return { ...item, quantidade: item.quantidade + 1 };
-          }
-          return item;
-        });
-        return updatedCarrinho;
-      } else {
-        // Se o produto não existe, adiciona-o com quantidade 1
-        return [...prevCarrinho, { ...viewingProduct, quantidade: 1 }];
-      }
-    });
-  
-    setAddedMessage('Produto adicionado ao carrinho!');
-    setTimeout(() => setAddedMessage(''), 2000);
-  };
-  
+    return updatedCarrinho;
+  });
 
-  const handleBuy = () => {
-    setCarrinho(prevCarrinho => {
-      const existingProductIndex = prevCarrinho.findIndex(item => item.id === viewingProduct.id);
+  setAddedMessage('Produto adicionado ao carrinho!');
+  setTimeout(() => setAddedMessage(''), 2000);
+};
 
-      if (existingProductIndex !== -1) {
-        const updatedCarrinho = [...prevCarrinho];
-        updatedCarrinho[existingProductIndex].quantidade += 1;
-        return updatedCarrinho;
-      } else {
-        return [...prevCarrinho, { ...viewingProduct, quantidade: 1 }];
-      }
-    });
-    setShowModal(false);
-    setShowCarrinho(true);
-  };
+const handleBuy = () => {
+  setCarrinho(prevCarrinho => {
+    const existingProductIndex = prevCarrinho.findIndex(item => item.id === viewingProduct.id);
+
+    let updatedCarrinho;
+    if (existingProductIndex !== -1) {
+      // Se o produto já existe, incrementa a quantidade
+      updatedCarrinho = [...prevCarrinho];
+      updatedCarrinho[existingProductIndex].quantidade += 1;
+    } else {
+      // Se o produto não existe, adiciona-o com quantidade 1
+      updatedCarrinho = [...prevCarrinho, { ...viewingProduct, quantidade: 1 }];
+    }
+
+    // Salva o carrinho atualizado no localStorage
+    localStorage.setItem("carrinho", JSON.stringify(updatedCarrinho));
+
+    return updatedCarrinho;
+  });
+
+  setShowModal(false);
+  setShowCarrinho(true);
+};
+
 
   const handleCarrinhoClick = () => {
     setShowCarrinho(!showCarrinho);
@@ -558,9 +582,13 @@ function Principal() {
         }
         return item;
       });
+  
+      // Salva o carrinho atualizado no localStorage
+      localStorage.setItem("carrinho", JSON.stringify(updatedCarrinho));
       return updatedCarrinho;
     });
   };
+  
 
   const handleRemoveUnit = (id) => {
     setCarrinho(prevCarrinho => {
@@ -571,33 +599,50 @@ function Principal() {
         return item;
       }).filter(item => item.quantidade > 0); // Remove qualquer produto com quantidade 0
   
+      // Salva o carrinho atualizado no localStorage
+      localStorage.setItem("carrinho", JSON.stringify(updatedCarrinho));
+      return updatedCarrinho;
+    });
+  };
+  
+
+  const handleRemoveItem = (id) => {
+    setCarrinho(prevCarrinho => {
+      const updatedCarrinho = prevCarrinho.filter(item => item.id !== id);
+  
+      // Salva o carrinho atualizado no localStorage
+      localStorage.setItem("carrinho", JSON.stringify(updatedCarrinho));
       return updatedCarrinho;
     });
   };
 
-  const handleRemoveItem = (id) => {
-    setCarrinho(prevCarrinho => prevCarrinho.filter(item => item.id !== id));
-  };
-
   const handleClearCarrinho = () => {
     setCarrinho([]);
+  
+    // Limpa o carrinho do localStorage
+    localStorage.removeItem("carrinho");
   };
-
+  
   const handleLogout = () => {
-    localStorage.removeItem("user"); // limpa do localStorage
+    // Armazenando carrinho de visitante (caso o usuário queira retornar depois)
+    localStorage.setItem('carrinho_guest', JSON.stringify(carrinho)); 
+  
+    localStorage.removeItem("user"); // limpa o localStorage
     setUser(null); // limpa o estado
     setGrupo(null);
     setDados(null);
-
-    console.log(user);
-    // redireciona para login ou home
-    window.location.reload()  
-  };
-
+    setCarrinho([]); // Limpa o carrinho no estado
   
+    // Redireciona ou recarrega a página
+    window.location.reload();
+  };
+  
+  
+  
+
   const settings = {
     dots: true,
-    infinite: false,
+    infinite: false,  
     speed: 500,
     slidesToShow: 1,
     slidesToScroll: 1,
@@ -691,7 +736,7 @@ function Principal() {
                 </div>
 
                 <Total>Total: R$ {total.toFixed(2)}</Total>
-                <BotaoFinalizar>Finalizar Compra 💳</BotaoFinalizar>
+                <BotaoFinalizar onClick={handleFinalizarCompra}>Finalizar Compra 💳</BotaoFinalizar>
               </ResumoPedido>
             )}
           </ModalContent>

@@ -100,7 +100,7 @@ const [email, setEmail] = useState("");
 const [password, setPassword] = useState("");
 const [error, setError] = useState("");
 const router = useRouter();
-const { setUser, setGrupo, setDados} = useAuth();
+const { setUser, setGrupo, setDados,setCarrinho, user, frete,setFrete} = useAuth();
 const [usuarioErro, setUsuarioErro] = useState(false);
 const [senhaErro, setSenhaErro] = useState(false);
 
@@ -156,16 +156,39 @@ const handleLogin = async (e) => {
     }
 
     // Se login for bem-sucedido
-    setUser(text);
+    setUser(text); // Atualiza o estado do usuário
     setGrupo(null);
     setDados(text.dados);
-    localStorage.setItem("user", JSON.stringify(text));
+    localStorage.setItem("user", JSON.stringify(text)); // Salva o usuário no localStorage
 
+    // Verifica e transfere o carrinho do visitante, se houver
+    const storedGuestCarrinho = localStorage.getItem('carrinho_guest');
+    if (storedGuestCarrinho) {
+      // Transfere o carrinho de visitante para o usuário logado
+      const guestCarrinho = JSON.parse(storedGuestCarrinho);
+      setCarrinho(guestCarrinho);  // Atualiza o estado do carrinho
+
+      // Salva o carrinho com a chave do usuário logado
+      localStorage.setItem(`carrinho_${text.id}`, JSON.stringify(guestCarrinho));
+      
+      // Remove o carrinho do visitante após a transferência
+      localStorage.removeItem('carrinho_guest');
+    }
+
+    const storedfrete = localStorage.getItem('frete');
+    if(storedfrete){
+      const freteSessao = JSON.parse(storedfrete);
+      setFrete(freteSessao);
+    }
+
+    // Redireciona para a página principal após login
     router.push("/pgPrincipal"); 
   } catch (error) {
     setError(error.message || "Erro ao fazer login");
   }
 };
+
+
 
 
 const enterAcionado = (e) => {
