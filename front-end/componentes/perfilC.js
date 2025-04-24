@@ -1,7 +1,8 @@
 import styled from "styled-components";
 import { createGlobalStyle } from "styled-components";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "./authContext";
+import { useRouter } from "next/navigation";
 
 
 const GlobalStyle = createGlobalStyle`
@@ -307,6 +308,7 @@ function Perfil() {
   // Estado para as abas
   const [activeTab, setActiveTab] = useState('dados');
   const {dados} = useAuth();
+  const router = useRouter();
 
   const dataFormatada = new Date(dados.dataNasc).toISOString().slice(0, 10);
 
@@ -413,6 +415,10 @@ function Perfil() {
     const { name, value } = e.target;
     setDadosPessoais((prev) => ({ ...prev, [name]: value }));
   };
+
+  const handleRedirect = useCallback(() => {
+      router.push('/pgPrincipal');
+    }, [router]);
   
   // Função para atualizar senha
   const handleSenhaChange = (e) => {
@@ -611,6 +617,8 @@ function Perfil() {
     return dadosPessoais.nome.charAt(0).toUpperCase();
   };
 
+
+
   return (
     
     <StyledPerfil>
@@ -642,6 +650,12 @@ function Perfil() {
             onClick={() => changeTab('enderecos')}
           >
             Endereços de Entrega
+          </Tab>
+          <Tab 
+            $active={activeTab === 'pedidos'} 
+            onClick={() => changeTab('pedidos')}
+          >
+            Meus Pedidos
           </Tab>
         </TabsContainer>
         
@@ -709,8 +723,11 @@ function Perfil() {
               
               {feedback.dados && <Success>{feedback.dados}</Success>}
               
-              <div style={{ textAlign: 'center', marginTop: '20px' }}>
+              <div style={{ textAlign: 'center', marginTop: '20px'}}>
                 <BotaoPrimario type="submit">Salvar Alterações</BotaoPrimario>
+              </div>
+              <div style={{ textAlign: 'center', marginTop: '20px'}}>
+              <BotaoPrimario onClick={handleRedirect}>Voltar</BotaoPrimario>
               </div>
             </FormSection>
           </form>
