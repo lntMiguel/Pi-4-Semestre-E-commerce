@@ -406,6 +406,7 @@ const Checkout = () => {
   const [enderecos, setEnderecos] = useState([]);
   const [enderecoSelecionado, setEnderecoSelecionado] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('cartao');
+  const [resposta, setResposta] = useState(null);
   
   // Estados para campos do cartão
   const [cardNumber, setCardNumber] = useState('');
@@ -431,22 +432,65 @@ const Checkout = () => {
     }
   };
 
-  const handleFinalizarCompra = () => {
+  const handleFinalizarCompra = async () => {
     if (!enderecoSelecionado) {
       alert("Por favor, selecione um endereço de entrega");
       return;
     }
-    
-    // Validar formulário de pagamento
+  
+    // Validação de cartão
     if (paymentMethod === 'cartao') {
       if (!cardNumber || !cardName || !cardExpiry || !cardCVV) {
         alert("Por favor, preencha todos os dados do cartão");
         return;
       }
     }
-    
-    // Implementar lógica de finalização de compra aqui conforme o método de pagamento
-    alert(`Pedido finalizado com sucesso! Forma de pagamento: ${paymentMethod}`);
+  
+    const produtosFormatados = carrinho.map((produto) => ({
+      idProduto: produto.id,
+      nomeProduto: produto.nome,
+      quantidade: produto.quantidade,
+      precoUnitario: produto.preco
+    }));
+  
+    const pedido = {
+      idCliente: dados.id,
+      dataPedido: new Date(),
+      status: "AGUARDANDO_PAGAMENTO",
+      valor: totalGeral,
+      produtos: produtosFormatados
+    };
+  
+    try {
+      const response = await fetch("http://localhost:8081/pedidos/criar", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(pedido)
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Erro desconhecido ao criar o pedido");
+      }
+  
+      const data = await response.json();
+      setResposta(data);
+  
+      handleClearCarrinho();
+      alert(`Pedido realizado com sucesso! Número do pedido: ${data.numero}`);
+    } catch (error) {
+      console.error("Erro ao criar pedido:", error);
+      alert(`Não foi possível finalizar o pedido: ${error.message}`);
+    }
+  };
+
+  const handleClearCarrinho = () => {
+    setCarrinho([]);
+  
+    // Limpa o carrinho do localStorage
+    localStorage.removeItem("carrinho");
   };
 
   // Formatação do número do cartão
@@ -484,6 +528,7 @@ const Checkout = () => {
   
   const handleCVVChange = (e) => {
     const digits = e.target.value.replace(/\D/g, '');
+    console.log(carrinho);
     setCardCVV(digits.slice(0, 3));
   };
 

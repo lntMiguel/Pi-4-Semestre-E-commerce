@@ -307,7 +307,7 @@ const BotoesContainer = styled.div`
 function Perfil() {
   // Estado para as abas
   const [activeTab, setActiveTab] = useState('dados');
-  const {dados} = useAuth();
+  const {dados, setDados} = useAuth();
   const router = useRouter();
 
   const dataFormatada = new Date(dados.dataNasc).toISOString().slice(0, 10);
@@ -330,6 +330,7 @@ function Perfil() {
   
   // Estado para endereços de entrega
   const [enderecos, setEnderecos] = useState([]);
+  const [pedidos, setPedidos] = useState([]);
   
   // Estado para novo endereço
   const [novoEndereco, setNovoEndereco] = useState({
@@ -365,12 +366,34 @@ function Perfil() {
 
   useEffect(() => {
     if (activeTab === 'enderecos') {
+  
       fetchEnderecos();
     }
   }, [activeTab]);
-    
-  
 
+  useEffect(() => {
+    if (activeTab === 'pedidos') {
+  
+      fetchPedidos();
+    }
+  }, [activeTab]);
+    
+  const fetchPedidos = async () => {
+      try{
+        const response = await fetch(`http://localhost:8081/pedidos/${dados.id}`);
+
+        if(!response.ok){
+          throw new Error("Erro ao buscar pedidos");
+  
+        }
+
+        const pedidosCliente = await response.json();
+        setPedidos(pedidosCliente);
+        
+      }catch(error){
+        console.error("Erro ao buscar pedidos:", error)
+      }
+  }
   const fetchEnderecos = async () => {
 
     try{
@@ -382,7 +405,6 @@ function Perfil() {
       }
       const enderecosCliente = await response.json();
       setEnderecos(enderecosCliente);
-      console.log(enderecos);
 
     }catch (error) {
       console.error("Erro ao buscar enderecos:", error);
@@ -492,6 +514,13 @@ function Perfil() {
       }
   
       setFeedback({ ...feedback, dados: "Dados atualizados com sucesso!" });
+      setDados(prev => ({
+        ...prev,
+        nome: dadosPessoais.nome,
+        dataNasc: dadosPessoais.nascimento,
+        genero: dadosPessoais.genero
+      }));
+      
   
     } catch (error) {
       console.error(error);
@@ -657,6 +686,7 @@ function Perfil() {
           >
             Meus Pedidos
           </Tab>
+          
         </TabsContainer>
         
         {/* Aba de Dados Pessoais */}
@@ -944,6 +974,32 @@ function Perfil() {
               </div>
             </form>
           </FormSection>
+        </TabContent>
+
+        <TabContent $active={activeTab === 'pedidos'}>
+        {pedidos.length === 0 ? (
+        <p>Nenhum pedido encontrado.</p>
+      ) : (
+        pedidos.map((pedido) => (
+          <div key={pedido.id} className="border p-4 mb-4 rounded shadow-md">
+            <p><strong>Número do Pedido:</strong> {pedido.numero}</p>
+            <p><strong>Data:</strong> {new Date(pedido.dataPedido).toLocaleString()}</p>
+            <p><strong>Status:</strong> {pedido.status}</p>
+            <p><strong>Valor Total:</strong> R$ {pedido.valor.toFixed(2)}</p>
+
+            <div className="mt-2">
+              <strong>Produtos:</strong>
+              <ul className="list-disc pl-5">
+                {pedido.produtos.map((produto, index) => (
+                  <li key={index}>
+                    {produto.nomeProduto} - {produto.quantidade}x R$ {produto.precoUnitario.toFixed(2)}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        ))
+      )}
         </TabContent>
       </Box>
     </StyledPerfil>

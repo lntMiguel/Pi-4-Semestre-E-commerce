@@ -99,5 +99,26 @@ public class ProductService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado");
         }
     }
+
+    public Produto diminuiQuantidade(String id, int quantidadeDescontada ){
+        Optional<Produto> produtoOptional = productRepository.findById(id);
+
+        if(produtoOptional.isPresent()){
+            Produto produto = produtoOptional.get();
+
+            if(produto.getQtdEstoque() < quantidadeDescontada){
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A quantidade desejada do "+ produto.getNome() + "não está disponivel em estoque");
+            }
+
+            produto.setQtdEstoque(produto.getQtdEstoque() - quantidadeDescontada);
+            return productRepository.save(produto);
+
+        }
+
+        else{
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado");
+        }
+    }
+
 }
  

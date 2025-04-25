@@ -76,4 +76,15 @@ public class ProductController {
 
     }
 
+    @PutMapping("/{id}/descontar")
+    public ResponseEntity<Produto> diminuiQuantidade(@PathVariable String id, @RequestParam int qtdDescontada){
+
+        Produto produtoAtualizado = productService.diminuiQuantidade(id, qtdDescontada);
+        return ResponseEntity.ok(produtoAtualizado);
+
+
+    }
+
+
+
 }
