@@ -19,17 +19,16 @@ const GlobalStyle = createGlobalStyle`
 `;
 
 const StyledCheckout = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100vw;
+   background: 
+    radial-gradient(ellipse at top, rgba(48, 240, 3, 0.6) -5%, rgba(18, 60, 7, 0.95) 70%),
+    repeating-linear-gradient(45deg, rgba(18, 60, 7, 0.15) 0px, rgba(18, 60, 7, 0.15) 10px, rgba(48, 240, 3, 0.1) 10px, rgba(48, 240, 3, 0.1) 20px);
   min-height: 100vh;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  margin: 0;
   padding: 30px 0;
-  background-color: #000;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 40' width='80' height='40'%3E%3Cpath fill='%2330f003' fill-opacity='0.59' d='M0 40a19.96 19.96 0 0 1 5.9-14.11 20.17 20.17 0 0 1 19.44-5.2A20 20 0 0 1 20.2 40H0zM65.32.75A20.02 20.02 0 0 1 40.8 25.26 20.02 20.02 0 0 1 65.32.76zM.07 0h20.1l-.08.07A20.02 20.02 0 0 1 .75 5.25 20.08 20.08 0 0 1 .07 0zm1.94 40h2.53l4.26-4.24v-9.78A17.96 17.96 0 0 0 2 40zm5.38 0h9.8a17.98 17.98 0 0 0 6.67-16.42L7.4 40zm3.43-15.42v9.17l11.62-11.59c-3.97-.5-8.08.3-11.62 2.42zm32.86-.78A18 18 0 0 0 63.85 3.63L43.68 23.8zm7.2-19.17v9.15L62.43 2.22c-3.96-.5-8.05.3-11.57 2.4zm-3.49 2.72c-4.1 4.1-5.81 9.69-5.13 15.03l6.61-6.6V6.02c-.51.41-1 .85-1.48 1.33zM17.18 0H7.42L3.64 3.78A18 18 0 0 0 17.18 0zM2.08 0c-.01.8.04 1.58.14 2.37L4.59 0H2.07z'%3E%3C/path%3E%3C/svg%3E");
-  background-repeat: repeat;
-  background-size: 80px 40px;
-  background-position: center;
 `;
 
 const CheckoutContainer = styled.div`
@@ -37,8 +36,8 @@ const CheckoutContainer = styled.div`
   flex-direction: column;
   width: 90%;
   max-width: 1200px;
-  background-color: white;
-  border-radius: 12px;
+  background-color: #f0f0f0;
+  border-radius: 50px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
   padding: 25px;
   margin-bottom: 40px;
@@ -84,7 +83,7 @@ const CarrinhoList = styled.ul`
   overflow-y: auto;
   width: 100%;
   border: 1px solid #e5e5e5;
-  border-radius: 8px;
+  border-radius: 30px;
 `;
 
 const CarrinhoItem = styled.li`
@@ -125,7 +124,7 @@ const ItemInfo = styled.div`
 
 const SummaryContainer = styled.div`
   background-color: #f5fff5;
-  border-radius: 8px;
+  border-radius: 30px;
   padding: 15px;
   border: 1px solid #28c702;
   height: fit-content;
@@ -176,7 +175,7 @@ const EnderecoCard = styled.div`
   border: ${props => props.selected ? "2px solid #28c702" : "1px solid #e0e0e0"};
   padding: 12px;
   background-color: ${props => props.isPadrao ? "#f0fff0" : "white"};
-  border-radius: 8px;
+  border-radius: 30px;
   transition: all 0.2s;
   cursor: pointer;
   height: 140px;
@@ -220,7 +219,7 @@ const PadraoTag = styled.span`
   color: white;
   font-size: 11px;
   padding: 2px 6px;
-  border-radius: 10px;
+  border-radius: 50px;
   margin-left: 8px;
   font-weight: 500;
 `;
@@ -232,7 +231,7 @@ const CheckoutButton = styled.button`
   padding: 12px 20px;
   font-size: 16px;
   font-weight: 600;
-  border-radius: 8px;
+  border-radius: 50px;
   cursor: pointer;
   margin-top: 15px;
   transition: all 0.2s;
@@ -277,9 +276,9 @@ const PaymentMethodTabs = styled.div`
 const PaymentTab = styled.div`
   padding: 10px 20px;
   cursor: pointer;
-  border-bottom: ${props => props.active ? '3px solid #28c702' : '3px solid transparent'};
-  color: ${props => props.active ? 'rgb(22, 77, 9)' : '#777'};
-  font-weight: ${props => props.active ? '600' : '400'};
+  border-bottom: ${props => props.$active ? '3px solid #28c702' : '3px solid transparent'};
+  color: ${props => props.$active ? 'rgb(22, 77, 9)' : '#777'};
+  font-weight: ${props => props.$active ? '600' : '400'};  
   transition: all 0.2s;
   
   &:hover {
@@ -307,7 +306,7 @@ const FormInput = styled.input`
   width: 100%;
   padding: 10px;
   border: 1px solid #ddd;
-  border-radius: 6px;
+  border-radius: 50px;
   font-size: 14px;
   transition: border 0.2s;
   
@@ -322,7 +321,7 @@ const FormSelect = styled.select`
   width: 100%;
   padding: 10px;
   border: 1px solid #ddd;
-  border-radius: 6px;
+  border-radius: 50px;
   font-size: 14px;
   background-color: white;
   transition: border 0.2s;
@@ -347,7 +346,7 @@ const QRCodeContainer = styled.div`
   justify-content: center;
   padding: 15px;
   border: 1px dashed #28c702;
-  border-radius: 8px;
+  border-radius: 50px;
   background-color: #f9f9f9;
 `;
 
@@ -379,7 +378,7 @@ const BoletoInfo = styled.div`
   flex-direction: column;
   padding: 15px;
   border: 1px dashed #28c702;
-  border-radius: 8px;
+  border-radius: 50px;
   background-color: #f9f9f9;
 `;
 
@@ -390,7 +389,7 @@ const BoletoButton = styled.button`
   padding: 12px 20px;
   font-size: 15px;
   font-weight: 600;
-  border-radius: 8px;
+  border-radius: 50px;
   cursor: pointer;
   margin-top: 15px;
   transition: all 0.2s;
@@ -407,7 +406,7 @@ const Checkout = () => {
   const [enderecoSelecionado, setEnderecoSelecionado] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('cartao');
   const [resposta, setResposta] = useState(null);
-  
+
   // Estados para campos do cartão
   const [cardNumber, setCardNumber] = useState('');
   const [cardName, setCardName] = useState('');
@@ -437,7 +436,7 @@ const Checkout = () => {
       alert("Por favor, selecione um endereço de entrega");
       return;
     }
-  
+
     // Validação de cartão
     if (paymentMethod === 'cartao') {
       if (!cardNumber || !cardName || !cardExpiry || !cardCVV) {
@@ -445,14 +444,14 @@ const Checkout = () => {
         return;
       }
     }
-  
+
     const produtosFormatados = carrinho.map((produto) => ({
       idProduto: produto.id,
       nomeProduto: produto.nome,
       quantidade: produto.quantidade,
       precoUnitario: produto.preco
     }));
-  
+
     const pedido = {
       idCliente: dados.id,
       dataPedido: new Date(),
@@ -460,7 +459,7 @@ const Checkout = () => {
       valor: totalGeral,
       produtos: produtosFormatados
     };
-  
+
     try {
       const response = await fetch("http://localhost:8081/pedidos/criar", {
         method: "POST",
@@ -469,15 +468,15 @@ const Checkout = () => {
         },
         body: JSON.stringify(pedido)
       });
-  
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Erro desconhecido ao criar o pedido");
       }
-  
+
       const data = await response.json();
       setResposta(data);
-  
+
       handleClearCarrinho();
       alert(`Pedido realizado com sucesso! Número do pedido: ${data.numero}`);
     } catch (error) {
@@ -488,7 +487,7 @@ const Checkout = () => {
 
   const handleClearCarrinho = () => {
     setCarrinho([]);
-  
+
     // Limpa o carrinho do localStorage
     localStorage.removeItem("carrinho");
   };
@@ -497,22 +496,22 @@ const Checkout = () => {
   const formatCardNumber = (value) => {
     const digits = value.replace(/\D/g, '');
     const groups = [];
-    
+
     for (let i = 0; i < digits.length && i < 16; i += 4) {
       groups.push(digits.slice(i, i + 4));
     }
-    
+
     return groups.join(' ');
   };
-  
+
   // Formatação da data de validade
   const formatExpiryDate = (value) => {
     const digits = value.replace(/\D/g, '');
-    
+
     if (digits.length <= 2) {
       return digits;
     }
-    
+
     return `${digits.slice(0, 2)}/${digits.slice(2, 4)}`;
   };
 
@@ -520,12 +519,12 @@ const Checkout = () => {
     const formatted = formatCardNumber(e.target.value);
     setCardNumber(formatted);
   };
-  
+
   const handleExpiryChange = (e) => {
     const formatted = formatExpiryDate(e.target.value);
     setCardExpiry(formatted);
   };
-  
+
   const handleCVVChange = (e) => {
     const digits = e.target.value.replace(/\D/g, '');
     console.log(carrinho);
@@ -552,12 +551,20 @@ const Checkout = () => {
     return 0;
   });
 
+  const BotaoIrParaEndereco = () => {
+    return (
+      <a href="/perfil?tab=enderecos">
+        <CheckoutButton>Adicionar Endereço</CheckoutButton>
+      </a>
+    );
+  };
+
   return (
     <StyledCheckout>
       <GlobalStyle />
       <CheckoutContainer>
         <PageTitle>Finalizar Compra</PageTitle>
-        
+
         <TwoColumnLayout>
           <ColumnSection>
             <SectionContainer>
@@ -579,7 +586,7 @@ const Checkout = () => {
                 )}
               </CarrinhoList>
             </SectionContainer>
-            
+
             <SectionContainer>
               <SectionTitle>Endereço de Entrega</SectionTitle>
               {enderecos.length === 0 ? (
@@ -590,7 +597,7 @@ const Checkout = () => {
                     <EnderecoCard
                       key={index}
                       selected={enderecoSelecionado?.id === endereco.id}
-                      isPadrao={endereco.padrao}
+                      $selected={true} $isPadrao={endereco.padrao}
                       onClick={() => setEnderecoSelecionado(endereco)}
                     >
                       <EnderecoHeader>
@@ -611,86 +618,87 @@ const Checkout = () => {
                       </EnderecoContent>
                     </EnderecoCard>
                   ))}
+                  <BotaoIrParaEndereco/>
                 </EnderecosGrid>
               )}
             </SectionContainer>
-            
+
             {/* Seção de formas de pagamento */}
             <SectionContainer>
               <SectionTitle>Forma de Pagamento</SectionTitle>
               <PaymentMethodsContainer>
                 <PaymentMethodTabs>
-                  <PaymentTab 
-                    active={paymentMethod === 'cartao'} 
+                  <PaymentTab
+                    $active={paymentMethod === 'cartao'}
                     onClick={() => setPaymentMethod('cartao')}
                   >
                     Cartão de Crédito
                   </PaymentTab>
-                  <PaymentTab 
-                    active={paymentMethod === 'boleto'} 
+                  <PaymentTab
+                    $active={paymentMethod === 'boleto'}
                     onClick={() => setPaymentMethod('boleto')}
                   >
                     Boleto
                   </PaymentTab>
-                  <PaymentTab 
-                    active={paymentMethod === 'pix'} 
+                  <PaymentTab
+                    $active={paymentMethod === 'pix'}
                     onClick={() => setPaymentMethod('pix')}
                   >
                     PIX
                   </PaymentTab>
                 </PaymentMethodTabs>
-                
+
                 <PaymentForm>
                   {paymentMethod === 'cartao' && (
                     <>
                       <FormGroup>
                         <FormLabel>Número do Cartão</FormLabel>
-                        <FormInput 
-                          type="text" 
-                          placeholder="0000 0000 0000 0000" 
+                        <FormInput
+                          type="text"
+                          placeholder="0000 0000 0000 0000"
                           value={cardNumber}
                           onChange={handleCardNumberChange}
                           maxLength={19}
                         />
                       </FormGroup>
-                      
+
                       <FormGroup>
                         <FormLabel>Nome no Cartão</FormLabel>
-                        <FormInput 
-                          type="text" 
-                          placeholder="Como aparece no cartão" 
+                        <FormInput
+                          type="text"
+                          placeholder="Como aparece no cartão"
                           value={cardName}
                           onChange={(e) => setCardName(e.target.value)}
                         />
                       </FormGroup>
-                      
+
                       <CardInputsRow>
                         <FormGroup>
                           <FormLabel>Data de Validade</FormLabel>
-                          <FormInput 
-                            type="text" 
-                            placeholder="MM/AA" 
+                          <FormInput
+                            type="text"
+                            placeholder="MM/AA"
                             value={cardExpiry}
                             onChange={handleExpiryChange}
                             maxLength={5}
                           />
                         </FormGroup>
-                        
+
                         <FormGroup>
                           <FormLabel>CVV</FormLabel>
-                          <FormInput 
-                            type="text" 
-                            placeholder="123" 
+                          <FormInput
+                            type="text"
+                            placeholder="123"
                             value={cardCVV}
                             onChange={handleCVVChange}
                             maxLength={3}
                           />
                         </FormGroup>
                       </CardInputsRow>
-                      
+
                       <FormGroup>
                         <FormLabel>Parcelas</FormLabel>
-                        <FormSelect 
+                        <FormSelect
                           value={cardInstallments}
                           onChange={(e) => setCardInstallments(e.target.value)}
                         >
@@ -704,7 +712,7 @@ const Checkout = () => {
                       </FormGroup>
                     </>
                   )}
-                  
+
                   {paymentMethod === 'boleto' && (
                     <BoletoInfo>
                       <p>Ao finalizar a compra, você receberá o boleto para pagamento.</p>
@@ -713,7 +721,7 @@ const Checkout = () => {
                       <BoletoButton>Gerar Boleto</BoletoButton>
                     </BoletoInfo>
                   )}
-                  
+
                   {paymentMethod === 'pix' && (
                     <QRCodeContainer>
                       <QRCodePlaceholder>
@@ -731,7 +739,7 @@ const Checkout = () => {
               </PaymentMethodsContainer>
             </SectionContainer>
           </ColumnSection>
-          
+
           {/* Coluna do resumo */}
           <ColumnSection>
             <SectionTitle>Resumo do Pedido</SectionTitle>
@@ -749,7 +757,7 @@ const Checkout = () => {
                   <span>Total:</span>
                   <span>R$ {totalGeral.toFixed(2)}</span>
                 </Total>
-                
+
                 <CheckoutButton onClick={handleFinalizarCompra}>
                   Finalizar Pedido
                 </CheckoutButton>

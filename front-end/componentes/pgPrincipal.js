@@ -34,35 +34,34 @@ const Modal = styled.div`
   z-index: 1000;
 `;
 const StyledMain = styled.div`
-  display: flex;
-  justify-content: center;
-  flex-direction: column;
-  align-items: center;
-  width: 100vw;
+   background: 
+    radial-gradient(ellipse at top, rgba(48, 240, 3, 0.6) -5%, rgba(18, 60, 7, 0.95) 70%),
+    repeating-linear-gradient(45deg, rgba(18, 60, 7, 0.15) 0px, rgba(18, 60, 7, 0.15) 10px, rgba(48, 240, 3, 0.1) 10px, rgba(48, 240, 3, 0.1) 20px);
   height: 100vh;
-  background-color: #000;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 40' width='80' height='40'%3E%3Cpath fill='%2330f003' fill-opacity='0.59' d='M0 40a19.96 19.96 0 0 1 5.9-14.11 20.17 20.17 0 0 1 19.44-5.2A20 20 0 0 1 20.2 40H0zM65.32.75A20.02 20.02 0 0 1 40.8 25.26 20.02 20.02 0 0 1 65.32.76zM.07 0h20.1l-.08.07A20.02 20.02 0 0 1 .75 5.25 20.08 20.08 0 0 1 .07 0zm1.94 40h2.53l4.26-4.24v-9.78A17.96 17.96 0 0 0 2 40zm5.38 0h9.8a17.98 17.98 0 0 0 6.67-16.42L7.4 40zm3.43-15.42v9.17l11.62-11.59c-3.97-.5-8.08.3-11.62 2.42zm32.86-.78A18 18 0 0 0 63.85 3.63L43.68 23.8zm7.2-19.17v9.15L62.43 2.22c-3.96-.5-8.05.3-11.57 2.4zm-3.49 2.72c-4.1 4.1-5.81 9.69-5.13 15.03l6.61-6.6V6.02c-.51.41-1 .85-1.48 1.33zM17.18 0H7.42L3.64 3.78A18 18 0 0 0 17.18 0zM2.08 0c-.01.8.04 1.58.14 2.37L4.59 0H2.07z'%3E%3C/path%3E%3C/svg%3E");
-  background-repeat: repeat;
-  background-size: 80px 40px;
-  background-position: center;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
 `;
 
 const Header = styled.div`
   width: 90%;
   height: 120px;
-  background-color:#fff;
+  background-color: #f0f0f0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 20px;
   color: black;
-  border-radius: 10px;
+  border-radius: 50px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
 `;
 
 const Logo = styled.img`
   height: 90px;
-  border-radius: 30px;
+  border-radius: 50px;
 `;
 
 const Titulo = styled.h2`
@@ -77,30 +76,66 @@ const Usuario = styled.div`
 
 const Carrinho = styled.div`
   font-size: 35px;
-  margin-right:20px;
   cursor: pointer;
 `;
 
-const BotaoLogin = styled.button`
-  background-color: #30f003;
+const UserSection = styled.div`
   display: flex;
+  align-items: center;
   flex-direction: column;
-  color: white;
-  border: none;
-  margin-top: 3px;
-  padding: 10px 13px;
+  gap: 15px;
+  padding: 10px 0px;
+  background: #f0f0f0;
   border-radius: 8px;
+`;
+
+const UserGreeting = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+`;
+
+const UserName = styled.span`
+  font-weight: 600;
+  color: #164d09;
+  font-size: 1rem;
+`;
+
+const ButtonsContainer = styled.div`
+  display: flex;
+  gap: 10px;
+  margin-left: auto;
+`;
+
+const UserButton = styled.button`
+  padding: 8px 16px;
+  background-color: ${props => props.$primary ? '#164d09' : '#f0f0f0'};
+  color: ${props => props.$primary ? '#f0f0f0' : '#164d09'};
+  border: 1px solid #164d09;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 600;
   cursor: pointer;
-  font-weight: bold;
+  transition: all 0.2s;
+  
+  &:hover {
+    background-color: ${props => props.$primary ? '#1a5e0a' : '#f0fff0'};
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
 `;
 
 const Container = styled.div`
    width: 90%;
    height: 70%;
   margin-top: 40px; 
-  background: white;
+  background: #f0f0f0;
   padding: 20px;
-  border-radius: 10px;
+  border-radius: 50px;
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
 `;
 
@@ -121,11 +156,11 @@ const Cards = styled.div`
 const CardP = styled.div`
   width: 230px;
   border: 1px solid #ddd;
-  border-radius: 10px;
+  border-radius: 50px;
   padding: 15px;
   text-align: center;
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-  background-color: #fff;
+  background-color: #f5f5f5;
   transition: transform 0.2s, box-shadow 0.2s;
 
   &:hover {
@@ -161,11 +196,11 @@ const DetalheB = styled.button`
   border: none;
   background-color: #007bff;
   color: white;
-  border-radius: 5px;
+  border-radius: 50px;
   cursor: pointer;
   font-size: 16px;
   font-weight: bold;
-  width: 100%;
+  width: 90%;
   transition: background 0.3s;
 
   &:hover {
@@ -187,7 +222,7 @@ const ModalBackground = styled.div`
 `;
 
 const ModalContent = styled.div`
-  background: #fff;
+  background: #f5f5f5;
   padding: 25px;
   border-radius: 12px;
   width: 500px;
@@ -269,7 +304,7 @@ const QuantityButton = styled.button`
   padding: 5px 10px;
   font-size: 16px;
   cursor: pointer;
-  border-radius: 5px;
+  border-radius: 50px;
   margin: 0 5px;
   transition: all 0.2s;
 
@@ -285,7 +320,7 @@ const RemoveButton = styled.button`
   padding: 5px 10px;
   font-size: 14px;
   cursor: pointer;
-  border-radius: 5px;
+  border-radius: 50px;
   transition: all 0.2s;
 
   &:hover {
@@ -297,7 +332,7 @@ const ResumoPedido = styled.div`
   margin-top: 20px;
   padding: 15px;
   background: #f8f9fa;
-  border-radius: 10px;
+  border-radius: 50px;
   text-align: center;
 `;
 
@@ -314,7 +349,7 @@ const BotaoFinalizar = styled.button`
   color: white;
   font-size: 16px;
   font-weight: bold;
-  border-radius: 8px;
+  border-radius: 50px;
   cursor: pointer;
   margin-top: 10px;
   transition: all 0.3s;
@@ -355,7 +390,7 @@ const ActionButton = styled.button`
   border: none;
   background: linear-gradient(135deg, #007bff, #0056b3);
   color: white;
-  border-radius: 8px;
+  border-radius: 50px;
   cursor: pointer;
   font-size: 16px;
   font-weight: bold;
@@ -376,7 +411,7 @@ const SuccessMessage = styled.p`
   background-color: #28a745;
   color: white;
   padding: 10px;
-  border-radius: 5px;
+  border-radius: 50px;
   margin-top: 10px;
   font-weight: bold;
   text-align: center;
@@ -407,10 +442,10 @@ const StyledSlider = styled(Slider)`
 
 function Principal() {
   const { user } = useAuth();
-  const { setUser, setGrupo, setDados, dados,frete, setFrete, valorFrete, setValorFrete } = useAuth();
+  const { setUser, setGrupo, setDados, dados, frete, setFrete, valorFrete, setValorFrete } = useAuth();
   const [produtos, setProdutos] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const {carrinho, setCarrinho} = useAuth();
+  const { carrinho, setCarrinho } = useAuth();
   const [showCarrinho, setShowCarrinho] = useState(false);
   const [addedMessage, setAddedMessage] = useState('');
   const [total, setTotal] = useState(0);
@@ -447,7 +482,7 @@ function Principal() {
       .then(async (response) => {
         const produtosComImagens = await Promise.all(response.data.map(async (produto) => {
           const imagens = await fetchImages(produto.id);
-          
+
 
           const imagemPrincipal = imagens.find(img => img.principal) || imagens[0]; // Pega a principal ou a primeira disponível
           return {
@@ -483,20 +518,26 @@ function Principal() {
   };
 
   useEffect(() => {
+    // 1. Atualiza o total
     const totalProdutos = carrinho.reduce((acc, item) => acc + (item.preco * item.quantidade), 0);
     setTotal(totalProdutos + valorFrete);
-  }, [carrinho, valorFrete]);
+
+    // 2. Atualiza o localStorage
+    const carrinhoKey = user ? `carrinho_${user.id}` : 'carrinho_guest';
+    localStorage.setItem(carrinhoKey, JSON.stringify(carrinho));
+  }, [carrinho, valorFrete, user]);
+
 
   const handleDetail = async (produto) => {
-   
+
     setAddedMessage('');
     const imagens = await fetchImages(produto.id); // Busca as imagens antes de atualizar o estado
- 
-      setViewingProduct({
-        ...produto,
-        imagens,
-      });
-      setShowModal(true);
+
+    setViewingProduct({
+      ...produto,
+      imagens,
+    });
+    setShowModal(true);
   };
 
   const handleCloseModal = () => {
@@ -504,70 +545,64 @@ function Principal() {
     setShowModal(false);
   };
 
- const handleFreteChange = (tipo) => {
-  let valor = 0;
-  if (tipo === 'normal') {
-    valor = 10;
-  } else if (tipo === 'rapida') {
-    valor = 20;
-  } else if (tipo === 'retirada') {
-    valor = 0;
-  }
-
-  setValorFrete(valor);
-  setFrete(tipo);
-
-  localStorage.setItem("frete", JSON.stringify(tipo));
-  localStorage.setItem("valorFrete", JSON.stringify(valor));
-
-};
-
-const handleAddToCart = () => {
-  setCarrinho(prevCarrinho => {
-    const existingProductIndex = prevCarrinho.findIndex(item => item.id === viewingProduct.id);
-    
-    let updatedCarrinho;
-    if (existingProductIndex !== -1) {
-      updatedCarrinho = [...prevCarrinho];
-      updatedCarrinho[existingProductIndex].quantidade += 1;
-    } else {
-      updatedCarrinho = [...prevCarrinho, { ...viewingProduct, quantidade: 1 }];
-    }
-    
-    // Para usuário não logado, salvamos o carrinho no localStorage com chave 'carrinho_guest'
-    const carrinhoKey = user ? `carrinho_${user.id}` : 'carrinho_guest';
-    localStorage.setItem(carrinhoKey, JSON.stringify(updatedCarrinho));
-
-    return updatedCarrinho;
-  });
-
-  setAddedMessage('Produto adicionado ao carrinho!');
-  setTimeout(() => setAddedMessage(''), 2000);
-};
-
-const handleBuy = () => {
-  setCarrinho(prevCarrinho => {
-    const existingProductIndex = prevCarrinho.findIndex(item => item.id === viewingProduct.id);
-
-    let updatedCarrinho;
-    if (existingProductIndex !== -1) {
-      // Se o produto já existe, incrementa a quantidade
-      updatedCarrinho = [...prevCarrinho];
-      updatedCarrinho[existingProductIndex].quantidade += 1;
-    } else {
-      // Se o produto não existe, adiciona-o com quantidade 1
-      updatedCarrinho = [...prevCarrinho, { ...viewingProduct, quantidade: 1 }];
+  const handleFreteChange = (tipo) => {
+    let valor = 0;
+    if (tipo === 'normal') {
+      valor = 10;
+    } else if (tipo === 'rapida') {
+      valor = 20;
+    } else if (tipo === 'retirada') {
+      valor = 0;
     }
 
-    // Salva o carrinho atualizado no localStorage
-    localStorage.setItem("carrinho", JSON.stringify(updatedCarrinho));
+    setValorFrete(valor);
+    setFrete(tipo);
 
-    return updatedCarrinho;
-  });
+    localStorage.setItem("frete", JSON.stringify(tipo));
+    localStorage.setItem("valorFrete", JSON.stringify(valor));
 
-  setShowModal(false);
-  setShowCarrinho(true);
-};
+  };
+
+  const handleAddToCart = () => {
+    setCarrinho(prevCarrinho => {
+      const existingProductIndex = prevCarrinho.findIndex(item => item.id === viewingProduct.id);
+
+      if (existingProductIndex !== -1) {
+        return prevCarrinho.map((item, index) =>
+          index === existingProductIndex ? { ...item, quantidade: item.quantidade + 1 } : item
+        );
+      } else {
+        return [...prevCarrinho, { ...viewingProduct, quantidade: 1 }];
+      }
+    });
+
+    setAddedMessage('Produto adicionado ao carrinho!');
+    setTimeout(() => setAddedMessage(''), 2000);
+  };
+
+  const handleBuy = () => {
+    setCarrinho(prevCarrinho => {
+      const existingProductIndex = prevCarrinho.findIndex(item => item.id === viewingProduct.id);
+
+      let updatedCarrinho;
+      if (existingProductIndex !== -1) {
+        // Se o produto já existe, incrementa a quantidade
+        updatedCarrinho = [...prevCarrinho];
+        updatedCarrinho[existingProductIndex].quantidade += 1;
+      } else {
+        // Se o produto não existe, adiciona-o com quantidade 1
+        updatedCarrinho = [...prevCarrinho, { ...viewingProduct, quantidade: 1 }];
+      }
+
+      // Salva o carrinho atualizado no localStorage
+      localStorage.setItem("carrinho", JSON.stringify(updatedCarrinho));
+
+      return updatedCarrinho;
+    });
+
+    setShowModal(false);
+    setShowCarrinho(true);
+  };
 
 
   const handleCarrinhoClick = () => {
@@ -575,20 +610,12 @@ const handleBuy = () => {
   };
 
   const handleIncreaseQuantity = (id) => {
-    setCarrinho(prevCarrinho => {
-      const updatedCarrinho = prevCarrinho.map(item => {
-        if (item.id === id) {
-          return { ...item, quantidade: item.quantidade + 1 };
-        }
-        return item;
-      });
-  
-      // Salva o carrinho atualizado no localStorage
-      localStorage.setItem("carrinho", JSON.stringify(updatedCarrinho));
-      return updatedCarrinho;
-    });
+    setCarrinho(prevCarrinho =>
+      prevCarrinho.map(item =>
+        item.id === id ? { ...item, quantidade: item.quantidade + 1 } : item
+      )
+    );
   };
-  
 
   const handleRemoveUnit = (id) => {
     setCarrinho(prevCarrinho => {
@@ -598,18 +625,18 @@ const handleBuy = () => {
         }
         return item;
       }).filter(item => item.quantidade > 0); // Remove qualquer produto com quantidade 0
-  
+
       // Salva o carrinho atualizado no localStorage
       localStorage.setItem("carrinho", JSON.stringify(updatedCarrinho));
       return updatedCarrinho;
     });
   };
-  
+
 
   const handleRemoveItem = (id) => {
     setCarrinho(prevCarrinho => {
       const updatedCarrinho = prevCarrinho.filter(item => item.id !== id);
-  
+
       // Salva o carrinho atualizado no localStorage
       localStorage.setItem("carrinho", JSON.stringify(updatedCarrinho));
       return updatedCarrinho;
@@ -618,31 +645,31 @@ const handleBuy = () => {
 
   const handleClearCarrinho = () => {
     setCarrinho([]);
-  
+
     // Limpa o carrinho do localStorage
     localStorage.removeItem("carrinho");
   };
-  
+
   const handleLogout = () => {
     // Armazenando carrinho de visitante (caso o usuário queira retornar depois)
-    localStorage.setItem('carrinho_guest', JSON.stringify(carrinho)); 
-  
+    localStorage.setItem('carrinho_guest', JSON.stringify(carrinho));
+
     localStorage.removeItem("user"); // limpa o localStorage
     setUser(null); // limpa o estado
     setGrupo(null);
     setDados(null);
     setCarrinho([]); // Limpa o carrinho no estado
-  
+
     // Redireciona ou recarrega a página
     window.location.reload();
   };
-  
-  
-  
+
+
+
 
   const settings = {
     dots: true,
-    infinite: false,  
+    infinite: false,
     speed: 500,
     slidesToShow: 1,
     slidesToScroll: 1,
@@ -657,18 +684,27 @@ const handleBuy = () => {
         <Titulo>Turn on the beck</Titulo>
         <Usuario>
           <Carrinho title="Carrinho" onClick={handleCarrinhoClick}>🛒</Carrinho>
-          {user ? (
-            <div>
-              <span>Olá, {dados.nome}!</span>
-              <BotaoLogin onClick={handleRedirectPerfil}>Perfil</BotaoLogin>
-              <BotaoLogin onClick={handleLogout}>Sair</BotaoLogin>
-            </div>
-          ) : (
-            <div>
-              <BotaoLogin onClick={handleRedirectL}>Login</BotaoLogin>
-              <BotaoLogin onClick={handleRedirect}>Cadastrar</BotaoLogin>
-            </div>
-          )}
+          <UserSection>
+            {user ? (
+              <>
+                <UserGreeting>
+                  <UserName>{dados.nome || 'Usuário'}</UserName>
+                </UserGreeting>
+                <ButtonsContainer>
+                  <UserButton onClick={handleRedirectPerfil}>Perfil</UserButton>
+                  <UserButton $primary onClick={handleLogout}>Sair</UserButton>
+                </ButtonsContainer>
+              </>
+            ) : (
+              <>
+                <UserName>Bem-vindo!</UserName>
+                <ButtonsContainer>
+                  <UserButton onClick={handleRedirectL}>Login</UserButton>
+                  <UserButton $primary onClick={handleRedirect}>Cadastrar</UserButton>
+                </ButtonsContainer>
+              </>
+            )}
+          </UserSection>
 
         </Usuario>
       </Header>
@@ -679,7 +715,7 @@ const handleBuy = () => {
             <CardP key={produto.id}>
               <NomeP>{produto.nome}</NomeP>
               <PrecoP>R$ {produto.preco.toFixed(2)}</PrecoP>
-              <ImgProduto src = {produto.imagemPrincipal.slice(22)}></ImgProduto>
+              <ImgProduto src={produto.imagemPrincipal.slice(22)}></ImgProduto>
               <DetalheB onClick={() => handleDetail(produto)}>Ver Detalhes</DetalheB>
             </CardP>
           ))}
@@ -742,12 +778,12 @@ const handleBuy = () => {
           </ModalContent>
         </ModalBackground>
       )}
-      
-      {showModal && viewingProduct &&(
-      <Modal>
-        <ModalContent>
-          <CloseButton onClick={handleCloseModal}>✖</CloseButton>
-        
+
+      {showModal && viewingProduct && (
+        <Modal>
+          <ModalContent>
+            <CloseButton onClick={handleCloseModal}>✖</CloseButton>
+
             <>
               {viewingProduct.imagens && viewingProduct.imagens.length > 0 ? (
                 <StyledSlider dots={true} infinite={false} speed={500} slidesToShow={2} slidesToScroll={1}>
@@ -756,7 +792,7 @@ const handleBuy = () => {
                       <img
                         src={`../` + imagem.caminhoArquivo.slice(22)}
                         alt={`Imagem ${index + 1}`}
-                        style={{ width: "100px", height: "auto", maxHeight: "300px", objectFit: "contain" }}  
+                        style={{ width: "100px", height: "auto", maxHeight: "300px", objectFit: "contain" }}
 
                       />
                     </div>
@@ -775,10 +811,10 @@ const handleBuy = () => {
                 <ActionButton onClick={handleBuy}>Comprar Agora 💳</ActionButton>
               </ButtonGroup>
             </>
-          
-        </ModalContent>
-      </Modal>
-    )}
+
+          </ModalContent>
+        </Modal>
+      )}
     </StyledMain>
   );
 }

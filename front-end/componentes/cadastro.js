@@ -2,7 +2,6 @@ import styled from "styled-components";
 import { createGlobalStyle } from "styled-components";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useAuth } from "./authContext";
 
 const GlobalStyle = createGlobalStyle`
   * {
@@ -20,29 +19,29 @@ const GlobalStyle = createGlobalStyle`
 `;
 
 const StyledCadastro = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100vw;
+  background: 
+    radial-gradient(ellipse at top, rgba(48, 240, 3, 0.6) -5%, rgba(18, 60, 7, 0.95) 70%),
+    repeating-linear-gradient(45deg, rgba(18, 60, 7, 0.15) 0px, rgba(18, 60, 7, 0.15) 10px, rgba(48, 240, 3, 0.1) 10px, rgba(48, 240, 3, 0.1) 20px);
   height: 100vh;
-  background-color: #000000;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 40' width='80' height='40'%3E%3Cpath fill='%2330f003' fill-opacity='0.59' d='M0 40a19.96 19.96 0 0 1 5.9-14.11 20.17 20.17 0 0 1 19.44-5.2A20 20 0 0 1 20.2 40H0zM65.32.75A20.02 20.02 0 0 1 40.8 25.26 20.02 20.02 0 0 1 65.32.76zM.07 0h20.1l-.08.07A20.02 20.02 0 0 1 .75 5.25 20.08 20.08 0 0 1 .07 0zm1.94 40h2.53l4.26-4.24v-9.78A17.96 17.96 0 0 0 2 40zm5.38 0h9.8a17.98 17.98 0 0 0 6.67-16.42L7.4 40zm3.43-15.42v9.17l11.62-11.59c-3.97-.5-8.08.3-11.62 2.42zm32.86-.78A18 18 0 0 0 63.85 3.63L43.68 23.8zm7.2-19.17v9.15L62.43 2.22c-3.96-.5-8.05.3-11.57 2.4zm-3.49 2.72c-4.1 4.1-5.81 9.69-5.13 15.03l6.61-6.6V6.02c-.51.41-1 .85-1.48 1.33zM17.18 0H7.42L3.64 3.78A18 18 0 0 0 17.18 0zM2.08 0c-.01.8.04 1.58.14 2.37L4.59 0H2.07z'%3E%3C/path%3E%3C/svg%3E");
-  background-repeat: repeat;
-  background-size: 80px 40px;
-  background-position: center;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
 `;
 
 const Box = styled.div`
   background-color: rgba(255, 255, 255, 0.97);
   padding: 25px 30px;
-  border-radius: 12px;
+  border-radius: 50px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2), 0 0 15px rgba(48, 240, 3, 0.2);
   text-align: left;
   width: 650px;
   max-height: 85vh;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: #28c702 #f0f0f0;
+  scrollbar-color:rgba(41, 199, 2, 0) #f0f0f0;
   
   &::-webkit-scrollbar {
     width: 8px;
@@ -50,12 +49,12 @@ const Box = styled.div`
   
   &::-webkit-scrollbar-track {
     background: #f0f0f0;
-    border-radius: 10px;
+    border-radius: 50px;
   }
   
   &::-webkit-scrollbar-thumb {
     background-color: #28c702;
-    border-radius: 10px;
+    border-radius: 50px;
   }
 `;
 
@@ -119,7 +118,7 @@ const Input = styled.input`
   width: 100%;
   padding: 8px 10px;
   border: 1px solid #ccc;
-  border-radius: 6px;
+  border-radius: 50px;
   font-size: 0.9rem;
   
   &:focus {
@@ -133,7 +132,7 @@ const Select = styled.select`
   width: 100%;
   padding: 8px 10px;
   border: 1px solid #ccc;
-  border-radius: 6px;
+  border-radius: 50px;
   font-size: 0.9rem;
   
   &:focus {
@@ -162,7 +161,7 @@ const Botao = styled.button`
   background-color: #164d09;
   color: #fff;
   font-size: 0.95rem;
-  border-radius: 6px;
+  border-radius: 50px;
   cursor: pointer;
   transition: all 0.2s ease;
   font-weight: 600;
@@ -207,7 +206,7 @@ const BotoesContainer = styled.div`
 
 const EnderecoCard = styled.div`
   background-color: #f9f9f9;
-  border-radius: 8px;
+  border-radius: 50px;
   padding: 12px;
   margin-bottom: 15px;
   border-left: 4px solid #28c702;

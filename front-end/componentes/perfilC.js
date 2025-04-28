@@ -21,22 +21,22 @@ const GlobalStyle = createGlobalStyle`
 `;
 
 const StyledPerfil = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100vw;
+   background: 
+    radial-gradient(ellipse at top, rgba(48, 240, 3, 0.6) -5%, rgba(18, 60, 7, 0.95) 70%),
+    repeating-linear-gradient(45deg, rgba(18, 60, 7, 0.15) 0px, rgba(18, 60, 7, 0.15) 10px, rgba(48, 240, 3, 0.1) 10px, rgba(48, 240, 3, 0.1) 20px);
   height: 100vh;
-  background-color: #000000;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 40' width='80' height='40'%3E%3Cpath fill='%2330f003' fill-opacity='0.59' d='M0 40a19.96 19.96 0 0 1 5.9-14.11 20.17 20.17 0 0 1 19.44-5.2A20 20 0 0 1 20.2 40H0zM65.32.75A20.02 20.02 0 0 1 40.8 25.26 20.02 20.02 0 0 1 65.32.76zM.07 0h20.1l-.08.07A20.02 20.02 0 0 1 .75 5.25 20.08 20.08 0 0 1 .07 0zm1.94 40h2.53l4.26-4.24v-9.78A17.96 17.96 0 0 0 2 40zm5.38 0h9.8a17.98 17.98 0 0 0 6.67-16.42L7.4 40zm3.43-15.42v9.17l11.62-11.59c-3.97-.5-8.08.3-11.62 2.42zm32.86-.78A18 18 0 0 0 63.85 3.63L43.68 23.8zm7.2-19.17v9.15L62.43 2.22c-3.96-.5-8.05.3-11.57 2.4zm-3.49 2.72c-4.1 4.1-5.81 9.69-5.13 15.03l6.61-6.6V6.02c-.51.41-1 .85-1.48 1.33zM17.18 0H7.42L3.64 3.78A18 18 0 0 0 17.18 0zM2.08 0c-.01.8.04 1.58.14 2.37L4.59 0H2.07z'%3E%3C/path%3E%3C/svg%3E");
-  background-repeat: repeat;
-  background-size: 80px 40px;
-  background-position: center;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
 `;
 
 const Box = styled.div`
-  background-color: rgba(255, 255, 255, 0.97);
+  background-color: #f0f0f0;
   padding: 25px 30px;
-  border-radius: 12px;
+  border-radius: 50px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2), 0 0 15px rgba(48, 240, 3, 0.2);
   text-align: left;
   width: 700px;
@@ -51,12 +51,12 @@ const Box = styled.div`
   
   &::-webkit-scrollbar-track {
     background: #f0f0f0;
-    border-radius: 10px;
+    border-radius: 50px;
   }
   
   &::-webkit-scrollbar-thumb {
     background-color: #28c702;
-    border-radius: 10px;
+    border-radius: 50px;
   }
 `;
 
@@ -170,7 +170,7 @@ const Input = styled.input`
   width: 100%;
   padding: 8px 10px;
   border: 1px solid #ccc;
-  border-radius: 6px;
+  border-radius: 50px;
   font-size: 0.9rem;
   
   &:focus {
@@ -184,7 +184,7 @@ const Select = styled.select`
   width: 100%;
   padding: 8px 10px;
   border: 1px solid #ccc;
-  border-radius: 6px;
+  border-radius: 50px;
   font-size: 0.9rem;
   
   &:focus {
@@ -206,7 +206,7 @@ const Success = styled.p`
   margin-top: 10px;
   background-color: #e8ffe8;
   padding: 8px;
-  border-radius: 4px;
+  border-radius: 50px;
   border-left: 3px solid #28c702;
 `;
 
@@ -223,7 +223,7 @@ const Botao = styled.button`
   background-color: #164d09;
   color: #fff;
   font-size: 0.95rem;
-  border-radius: 6px;
+  border-radius: 50px;
   cursor: pointer;
   transition: all 0.2s ease;
   font-weight: 600;
@@ -262,7 +262,7 @@ const BotaoSecundario = styled(Botao)`
 
 const EnderecoCard = styled.div`
   background-color: #f9f9f9;
-  border-radius: 8px;
+  border-radius: 30px;
   padding: 12px;
   margin-bottom: 15px;
   border-left: 4px solid #28c702;
@@ -302,6 +302,150 @@ const BotoesContainer = styled.div`
   display: flex;
   gap: 10px;
   margin-top: 10px;
+`;
+
+const PedidoCard = styled.div`
+  background-color: #f9f9f9;
+  border-radius: 30px;
+  padding: 15px;
+  margin-bottom: 15px;
+  border-left: 4px solid #28c702;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+  }
+`;
+
+const PedidoHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e0e0e0;
+`;
+
+const PedidoNumero = styled.span`
+  font-weight: 600;
+  color: #164d09;
+  font-size: 1.1rem;
+`;
+
+const PedidoStatus = styled.span`
+  background-color: ${props => {
+    switch(props.status.toLowerCase()) {
+      case 'entregue': return '#e8ffe8';
+      case 'cancelado': return '#ffebeb';
+      case 'em andamento': return '#fff8e8';
+      default: return '#f0f0f0';
+    }
+  }};
+  color: ${props => {
+    switch(props.status.toLowerCase()) {
+      case 'entregue': return '#028a02';
+      case 'cancelado': return '#c70000';
+      case 'em andamento': return '#c79400';
+      default: return '#666';
+    }
+  }};
+  padding: 4px 10px;
+  border-radius: 50px;
+  font-size: 0.8rem;
+  font-weight: 600;
+`;
+
+const PedidoInfo = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+`;
+
+const PedidoInfoItem = styled.div`
+  margin: 4px 0;
+`;
+
+const PedidoLabel = styled.span`
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: #666;
+`;
+
+const PedidoValue = styled.span`
+  display: block;
+  font-size: 0.9rem;
+`;
+
+const ProdutosTitle = styled.div`
+  font-weight: 600;
+  color: #164d09;
+  margin: 10px 0;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  
+  &::before {
+    content: "";
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    background-color: #30f003;
+    margin-right: 8px;
+    border-radius: 50%;
+  }
+`;
+
+const ProdutosList = styled.div`
+  background-color: white;
+  border-radius: 30px;
+  padding: 8px;
+`;
+
+const ProdutoItem = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid #f0f0f0;
+  
+  &:last-child {
+    border-bottom: none;
+  }
+`;
+
+const ProdutoNome = styled.span`
+  flex: 2;
+`;
+
+const ProdutoQtd = styled.span`
+  flex: 1;
+  text-align: center;
+  color: #666;
+`;
+
+const ProdutoPreco = styled.span`
+  flex: 1;
+  text-align: right;
+  font-weight: 500;
+`;
+
+const PedidoValorTotal = styled.div`
+  text-align: right;
+  margin-top: 10px;
+  font-weight: 600;
+  color: #164d09;
+  font-size: 1.1rem;
+`;
+
+const NenhumPedido = styled.div`
+  padding: 30px;
+  text-align: center;
+  color: #666;
+  background-color: #f9f9f9;
+  border-radius: 30px;
+  margin: 20px 0;
 `;
 
 function Perfil() {
@@ -363,6 +507,16 @@ function Perfil() {
     setActiveTab(tab);
   };
 
+  useEffect(() => {
+    // Verifica se há um parâmetro 'tab' na URL
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get('tab');
+    
+    // Se houver e for uma tab válida, ativa-a
+    if (tabParam && ['dados', 'senha', 'enderecos', 'pedidos'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, []);
 
   useEffect(() => {
     if (activeTab === 'enderecos') {
@@ -410,7 +564,6 @@ function Perfil() {
       console.error("Erro ao buscar enderecos:", error);
       return [];
     }
-
 
   }
 
@@ -977,30 +1130,47 @@ function Perfil() {
         </TabContent>
 
         <TabContent $active={activeTab === 'pedidos'}>
-        {pedidos.length === 0 ? (
+    {pedidos.length === 0 ? (
+      <NenhumPedido>
         <p>Nenhum pedido encontrado.</p>
-      ) : (
-        pedidos.map((pedido) => (
-          <div key={pedido.id} className="border p-4 mb-4 rounded shadow-md">
-            <p><strong>Número do Pedido:</strong> {pedido.numero}</p>
-            <p><strong>Data:</strong> {new Date(pedido.dataPedido).toLocaleString()}</p>
-            <p><strong>Status:</strong> {pedido.status}</p>
-            <p><strong>Valor Total:</strong> R$ {pedido.valor.toFixed(2)}</p>
-
-            <div className="mt-2">
-              <strong>Produtos:</strong>
-              <ul className="list-disc pl-5">
-                {pedido.produtos.map((produto, index) => (
-                  <li key={index}>
-                    {produto.nomeProduto} - {produto.quantidade}x R$ {produto.precoUnitario.toFixed(2)}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        ))
-      )}
-        </TabContent>
+      </NenhumPedido>
+    ) : (
+      pedidos.map((pedido) => (
+        <PedidoCard key={pedido.id}>
+          <PedidoHeader>
+            <PedidoNumero>Pedido #{pedido.numero}</PedidoNumero>
+            <PedidoStatus status={pedido.status}>{pedido.status}</PedidoStatus>
+          </PedidoHeader>
+          
+          <PedidoInfo>
+            <PedidoInfoItem>
+              <PedidoLabel>Data do Pedido</PedidoLabel>
+              <PedidoValue>{new Date(pedido.dataPedido).toLocaleString()}</PedidoValue>
+            </PedidoInfoItem>
+            <PedidoInfoItem>
+              <PedidoLabel>Método de Pagamento</PedidoLabel>
+              <PedidoValue>{pedido.metodoPagamento || "Não informado"}</PedidoValue>
+            </PedidoInfoItem>
+          </PedidoInfo>
+          
+          <ProdutosTitle>Produtos</ProdutosTitle>
+          <ProdutosList>
+            {pedido.produtos.map((produto, index) => (
+              <ProdutoItem key={index}>
+                <ProdutoNome>{produto.nomeProduto}</ProdutoNome>
+                <ProdutoQtd>{produto.quantidade}x</ProdutoQtd>
+                <ProdutoPreco>R$ {produto.precoUnitario.toFixed(2)}</ProdutoPreco>
+              </ProdutoItem>
+            ))}
+          </ProdutosList>
+          
+          <PedidoValorTotal>
+            Total: R$ {pedido.valor.toFixed(2)}
+          </PedidoValorTotal>
+        </PedidoCard>
+      ))
+    )}
+  </TabContent>
       </Box>
     </StyledPerfil>
   );
