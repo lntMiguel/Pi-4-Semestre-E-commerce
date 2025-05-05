@@ -1149,7 +1149,6 @@ function Perfil() {
             </PedidoInfoItem>
             <PedidoInfoItem>
               <PedidoLabel>Método de Pagamento</PedidoLabel>
-              <PedidoValue>{pedido.metodoPagamento || "Não informado"}</PedidoValue>
             </PedidoInfoItem>
           </PedidoInfo>
           

@@ -1,6 +1,7 @@
 import { useAuth } from "./authContext";
 import { useState, useEffect } from "react";
 import styled from "styled-components";
+import { useRouter } from "next/navigation";
 import { createGlobalStyle } from "styled-components";
 
 const GlobalStyle = createGlobalStyle`
@@ -406,6 +407,8 @@ const Checkout = () => {
   const [enderecoSelecionado, setEnderecoSelecionado] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('cartao');
   const [resposta, setResposta] = useState(null);
+  const router = useRouter();
+  
 
   // Estados para campos do cartão
   const [cardNumber, setCardNumber] = useState('');
@@ -478,12 +481,18 @@ const Checkout = () => {
       setResposta(data);
 
       handleClearCarrinho();
-      alert(`Pedido realizado com sucesso! Número do pedido: ${data.numero}`);
+      alert(`Pedido realizado com sucesso! Número do pedido: ${data.numero} \n Visite "Meus pedidos" no perfil para visualisar suas compras`);
+      handleRedirect();
+      
     } catch (error) {
       console.error("Erro ao criar pedido:", error);
       alert(`Não foi possível finalizar o pedido: ${error.message}`);
     }
   };
+
+  const handleRedirect = () => {
+    router.push('/pgPrincipal');
+  }
 
   const handleClearCarrinho = () => {
     setCarrinho([]);
