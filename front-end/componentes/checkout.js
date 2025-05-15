@@ -19,6 +19,12 @@ const GlobalStyle = createGlobalStyle`
   }
 `;
 
+const FormRow = styled.div`
+  display: flex;
+  gap: 10px;
+  margin-bottom: 0;
+`;
+
 const StyledCheckout = styled.div`
    background: 
     radial-gradient(ellipse at top, rgba(48, 240, 3, 0.6) -5%, rgba(18, 60, 7, 0.95) 70%),
@@ -30,6 +36,19 @@ const StyledCheckout = styled.div`
   justify-content: center;
   margin: 0;
   padding: 30px 0;
+`;
+
+const Label = styled.label`
+  font-weight: 600;
+  display: block;
+  font-size: 0.9rem;
+  margin-bottom: 3px;
+  color: #333;
+`;
+
+const Field = styled.div`
+  margin-bottom: 8px;
+  flex: ${props => props.flex || 1};
 `;
 
 const CheckoutContainer = styled.div`
@@ -59,6 +78,20 @@ const SectionTitle = styled.h2`
   font-size: 18px;
   margin-bottom: 15px;
   font-weight: 600;
+`;
+
+const Input = styled.input`
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 50px;
+  font-size: 0.9rem;
+  
+  &:focus {
+    outline: none;
+    border-color: #28c702;
+    box-shadow: 0 0 0 2px rgba(48, 240, 3, 0.2);
+  }
 `;
 
 const TwoColumnLayout = styled.div`
@@ -408,7 +441,28 @@ const Checkout = () => {
   const [paymentMethod, setPaymentMethod] = useState('cartao');
   const [resposta, setResposta] = useState(null);
   const router = useRouter();
+  const [novoEndereco, setNovoEndereco] = useState({
+    cep: '',
+    logradouro: '',
+    numero: '',
+    complemento: '',
+    bairro: '',
+    cidade: '',
+    uf: '',
+    padrao: false
+  });
+
+  const [usuarioSemLogin , setUsuarioSemLogin] = useState({
+    nome: '',
+    cpf:'',
+    email:''
+  });
+
   
+   const [errors, setErrors] = useState({
+   
+    endereco: {}
+  });
 
   // Estados para campos do cartão
   const [cardNumber, setCardNumber] = useState('');
@@ -416,7 +470,7 @@ const Checkout = () => {
   const [cardExpiry, setCardExpiry] = useState('');
   const [cardCVV, setCardCVV] = useState('');
   const [cardInstallments, setCardInstallments] = useState('1');
-
+  
   // Calcular total dos produtos
   const totalProdutos = carrinho.reduce((total, item) => total + item.preco * item.quantidade, 0);
   const totalGeral = totalProdutos + valorFrete;
@@ -435,59 +489,100 @@ const Checkout = () => {
   };
 
   const handleFinalizarCompra = async () => {
-    if (!enderecoSelecionado) {
-      alert("Por favor, selecione um endereço de entrega");
+  if (user && !enderecoSelecionado) {
+    alert("Por favor, selecione um endereço de entrega");
+    return;
+  }
+
+  // Validação de cartão
+  if (paymentMethod === 'cartao') {
+    if (!cardNumber || !cardName || !cardExpiry || !cardCVV) {
+      alert("Por favor, preencha todos os dados do cartão");
       return;
     }
+  }
 
-    // Validação de cartão
-    if (paymentMethod === 'cartao') {
-      if (!cardNumber || !cardName || !cardExpiry || !cardCVV) {
-        alert("Por favor, preencha todos os dados do cartão");
-        return;
-      }
+  if (user == null && !validateCPF(usuarioSemLogin.cpf)) {
+    alert("CPF inválido");
+    return;
+  }
+
+  const produtosFormatados = carrinho.map((produto) => ({
+    idProduto: produto.id,
+    nomeProduto: produto.nome,
+    quantidade: produto.quantidade,
+    precoUnitario: produto.preco
+  }));
+
+  // Define o pedido de forma geral, com dados comuns
+  const pedidoBase = {
+    dataPedido: new Date(),
+    status: "AGUARDANDO_PAGAMENTO",
+    valor: totalGeral,
+    produtos: produtosFormatados,
+    enderecoCliente: user ? enderecoSelecionado : novoEndereco,
+  };
+
+  if (user != null) {
+    // Usuário logado: idCliente do usuário logado
+    pedidoBase.idCliente = dados.id;
+  } else {
+    // Usuário não logado: idCliente pode ser CPF ou outro identificador
+    pedidoBase.idCliente = usuarioSemLogin.cpf;
+  }
+
+  try {
+    const response = await fetch("http://localhost:8081/pedidos/criar", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(pedidoBase)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Erro desconhecido ao criar o pedido");
     }
 
-    const produtosFormatados = carrinho.map((produto) => ({
-      idProduto: produto.id,
-      nomeProduto: produto.nome,
-      quantidade: produto.quantidade,
-      precoUnitario: produto.preco
-    }));
+    const data = await response.json();
+    setResposta(data);
 
-    const pedido = {
-      idCliente: dados.id,
-      dataPedido: new Date(),
-      status: "AGUARDANDO_PAGAMENTO",
-      valor: totalGeral,
-      produtos: produtosFormatados
-    };
+  if (user == null) {
+    const pedidosSalvos = JSON.parse(localStorage.getItem("pedidosSalvos")) || [];
+    pedidosSalvos.push(data);
+    localStorage.setItem("pedidosSalvos", JSON.stringify(pedidosSalvos));
+  }
 
-    try {
-      const response = await fetch("http://localhost:8081/pedidos/criar", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(pedido)
-      });
+    handleClearCarrinho();
+    alert(`Pedido realizado com sucesso! Número do pedido: ${data.numero} \n Visite "Meus pedidos" no perfil para visualizar suas compras`);
+    handleRedirect();
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Erro desconhecido ao criar o pedido");
-      }
+  } catch (error) {
+    console.error("Erro ao criar pedido:", error);
+    alert(`Não foi possível finalizar o pedido: ${error.message}`);
+  }
+};
 
-      const data = await response.json();
-      setResposta(data);
 
-      handleClearCarrinho();
-      alert(`Pedido realizado com sucesso! Número do pedido: ${data.numero} \n Visite "Meus pedidos" no perfil para visualisar suas compras`);
-      handleRedirect();
-      
-    } catch (error) {
-      console.error("Erro ao criar pedido:", error);
-      alert(`Não foi possível finalizar o pedido: ${error.message}`);
-    }
+    const validateCPF = (cpf) => {
+    cpf = cpf.replace(/[^\d]+/g, '');
+    if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
+    let sum = 0;
+    for (let i = 0; i < 9; i++) sum += parseInt(cpf.charAt(i)) * (10 - i);
+    let rev = 11 - (sum % 11);
+    if (rev === 10 || rev === 11) rev = 0;
+    if (rev !== parseInt(cpf.charAt(9))) return false;
+    sum = 0;
+    for (let i = 0; i < 10; i++) sum += parseInt(cpf.charAt(i)) * (11 - i);
+    rev = 11 - (sum % 11);
+    if (rev === 10 || rev === 11) rev = 0;
+    return rev === parseInt(cpf.charAt(10));
+  };
+
+   const handleEnderecoChange = (e) => {
+    const { name, value } = e.target;
+    setNovoEndereco((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleRedirect = () => {
@@ -524,6 +619,40 @@ const Checkout = () => {
     return `${digits.slice(0, 2)}/${digits.slice(2, 4)}`;
   };
 
+   const buscarCep = async () => {
+    const cep = novoEndereco.cep.replace(/\D/g, '');
+    if (cep.length !== 8) return;
+
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const data = await res.json();
+      if (!data.erro) {
+        setNovoEndereco((prev) => ({
+          ...prev,
+          logradouro: data.logradouro,
+          bairro: data.bairro,
+          cidade: data.localidade,
+          uf: data.uf,
+        }));
+        setErrors((prev) => ({ 
+          ...prev, 
+          endereco: { ...prev.endereco, cep: '' } 
+        }));
+      } else {
+        setErrors((prev) => ({ 
+          ...prev, 
+          endereco: { ...prev.endereco, cep: 'CEP inválido' } 
+        }));
+      }
+    } catch (err) {
+      setErrors((prev) => ({ 
+        ...prev, 
+        endereco: { ...prev.endereco, cep: 'Erro ao buscar CEP' } 
+      }));
+    }
+  };
+
+
   const handleCardNumberChange = (e) => {
     const formatted = formatCardNumber(e.target.value);
     setCardNumber(formatted);
@@ -545,6 +674,11 @@ const Checkout = () => {
       fetchEnderecos();
     }
   }, [user]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setUsuarioSemLogin((prev) => ({ ...prev, [name]: value }));
+  };
 
   useEffect(() => {
     const padrao = enderecos.find(end => end.padrao);
@@ -596,10 +730,117 @@ const Checkout = () => {
               </CarrinhoList>
             </SectionContainer>
 
+            {user == null && (
+              <SectionContainer>
+                <SectionTitle>Dados Pessoais</SectionTitle>
+            <Field>
+              <Label>Nome Completo</Label>
+              <Input name="nome" value={usuarioSemLogin.nome} onChange={handleChange} placeholder="Digite seu nome completo" />
+              {errors.nome && <Error>{errors.nome}</Error>}
+            </Field>
+            
+            <FormRow>
+              <Field flex={2}>
+                <Label>E-mail</Label>
+                <Input name="email" type="email" value={usuarioSemLogin.email} onChange={handleChange} placeholder="seu@email.com" />
+                {errors.email && <Error>{errors.email}</Error>}
+              </Field>
+              <Field flex={1}>
+                <Label>CPF</Label>
+                <Input name="cpf" value={usuarioSemLogin.cpf} onChange={handleChange} placeholder="00000000000" />
+                {errors.cpf && <Error>{errors.cpf}</Error>}
+              </Field>
+            </FormRow>
+              </SectionContainer>
+
+            )}
+
             <SectionContainer>
               <SectionTitle>Endereço de Entrega</SectionTitle>
               {enderecos.length === 0 ? (
-                <EmptyCartMessage>Nenhum endereço de entrega cadastrado.</EmptyCartMessage>
+                <>
+                <FormRow>
+                <Field flex={1}>
+                  <Label>CEP</Label>
+                  <Input 
+                    name="cep" 
+                    value={novoEndereco.cep} 
+                    onChange={handleEnderecoChange} 
+                    onBlur={buscarCep}
+                    placeholder="00000-000" 
+                  />
+                 {errors.endereco?.cep && <Error>{errors.endereco.cep}</Error>}
+                </Field>
+                <Field flex={2}>
+                  <Label>Logradouro</Label>
+                  <Input 
+                    name="logradouro" 
+                    value={novoEndereco.logradouro} 
+                    onChange={handleEnderecoChange} 
+                    placeholder="Rua, Avenida, etc." 
+                  />
+                  {errors.endereco?.logradouro && <Error>{errors.endereco.logradouro}</Error>
+                  }
+                </Field>
+              </FormRow>
+              
+              <FormRow>
+                <Field flex={1}>
+                  <Label>Número</Label>
+                  <Input 
+                    name="numero" 
+                    value={novoEndereco.numero} 
+                    onChange={handleEnderecoChange} 
+                    placeholder="Nº" 
+                  />
+                  {errors.endereco?.numero && <Error>{errors.endereco.numero}</Error>
+                  }
+                </Field>
+                <Field flex={2}>
+                  <Label>Complemento</Label>
+                  <Input 
+                    name="complemento" 
+                    value={novoEndereco.complemento} 
+                    onChange={handleEnderecoChange} 
+                    placeholder="Apto, Bloco, etc." 
+                  />
+                </Field>
+                
+              </FormRow>
+               <FormRow>
+                <Field>
+                  <Label>Bairro</Label>
+                  <Input 
+                    name="bairro" 
+                    value={novoEndereco.bairro} 
+                    onChange={handleEnderecoChange} 
+                    placeholder="Bairro" 
+                  />
+                  {errors.endereco?.bairro && <Error>{errors.endereco.bairro}</Error>}
+                </Field>
+                <Field>
+                  <Label>Cidade</Label>
+                  <Input 
+                    name="cidade" 
+                    value={novoEndereco.cidade} 
+                    onChange={handleEnderecoChange} 
+                    placeholder="Cidade" 
+                  />
+                  {errors.endereco?.cidade && <Error>{errors.endereco.cidade}</Error>}
+                </Field>
+                <Field flex={0.5}>
+                  <Label>UF</Label>
+                  <Input 
+                    name="uf" 
+                    value={novoEndereco.uf} 
+                    onChange={handleEnderecoChange} 
+                    maxLength={2}
+                    placeholder="UF" 
+                  />
+                  {errors.endereco?.uf && <Error>{errors.endereco.uf}</Error>}
+                </Field>
+              </FormRow>
+              </>
               ) : (
                 <EnderecosGrid>
                   {enderecosOrdenados.map((endereco, index) => (
@@ -626,6 +867,7 @@ const Checkout = () => {
                         <EnderecoLine>CEP: {endereco.cep}</EnderecoLine>
                       </EnderecoContent>
                     </EnderecoCard>
+
                   ))}
                   <BotaoIrParaEndereco/>
                 </EnderecosGrid>

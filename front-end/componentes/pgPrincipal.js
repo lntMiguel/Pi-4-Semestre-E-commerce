@@ -455,6 +455,10 @@ function Principal() {
   const handleRedirect = () => {
     router.push('/cadastro');
   };
+
+  const handleRedirectPedidos = () => {
+    router.push('/pedidos');
+  }
   const handleRedirectL = () => {
     router.push('/login');
   };
@@ -469,12 +473,8 @@ function Principal() {
       return;
     }
 
-    if (!user) {
-      // Se não houver usuário logado, redireciona para a página de login
-      router.push("/login");
-    } else {
-      router.push("/checkout");
-    }
+    router.push("/checkout");
+    
   };
 
   useEffect(() => {
@@ -607,6 +607,8 @@ function Principal() {
 
   const handleCarrinhoClick = () => {
     setShowCarrinho(!showCarrinho);
+    const pedidosSalvos = JSON.parse(localStorage.getItem("pedidosSalvos")) || [];
+    console.log(pedidosSalvos);
   };
 
   const handleIncreaseQuantity = (id) => {
@@ -701,6 +703,7 @@ function Principal() {
                 <ButtonsContainer>
                   <UserButton onClick={handleRedirectL}>Login</UserButton>
                   <UserButton $primary onClick={handleRedirect}>Cadastrar</UserButton>
+                  <UserButton onClick={handleRedirectPedidos}>Meus Pedidos</UserButton>
                 </ButtonsContainer>
               </>
             )}

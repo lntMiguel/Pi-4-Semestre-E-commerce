@@ -19,6 +19,15 @@ public class Pedido {
     private BigDecimal valor;
     private StatusPedido status;
     private List<ProdutoPedido> produtos;
+    private EnderecoCliente enderecoCliente;
+
+    public EnderecoCliente getEnderecoCliente() {
+        return enderecoCliente;
+    }
+
+    public void setEnderecoCliente(EnderecoCliente enderecoCliente) {
+        this.enderecoCliente = enderecoCliente;
+    }
 
     public String getId() {
         return id;
