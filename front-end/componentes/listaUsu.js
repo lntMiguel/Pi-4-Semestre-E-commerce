@@ -71,7 +71,7 @@ const Box = styled.div`
 
 const Titulo = styled.h2`
   margin-bottom: 20px;
-  color: #333;
+  color: black;
 `;
 
 const Pesquisar = styled.div`

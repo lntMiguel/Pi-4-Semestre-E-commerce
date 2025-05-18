@@ -448,10 +448,17 @@ const NenhumPedido = styled.div`
   margin: 20px 0;
 `;
 
+const DetalhesContainer = styled.div`
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px dashed #ddd;
+`;
+
 function Perfil() {
   // Estado para as abas
   const [activeTab, setActiveTab] = useState('dados');
   const {dados, setDados} = useAuth();
+  const [pedidosExpandidos, setPedidosExpandidos] = useState([]);
   const router = useRouter();
 
   const dataFormatada = new Date(dados.dataNasc).toISOString().slice(0, 10);
@@ -505,6 +512,14 @@ function Perfil() {
   // Função para mudar de aba
   const changeTab = (tab) => {
     setActiveTab(tab);
+  };
+
+  const toggleDetalhes = (pedidoId) => {
+    setPedidosExpandidos(prev => 
+      prev.includes(pedidoId) 
+        ? prev.filter(id => id !== pedidoId) 
+        : [...prev, pedidoId]
+    );
   };
 
   useEffect(() => {
@@ -1142,30 +1157,41 @@ function Perfil() {
             <PedidoStatus status={pedido.status}>{pedido.status}</PedidoStatus>
           </PedidoHeader>
           
-          <PedidoInfo>
-            <PedidoInfoItem>
-              <PedidoLabel>Data do Pedido</PedidoLabel>
-              <PedidoValue>{new Date(pedido.dataPedido).toLocaleString()}</PedidoValue>
-            </PedidoInfoItem>
-            <PedidoInfoItem>
-              <PedidoLabel>Método de Pagamento</PedidoLabel>
-            </PedidoInfoItem>
-          </PedidoInfo>
-          
-          <ProdutosTitle>Produtos</ProdutosTitle>
-          <ProdutosList>
-            {pedido.produtos.map((produto, index) => (
-              <ProdutoItem key={index}>
-                <ProdutoNome>{produto.nomeProduto}</ProdutoNome>
-                <ProdutoQtd>{produto.quantidade}x</ProdutoQtd>
-                <ProdutoPreco>R$ {produto.precoUnitario.toFixed(2)}</ProdutoPreco>
-              </ProdutoItem>
-            ))}
-          </ProdutosList>
-          
           <PedidoValorTotal>
             Total: R$ {pedido.valor.toFixed(2)}
           </PedidoValorTotal>
+          
+          <Botao 
+            onClick={() => toggleDetalhes(pedido.id)}
+          >
+            {pedidosExpandidos.includes(pedido.id) ? 'Ocultar Detalhes' : 'Ver Detalhes'}
+          </Botao>
+          
+          {pedidosExpandidos.includes(pedido.id) && (
+            <DetalhesContainer>
+              <PedidoInfo>
+                <PedidoInfoItem>
+                  <PedidoLabel>Data do Pedido</PedidoLabel>
+                  <PedidoValue>{new Date(pedido.dataPedido).toLocaleString()}</PedidoValue>
+                </PedidoInfoItem>
+                <PedidoInfoItem>
+                  <PedidoLabel>Método de Pagamento</PedidoLabel>
+                  <PedidoValue>{pedido.metodoPagamento}</PedidoValue>
+                </PedidoInfoItem>
+              </PedidoInfo>
+              
+              <ProdutosTitle>Produtos</ProdutosTitle>
+              <ProdutosList>
+                {pedido.produtos.map((produto, index) => (
+                  <ProdutoItem key={index}>
+                    <ProdutoNome>{produto.nomeProduto}</ProdutoNome>
+                    <ProdutoQtd>{produto.quantidade}x</ProdutoQtd>
+                    <ProdutoPreco>R$ {produto.precoUnitario.toFixed(2)}</ProdutoPreco>
+                  </ProdutoItem>
+                ))}
+              </ProdutosList>
+            </DetalhesContainer>
+          )}
         </PedidoCard>
       ))
     )}

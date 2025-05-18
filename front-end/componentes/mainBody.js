@@ -73,7 +73,9 @@ function Main() {
     const handleRedirectP = () => {
       router.push('/produtos');
     };
-
+    const handleRedirectPe = () => {
+      router.push('/gerenciaPedidos');
+    };
     const handleRedirectL = () => {
       router.push('/login');
     };
@@ -96,7 +98,8 @@ function Main() {
         <Titulo>Painel de Controle</Titulo>
         <Botao onClick={handleRedirectP} >Listar Produtos</Botao>
         {grupo === "admin" && <Botao onClick={handleRedirect}>Listar Usuários</Botao>}        
-        {grupo === "estoquista" && <Botao onClick={handleRedirect}>Listar Pedidos</Botao>}   
+        {grupo === "estoquista" && <Botao onClick={handleRedirect}>Listar Produtos</Botao>}   
+        {grupo === "estoquista" && <Botao onClick={handleRedirectPe}>Listar Pedidos</Botao>}
         <Botao onClick={handleLogout}>Sair</Botao>
       </Box>
     </StyledMain>
