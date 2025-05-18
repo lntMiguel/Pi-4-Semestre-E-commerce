@@ -18,9 +18,18 @@ const GlobalStyle = createGlobalStyle`
 `;
 
 const StyledPedidos = styled.div`
-   background: 
-    radial-gradient(ellipse at top, rgba(48, 240, 3, 0.6) -5%, rgba(18, 60, 7, 0.95) 70%),
-    repeating-linear-gradient(45deg, rgba(18, 60, 7, 0.15) 0px, rgba(18, 60, 7, 0.15) 10px, rgba(48, 240, 3, 0.1) 10px, rgba(48, 240, 3, 0.1) 20px);
+  background: radial-gradient(
+      ellipse at top,
+      rgba(48, 240, 3, 0.6) -5%,
+      rgba(18, 60, 7, 0.95) 70%
+    ),
+    repeating-linear-gradient(
+      45deg,
+      rgba(18, 60, 7, 0.15) 0px,
+      rgba(18, 60, 7, 0.15) 10px,
+      rgba(48, 240, 3, 0.1) 10px,
+      rgba(48, 240, 3, 0.1) 20px
+    );
   height: 100vh;
   display: flex;
   align-items: center;
@@ -130,18 +139,18 @@ const LoadingSpinner = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  
+
   &:after {
     content: " ";
     display: block;
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    border: 6px solid #0C5C0C;
-    border-color: #0C5C0C transparent #0C5C0C transparent;
+    border: 6px solid #0c5c0c;
+    border-color: #0c5c0c transparent #0c5c0c transparent;
     animation: spin 1.2s linear infinite;
   }
-  
+
   @keyframes spin {
     0% {
       transform: rotate(0deg);
@@ -160,210 +169,244 @@ const StatusSelect = styled.select`
   width: 100%;
   &:focus {
     outline: none;
-    border-color: #0C5C0C;
+    border-color: #0c5c0c;
     box-shadow: 0 0 0 2px rgba(12, 92, 12, 0.2);
   }
 `;
 
 function GPedidos() {
-    const [pedidos, setPedidos] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const {dados, setDados} = useAuth();
-    const [editandoStatus, setEditandoStatus] = useState(null);
+  const [pedidos, setPedidos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { dados, setDados } = useAuth();
+  const [editandoStatus, setEditandoStatus] = useState(null);
 
-    const statusOptions = [
-        "Aguardando pagamento",
-        "Pagamento rejeitado",
-        "Pagamento com sucesso",
-        "Aguardando retirada",
-        "Em trânsito",
-        "Entregue"
-    ];
-    
+  const statusMap = {
+    "Aguardando pagamento": "AGUARDANDO_PAGAMENTO",
+    "Pagamento rejeitado": "PAGAMENTO_REJEITADO",
+    "Pagamento com sucesso": "PAGAMENTO_COM_SUCESSO",
+    "Aguardando retirada": "AGUARDANDO_RETIRADA",
+    "Em trânsito": "EM_TRANSITO",
+    Entregue: "ENTREGUE",
+  };
 
-    useEffect(() => {
-        fetchPedidos();
-      }, []);
+  const statusOptions = Object.keys(statusMap);
 
-      const fetchPedidos = async () => {
-        try {
-            const token = localStorage.getItem("token"); // caso use autenticação
-          
-            const response = await fetch("http://localhost:8081/pedidos/", {
-              headers: {
-                "Authorization": `Bearer ${token}` // remova se sua API não usa token
-              }
-            });
-          
-            console.log("Status da resposta:", response.status); // ajuda na depuração
-          
-            if (!response.ok) throw new Error("Erro ao buscar pedidos");
-          
-            const pedidosCliente = await response.json();
-            setPedidos(pedidosCliente);
-          } catch (error) {
-            console.error("Erro ao buscar pedidos:", error.message);
-          }
-          
-      };
+  useEffect(() => {
+    fetchPedidos();
+  }, []);
 
+  const fetchPedidos = async () => {
+    try {
+      const response = await fetch("http://localhost:8081/pedidos/getPedido");
 
-    const formatarData = (dataString) => {
-        const data = new Date(dataString);
-        return data.toLocaleDateString('pt-BR') + ' ' + data.toLocaleTimeString('pt-BR', {
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    };
+      console.log("Status da resposta:", response.status);
 
-    const formatarValor = (valor) => {
-        return valor.toLocaleString('pt-BR', {
-            style: 'currency',
-            currency: 'BRL'
-        });
-    };
+      if (!response.ok) {
+        throw new Error("Erro ao buscar pedidos");
+      }
 
-    const handleEditarPedido = (id) => {
-        // Função para editar pedido
-        alert(`Editar pedido ${id}`);
-    };
+      const pedidosRecebidos = await response.json();
 
-    const handleAlterarStatus = async (id, novoStatus) => {
-        try {
-            const response = await fetch(`http://localhost:8081/pedidos/${id}/status`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ status: novoStatus }),
-            });
+      setPedidos(pedidosRecebidos.reverse());
+    } catch (error) {
+      console.error("Erro ao buscar pedidos:", error.message);
+    } finally {
+      setLoading(false); // Finaliza o carregamento mesmo em caso de erro
+    }
+  };
 
-            if (!response.ok) {
-                throw new Error('Erro ao atualizar status');
-            }
-
-
-            setPedidos(pedidos.map(pedido =>
-                pedido.id === id ? { ...pedido, status: novoStatus } : pedido
-            ));
-
-            setEditandoStatus(null);
-        } catch (error) {
-            console.error("Erro ao atualizar status:", error);
-        }
-    };
-
-    const getStatusStyle = (status) => {
-        switch (status) {
-            case "Aguardando pagamento":
-                return {
-                    background: "rgba(253, 230, 138, 0.4)",
-                    color: "#854d0e"
-                };
-            case "Pagamento rejeitado":
-                return {
-                    background: "rgba(254, 202, 202, 0.4)",
-                    color: "#991b1b"
-                };
-            case "Pagamento com sucesso":
-                return {
-                    background: "rgba(187, 247, 208, 0.4)",
-                    color: "#166534"
-                };
-            case "Aguardando retirada":
-                return {
-                    background: "rgba(191, 219, 254, 0.4)",
-                    color: "#1e40af"
-                };
-            case "Em trânsito":
-                return {
-                    background: "rgba(221, 214, 254, 0.4)",
-                    color: "#5b21b6"
-                };
-            case "Entregue":
-                return {
-                    background: "rgba(209, 213, 219, 0.4)",
-                    color: "#1f2937"
-                };
-            default:
-                return {
-                    background: "rgba(209, 213, 219, 0.4)",
-                    color: "#1f2937"
-                };
-        }
-    };
-
+  const formatarData = (dataString) => {
+    const data = new Date(dataString);
     return (
-        <StyledPedidos>
-            <GlobalStyle />
-
-            <TableContainer>
-                <TableHeader>
-                    <TableTitle>Lista de Pedidos</TableTitle>
-                </TableHeader>
-
-                <TableContent>
-                    {loading ? (
-                        <LoadingSpinner />
-                    ) : (
-                        <StyledTable>
-                            <thead>
-                                <TableHeaderRow>
-                                    <TableHeaderCell>Data do Pedido</TableHeaderCell>
-                                    <TableHeaderCell>Número do Pedido</TableHeaderCell>
-                                    <TableHeaderCell>Valor Total</TableHeaderCell>
-                                    <TableHeaderCell>Status</TableHeaderCell>
-                                    <TableHeaderCell style={{ textAlign: 'right' }}>Ações</TableHeaderCell>
-                                </TableHeaderRow>
-                            </thead>
-                            <tbody>
-                                {pedidos.map((pedido) => (
-                                    <TableRow key={pedido.id}>
-                                        <TableCell>{formatarData(pedido.dataPedido)}</TableCell>
-                                        <TableCell style={{ fontWeight: 500 }}>{pedido.numeroPedido}</TableCell>
-                                        <TableCell>{formatarValor(pedido.valorTotal)}</TableCell>
-                                        <TableCell>
-                                            {editandoStatus === pedido.id ? (
-                                                <StatusSelect
-                                                    defaultValue={pedido.status}
-                                                    onChange={(e) => handleAlterarStatus(pedido.id, e.target.value)}
-                                                    autoFocus
-                                                    onBlur={() => setEditandoStatus(null)}
-                                                >
-                                                    {statusOptions.map((option) => (
-                                                        <option key={option} value={option}>
-                                                            {option}
-                                                        </option>
-                                                    ))}
-                                                </StatusSelect>
-                                            ) : (
-                                                <StatusBadge
-                                                    style={getStatusStyle(pedido.status)}
-                                                    onClick={() => setEditandoStatus(pedido.id)}
-                                                >
-                                                    {pedido.status}
-                                                </StatusBadge>
-                                            )}
-                                        </TableCell>
-                                        <TableCell style={{ textAlign: 'right' }}>
-                                            <EditButton onClick={() => handleEditarPedido(pedido.id)}>
-                                                Editar
-                                            </EditButton>
-                                            {editandoStatus !== pedido.id && (
-                                                <StatusButton onClick={() => setEditandoStatus(pedido.id)}>
-                                                    Alterar Status
-                                                </StatusButton>
-                                            )}
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </tbody>
-                        </StyledTable>
-                    )}
-                </TableContent>
-            </TableContainer>
-        </StyledPedidos>
+      data.toLocaleDateString("pt-BR") +
+      " " +
+      data.toLocaleTimeString("pt-BR", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
     );
+  };
+
+  const formatarValor = (valor) => {
+    return valor.toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    });
+  };
+
+  const handleEditarPedido = (id) => {
+    // Função para editar pedido
+    alert(`Editar pedido ${id}`);
+  };
+
+  const handleAlterarStatus = async (id, novoStatus) => {
+    try {
+      const response = await fetch(
+        `http://localhost:8081/pedidos/${id}?statusPedido=${novoStatus}`,
+        {
+          method: "PUT",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Erro ao atualizar status");
+      }
+
+      setPedidos(
+        pedidos.map((pedido) =>
+          pedido.id === id ? { ...pedido, status: novoStatus } : pedido
+        )
+      );
+
+      setEditandoStatus(null);
+    } catch (error) {
+      console.error("Erro ao atualizar status:", error);
+    }
+  };
+
+  const getStatusStyle = (status) => {
+    switch (status) {
+      case "Aguardando pagamento":
+        return {
+          background: "rgba(253, 230, 138, 0.4)",
+          color: "#854d0e",
+        };
+      case "Pagamento rejeitado":
+        return {
+          background: "rgba(254, 202, 202, 0.4)",
+          color: "#991b1b",
+        };
+      case "Pagamento com sucesso":
+        return {
+          background: "rgba(187, 247, 208, 0.4)",
+          color: "#166534",
+        };
+      case "Aguardando retirada":
+        return {
+          background: "rgba(191, 219, 254, 0.4)",
+          color: "#1e40af",
+        };
+      case "Em trânsito":
+        return {
+          background: "rgba(221, 214, 254, 0.4)",
+          color: "#5b21b6",
+        };
+      case "Entregue":
+        return {
+          background: "rgba(209, 213, 219, 0.4)",
+          color: "#1f2937",
+        };
+      default:
+        return {
+          background: "rgba(209, 213, 219, 0.4)",
+          color: "#1f2937",
+        };
+    }
+  };
+
+  const getLabelFromEnum = (enumValue) => {
+    return (
+      Object.entries(statusMap).find(
+        ([label, value]) => value === enumValue
+      )?.[0] || enumValue
+    );
+  };
+
+  return (
+    <StyledPedidos>
+      <GlobalStyle />
+
+      <TableContainer>
+        <TableHeader>
+          <TableTitle>Lista de Pedidos</TableTitle>
+        </TableHeader>
+
+        <TableContent>
+          {loading ? (
+            <LoadingSpinner />
+          ) : (
+            <StyledTable>
+              <thead>
+                <TableHeaderRow>
+                  <TableHeaderCell>Data do Pedido</TableHeaderCell>
+                  <TableHeaderCell>Número do Pedido</TableHeaderCell>
+                  <TableHeaderCell>Valor Total</TableHeaderCell>
+                  <TableHeaderCell>Status</TableHeaderCell>
+                  <TableHeaderCell style={{ textAlign: "right" }}>
+                    Ações
+                  </TableHeaderCell>
+                </TableHeaderRow>
+              </thead>
+              <tbody>
+                {pedidos.map((pedido) => (
+                  <TableRow key={pedido.id}>
+                    <TableCell>{formatarData(pedido.dataPedido)}</TableCell>
+                    <TableCell style={{ fontWeight: 500 }}>
+                      {pedido.numero}
+                    </TableCell>
+                    <TableCell>{formatarValor(pedido.valor)}</TableCell>
+                    <TableCell>
+                      {editandoStatus === pedido.id ? (
+                        <>
+                          <StatusSelect
+                            value={statusOptions.find(
+                              (label) => statusMap[label] === pedido.status
+                            )}
+                            onChange={(e) =>
+                              setPedidos((prevPedidos) =>
+                                prevPedidos.map((p) =>
+                                  p.id === pedido.id
+                                    ? {
+                                        ...p,
+                                        novoStatusTemp:
+                                          statusMap[e.target.value],
+                                      }
+                                    : p
+                                )
+                              )
+                            }
+                          >
+                            {statusOptions.map((label) => (
+                              <option key={label} value={label}>
+                                {label}
+                              </option>
+                            ))}
+                          </StatusSelect>
+                          <StatusButton
+                            onClick={() => {
+                              const novoStatus =
+                                pedidos.find((p) => p.id === pedido.id)
+                                  ?.novoStatusTemp || pedido.status;
+                              handleAlterarStatus(pedido.id, novoStatus);
+                            }}
+                          >
+                            Salvar
+                          </StatusButton>
+                        </>
+                      ) : (
+                        <StatusBadge style={getStatusStyle(pedido.status)}>
+                          {getLabelFromEnum(pedido.status)}
+                        </StatusBadge>
+                      )}
+                    </TableCell>
+                    <TableCell style={{ textAlign: "right" }}>
+                      {editandoStatus !== pedido.id && (
+                        <StatusButton
+                          onClick={() => setEditandoStatus(pedido.id)}
+                        >
+                          Alterar Status
+                        </StatusButton>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </tbody>
+            </StyledTable>
+          )}
+        </TableContent>
+      </TableContainer>
+    </StyledPedidos>
+  );
 }
 
 export default GPedidos;

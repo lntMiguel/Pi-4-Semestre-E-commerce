@@ -1176,8 +1176,24 @@ function Perfil() {
                 </PedidoInfoItem>
                 <PedidoInfoItem>
                   <PedidoLabel>Método de Pagamento</PedidoLabel>
-                  <PedidoValue>{pedido.metodoPagamento}</PedidoValue>
+                  <PedidoValue>{pedido.metodoDePagamento}</PedidoValue>
                 </PedidoInfoItem>
+
+                <PedidoInfoItem>
+                  <PedidoLabel>Endereço</PedidoLabel>
+                  <PedidoValue>{pedido.enderecoCliente.cep}</PedidoValue>
+                  <PedidoValue>
+                    {pedido.enderecoCliente.logradouro + " "}
+                    {pedido.enderecoCliente.numero+ " "}
+                    {pedido.enderecoCliente.complemento && pedido.enderecoCliente.complemento}                  </PedidoValue>
+                  <PedidoValue>
+                    {pedido.enderecoCliente.bairro+ " "}
+                    {pedido.enderecoCliente.cidade+ " "}
+                    {pedido.enderecoCliente.uf}
+                    </PedidoValue>
+                  
+                </PedidoInfoItem>
+
               </PedidoInfo>
               
               <ProdutosTitle>Produtos</ProdutosTitle>

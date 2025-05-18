@@ -617,7 +617,7 @@ const Checkout = () => {
   const { user, carrinho, setCarrinho, frete, setFrete, dados, valorFrete, setValorFrete } = useAuth();
   const [enderecos, setEnderecos] = useState([]);
   const [enderecoSelecionado, setEnderecoSelecionado] = useState(null);
-  const [paymentMethod, setPaymentMethod] = useState('cartao');
+  const [paymentMethod, setPaymentMethod] = useState('Cartão de Crédito');
   const [resposta, setResposta] = useState(null);
   const router = useRouter();
   const [novoEndereco, setNovoEndereco] = useState({
@@ -677,6 +677,7 @@ const Checkout = () => {
     valor: totalGeral,
     produtos: produtosFormatados,
     enderecoCliente: user ? enderecoSelecionado : novoEndereco,
+    metodoDePagamento: paymentMethod
   };
 
   if (user != null) {
@@ -693,7 +694,7 @@ const Checkout = () => {
     const validatePagamento = () => {
       const newErrors = { pagamento: {} };
       
-      if (paymentMethod === 'cartao') {
+      if (paymentMethod === 'Cartão de Crédito') {
         if (!cardNumber || cardNumber.replace(/\s/g, '').length < 16) {
           newErrors.pagamento.cardNumber = 'Número de cartão inválido';
         }
@@ -758,6 +759,13 @@ const Checkout = () => {
     if (rev === 10 || rev === 11) rev = 0;
     return rev === parseInt(cpf.charAt(10));
   };
+
+    useEffect(() => {
+   if (user != null) {
+    setCurrentStep(2);
+  }
+    // você pode chamar uma API, carregar dados do localStorage, etc.
+  }, []);
 
    const handleEnderecoChange = (e) => {
     const { name, value } = e.target;
@@ -846,8 +854,8 @@ const Checkout = () => {
     
     if (!usuarioSemLogin.cpf) {
       newErrors.cpf = 'CPF é obrigatório';
-    } else if (usuarioSemLogin.cpf.length !== 11) {
-      newErrors.cpf = 'CPF deve ter 11 dígitos';
+    } else if (!validateCPF(usuarioSemLogin.cpf)) {
+      newErrors.cpf = 'CPF inválido';
     }
     
     setErrors(newErrors);
@@ -934,12 +942,44 @@ const Checkout = () => {
   const handleFinalizarCompra = () => {
     setShowModal(true);
   };
-   const handleConcluirCompra = () => {
-    // Aqui você implementaria a lógica para salvar o pedido
-    alert('Pedido realizado com sucesso!');
-    router.push('/perfil?tab=enderecos');
+
+   const handleConcluirCompra = async () => {
+    
+
+  try {
+    const response = await fetch("http://localhost:8081/pedidos/criar", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(pedidoBase)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Erro desconhecido ao criar o pedido");
+    }
+
+    const data = await response.json();
+    setResposta(data);
+
+    if(user == null){
+    const pedidosSalvos = JSON.parse(localStorage.getItem("pedidosSalvos")) || [];
+    pedidosSalvos.push(data);
+    localStorage.setItem("pedidosSalvos", JSON.stringify(pedidosSalvos));
+    
+  }
+    
+
+    handleClearCarrinho();
+    alert(`Pedido realizado com sucesso! Número do pedido: ${data.numero} \n Visite "Meus pedidos" no perfil para visualizar suas compras`);
+     router.push('/pgPrincipal');
     setShowModal(false);
-    // Reiniciar o processo ou redirecionar
+
+  } catch (error) {
+    console.error("Erro ao criar pedido:", error);
+    alert(`Não foi possível finalizar o pedido: ${error.message}`);
+  }
   };
 
   const BotaoIrParaEndereco = () => {
@@ -955,48 +995,10 @@ const Checkout = () => {
       case 1:
         return (
           <SectionContainer>
-            {user ? (
+            {user == null && (
               // Se o usuário está logado, mostra apenas os itens do carrinho e avança
-              <>
-                <SectionTitle>Itens do Carrinho</SectionTitle>
-                <CarrinhoList>
-                  {carrinho.length === 0 ? (
-                    <EmptyCartMessage>Seu carrinho está vazio</EmptyCartMessage>
-                  ) : (
-                    carrinho.map((item, index) => (
-                      <CarrinhoItem key={index}>
-                        <ItemInfo>
-                          <div>
-                            <ItemName>{item.nome}</ItemName>
-                            <ItemPrice>R$ {item.preco.toFixed(2)} x {item.quantidade}</ItemPrice>
-                          </div>
-                        </ItemInfo>
-                      </CarrinhoItem>
-                    ))
-                  )}
-                </CarrinhoList>
-              </>
-            ) : (
-              // Se o usuário não está logado, pede os dados pessoais
-              <>
-                <SectionTitle>Itens do Carrinho</SectionTitle>
-                <CarrinhoList>
-                  {carrinho.length === 0 ? (
-                    <EmptyCartMessage>Seu carrinho está vazio</EmptyCartMessage>
-                  ) : (
-                    carrinho.map((item, index) => (
-                      <CarrinhoItem key={index}>
-                        <ItemInfo>
-                          <div>
-                            <ItemName>{item.nome}</ItemName>
-                            <ItemPrice>R$ {item.preco.toFixed(2)} x {item.quantidade}</ItemPrice>
-                          </div>
-                        </ItemInfo>
-                      </CarrinhoItem>
-                    ))
-                  )}
-                </CarrinhoList>
-
+            <>
+               
                 <SectionTitle style={{ marginTop: '20px' }}>Dados Pessoais</SectionTitle>
                 <Field>
                   <Label>Nome Completo</Label>
@@ -1033,7 +1035,7 @@ const Checkout = () => {
                   </Field>
                 </FormRow>
               </>
-            )}
+            ) }
           </SectionContainer>
         );
       
@@ -1163,27 +1165,27 @@ const Checkout = () => {
             <PaymentMethodsContainer>
               <PaymentMethodTabs>
                 <PaymentTab
-                  $active={paymentMethod === 'cartao'}
-                  onClick={() => setPaymentMethod('cartao')}
+                  $active={paymentMethod === 'Cartão de Crédito'}
+                  onClick={() => setPaymentMethod('Cartão de Crédito')}
                 >
                   Cartão de Crédito
                 </PaymentTab>
                 <PaymentTab
-                  $active={paymentMethod === 'boleto'}
-                  onClick={() => setPaymentMethod('boleto')}
+                  $active={paymentMethod === 'Boleto'}
+                  onClick={() => setPaymentMethod('Boleto')}
                 >
                   Boleto
                 </PaymentTab>
                 <PaymentTab
-                  $active={paymentMethod === 'pix'}
-                  onClick={() => setPaymentMethod('pix')}
+                  $active={paymentMethod === 'Pix'}
+                  onClick={() => setPaymentMethod('Pix')}
                 >
                   PIX
                 </PaymentTab>
               </PaymentMethodTabs>
 
               <PaymentForm>
-                {paymentMethod === 'cartao' && (
+                {paymentMethod === 'Cartão de Crédito' && (
                   <>
                     <FormGroup>
                       <FormLabel>Número do Cartão</FormLabel>
@@ -1251,7 +1253,7 @@ const Checkout = () => {
                   </>
                 )}
 
-                {paymentMethod === 'boleto' && (
+                {paymentMethod === 'Boleto' && (
                   <BoletoInfo>
                     <p>Ao finalizar a compra, você receberá o boleto para pagamento.</p>
                     <p>O prazo de entrega começa a contar a partir da confirmação do pagamento.</p>
@@ -1259,7 +1261,7 @@ const Checkout = () => {
                   </BoletoInfo>
                 )}
 
-                {paymentMethod === 'pix' && (
+                {paymentMethod === 'Pix' && (
                   <QRCodeContainer>
                     <QRCodePlaceholder>
                       QR Code do PIX será gerado ao finalizar o pedido
@@ -1279,8 +1281,27 @@ const Checkout = () => {
       
       case 4:
         return (
-          <SectionContainer>
-            <SectionTitle>Resumo da Compra</SectionTitle>
+          <SectionContainer>    
+                <SectionTitle>Itens do Carrinho</SectionTitle>
+                <CarrinhoList>
+                  {carrinho.length === 0 ? (
+                    <EmptyCartMessage>Seu carrinho está vazio</EmptyCartMessage>
+                  ) : (
+                    carrinho.map((item, index) => (
+                      <CarrinhoItem key={index}>
+                        <ItemInfo>
+                          <div>
+                            <ItemName>{item.nome}</ItemName>
+                            <ItemPrice>R$ {item.preco.toFixed(2)} x {item.quantidade}</ItemPrice>
+                          </div>
+                        </ItemInfo>
+                      </CarrinhoItem>
+                    ))
+                  )}
+                </CarrinhoList>
+                <ColumnSection>
+          <SectionTitle>Resumo do Pedido</SectionTitle>
+          {carrinho.length > 0 ? (
             <SummaryContainer>
               <SummaryRow>
                 <span>Subtotal:</span>
@@ -1294,11 +1315,18 @@ const Checkout = () => {
                 <span>Total:</span>
                 <span>R$ {totalGeral.toFixed(2)}</span>
               </Total>
-
-              <CheckoutButton onClick={handleFinalizarCompra}>
+            </SummaryContainer>
+          ) : (
+            <SummaryContainer>
+              <EmptyCartMessage>Adicione produtos ao carrinho</EmptyCartMessage>
+            </SummaryContainer>
+          )}
+        </ColumnSection>
+                  
+                <CheckoutButton onClick={handleFinalizarCompra}>
                 Finalizar Pedido
               </CheckoutButton>
-            </SummaryContainer>
+              
           </SectionContainer>
         );
       
@@ -1355,7 +1383,7 @@ const Checkout = () => {
           <ModalSection>
             <ModalSectionTitle>Forma de Pagamento</ModalSectionTitle>
             <div style={{ padding: '10px', backgroundColor: '#f5fff5', borderRadius: '10px' }}>
-              {paymentMethod === 'cartao' && (
+              {paymentMethod === 'Cartão de Crédito' && (
                 <>
                   <p><strong>Cartão de Crédito</strong></p>
                   <p>Final: {cardNumber.slice(-4)}</p>
@@ -1364,11 +1392,11 @@ const Checkout = () => {
                 </>
               )}
               
-              {paymentMethod === 'boleto' && (
+              {paymentMethod === 'Boleto' && (
                 <p><strong>Boleto Bancário</strong></p>
               )}
               
-              {paymentMethod === 'pix' && (
+              {paymentMethod === 'Pix' && (
                 <p><strong>Pagamento via PIX</strong></p>
               )}
             </div>
@@ -1411,25 +1439,24 @@ const Checkout = () => {
       <GlobalStyle/>
     <CheckoutContainer>
       <PageTitle>Finalizar Compra</PageTitle>
-      
       {/* Sistema de etapas */}
       <StepsContainer>
         <StepLine>
           <StepLineProgress currentstep={currentStep} />
         </StepLine>
-        
+        { user == null &&
         <Step>
           <StepCircle active={currentStep === 1 ? "true" : undefined} completed={currentStep > 1 ? "true" : undefined}>
-            {currentStep > 1 ? '✓' : '1'}
+            {currentStep > 1 ? '✓' : ''}
           </StepCircle>
           <StepText active={currentStep === 1 ? "true" : undefined} completed={currentStep > 1 ? "true" : undefined}>
-            {user ? 'Carrinho' : 'Identificação'}
+            Identificação
           </StepText>
         </Step>
-        
+        }
         <Step>
           <StepCircle active={currentStep === 2 ? "true" : undefined} completed={currentStep > 2 ? "true" : undefined}>
-            {currentStep > 2 ? '✓' : '2'}
+            {currentStep > 2 ? '✓' : ''}
           </StepCircle>
           <StepText active={currentStep === 2 ? "true" : undefined} completed={currentStep > 2 ? "true" : undefined}>
             Endereço
@@ -1438,7 +1465,7 @@ const Checkout = () => {
         
         <Step>
           <StepCircle active={currentStep === 3 ? "true" : undefined} completed={currentStep > 3 ? "true" : undefined}>
-            {currentStep > 3 ? '✓' : '3'}
+            {currentStep > 3 ? '✓' : ''}
           </StepCircle>
           <StepText active={currentStep === 3 ? "true" : undefined} completed={currentStep > 3 ? "true" : undefined}>
             Pagamento
@@ -1447,7 +1474,7 @@ const Checkout = () => {
         
         <Step>
           <StepCircle active={currentStep === 4 ? "true" : undefined} completed={currentStep > 4 ? "true" : undefined}>
-            4
+            
           </StepCircle>
           <StepText active={currentStep === 4 ? "true" : undefined} completed={currentStep > 4 ? "true" : undefined}>
             Confirmação
@@ -1461,44 +1488,22 @@ const Checkout = () => {
           
           {/* Navegação entre etapas */}
           <StepNavigation>
-            {currentStep > 1 && (
-              <StepButton back="true" onClick={prevStep}>
-                Voltar
-              </StepButton>
-            )}
-            
-            {currentStep < 4 && (
-              <StepButton onClick={nextStep}>
-                Continuar
-              </StepButton>
-            )}
-          </StepNavigation>
+  {currentStep > 1 && !(user !== null && currentStep === 2) && (
+    <StepButton back="true" onClick={prevStep}>
+      Voltar
+    </StepButton>
+  )}
+
+  {currentStep < 4 && (
+    <StepButton onClick={nextStep}>
+      Continuar
+    </StepButton>
+  )}
+</StepNavigation>
         </ColumnSection>
         
         {/* Coluna do resumo - sempre visível */}
-        <ColumnSection>
-          <SectionTitle>Resumo do Pedido</SectionTitle>
-          {carrinho.length > 0 ? (
-            <SummaryContainer>
-              <SummaryRow>
-                <span>Subtotal:</span>
-                <span>R$ {totalProdutos.toFixed(2)}</span>
-              </SummaryRow>
-              <SummaryRow>
-                <span>Frete ({frete}):</span>
-                <span>R$ {valorFrete.toFixed(2)}</span>
-              </SummaryRow>
-              <Total>
-                <span>Total:</span>
-                <span>R$ {totalGeral.toFixed(2)}</span>
-              </Total>
-            </SummaryContainer>
-          ) : (
-            <SummaryContainer>
-              <EmptyCartMessage>Adicione produtos ao carrinho</EmptyCartMessage>
-            </SummaryContainer>
-          )}
-        </ColumnSection>
+        
       </TwoColumnLayout>
       
       {/* Modal de confirmação do pedido */}

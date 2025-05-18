@@ -18,6 +18,7 @@ public class Pedido {
     private Date dataPedido;
     private BigDecimal valor;
     private StatusPedido status;
+    private String metodoDePagamento;
     private List<ProdutoPedido> produtos;
     private EnderecoCliente enderecoCliente;
 
@@ -27,6 +28,14 @@ public class Pedido {
 
     public void setEnderecoCliente(EnderecoCliente enderecoCliente) {
         this.enderecoCliente = enderecoCliente;
+    }
+
+    public String getMetodoDePagamento() {
+        return metodoDePagamento;
+    }
+
+    public void setMetodoDePagamento(String metodoDePagamento) {
+        this.metodoDePagamento = metodoDePagamento;
     }
 
     public String getId() {

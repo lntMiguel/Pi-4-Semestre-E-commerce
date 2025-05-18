@@ -467,6 +467,11 @@ function Principal() {
     router.push('/perfil');
   }
 
+  const limparPedidosSalvos = () => {
+  localStorage.removeItem("pedidosSalvos");
+  alert("Todos os pedidos foram removidos do histórico local.");
+};
+
   const handleFinalizarCompra = () => {
     if (!frete) {
       alert("Por favor, selecione uma opção de frete antes de finalizar a compra.");
@@ -680,6 +685,7 @@ function Principal() {
 
   return (
     <StyledMain>
+        
       <GlobalStyle />
       <Header>
         <Logo src="imagens/logo.png" alt="Logo" />
