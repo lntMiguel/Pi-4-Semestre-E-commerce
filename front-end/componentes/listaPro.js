@@ -315,7 +315,17 @@ function Produtos() {
     return principal ? principal.id : null;
   }); // imagemPrincipalId deve vir do backend
 
-  
+  const handleImagemPrincipal = (event) => {
+    const index = parseInt(event.target.value);
+    
+    // Atualizar o estado para definir a imagem principal
+    setSelectedFiles(prevFiles => 
+      prevFiles.map((file, i) => ({
+        ...file,
+        isPrincipal: i === index,
+      }))
+    );
+  };
 
   const filteredProducts = products.filter((product) =>
     product.nome.toLowerCase().includes(searchTerm.toLowerCase())
@@ -632,11 +642,11 @@ function Produtos() {
     setCurrentPage(pageNumber);
   };
 
-  const handleFileChange = (event) => {
+   const handleFileChange = (event) => {
     const files = Array.from(event.target.files);
     const filesComPrincipal = files.map((file, index) => ({
       file,
-      isPrincipal: index === 0,
+      isPrincipal: index === 0, // Define a primeira imagem como principal por padrão
     }));
     setSelectedFiles(filesComPrincipal);
 
@@ -907,7 +917,7 @@ function Produtos() {
         />
             </>
             <GpBotoes>
-          <BotaoSalvar onClick={handUpdate} disabled={grupo === "estoquista"}>Salvar</BotaoSalvar>
+          <BotaoSalvar onClick={handUpdate}>Salvar</BotaoSalvar>
           <BotaoCancelar onClick={() => setEditModalOpen(false)}>Cancelar</BotaoCancelar>
         </GpBotoes>
       </ModalConteudo>

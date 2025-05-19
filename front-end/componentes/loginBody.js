@@ -225,7 +225,7 @@ const enterAcionado = (e) => {
         </InputWrapper>
         {error && <p style={{ color: "red" }}>{error}</p>}
         <Botao onClick={handleLogin}>Entrar</Botao>
-        <Botao onClick={handleRedirectP}>Cadrastrar</Botao>
+        <Botao onClick={handleRedirectP}>Cadastrar</Botao>
         <Botao onClick={handleRedirectF}>Funcionario</Botao>
       </Box>
     </StyledLogin>
