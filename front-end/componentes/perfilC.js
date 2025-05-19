@@ -803,6 +803,7 @@ function Perfil() {
     
         const mensagem = await response.text();
         alert("Endereço excluído com sucesso: " + mensagem);
+        fetchEnderecos();
       } catch (error) {
         console.error("Erro ao excluir endereço:", error);
         alert("Erro ao excluir endereço: " + error.message);
