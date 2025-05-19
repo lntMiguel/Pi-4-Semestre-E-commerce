@@ -107,8 +107,37 @@ const ButtonsContainer = styled.div`
   margin-left: auto;
 `;
 
+const ButtonsContainerN = styled.div`
+  display: flex;
+  flex-direction: column;a
+  margin-left: auto;
+`;
+
 const UserButton = styled.button`
   padding: 8px 16px;
+  background-color: ${props => props.$primary ? '#164d09' : '#f0f0f0'};
+  color: ${props => props.$primary ? '#f0f0f0' : '#164d09'};
+  border: 1px solid #164d09;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover {
+    background-color: ${props => props.$primary ? '#1a5e0a' : '#f0fff0'};
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+`;
+
+const UserButtonN = styled.button`
+  margin: 1px;
+  padding: 5px 10px;
   background-color: ${props => props.$primary ? '#164d09' : '#f0f0f0'};
   color: ${props => props.$primary ? '#f0f0f0' : '#164d09'};
   border: 1px solid #164d09;
@@ -705,12 +734,12 @@ function Principal() {
               </>
             ) : (
               <>
-                <UserName>Bem-vindo!</UserName>
-                <ButtonsContainer>
-                  <UserButton onClick={handleRedirectL}>Login</UserButton>
-                  <UserButton $primary onClick={handleRedirect}>Cadastrar</UserButton>
-                  <UserButton onClick={handleRedirectPedidos}>Meus Pedidos</UserButton>
-                </ButtonsContainer>
+                
+                <ButtonsContainerN>
+                  <UserButtonN onClick={handleRedirectL}>Login</UserButtonN>
+                  <UserButtonN $primary onClick={handleRedirect}>Cadastrar</UserButtonN>
+                  <UserButtonN onClick={handleRedirectPedidos}>Meus Pedidos</UserButtonN>
+                </ButtonsContainerN>
               </>
             )}
           </UserSection>

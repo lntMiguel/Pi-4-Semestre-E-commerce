@@ -73,9 +73,32 @@ const PageTitle = styled.h1`
 `;
 
 const SectionTitle = styled.h2`
+  display: flex;
+  justify-content: center;
   color: rgb(22, 77, 9);
   font-size: 18px;
   margin-bottom: 15px;
+  margin-left: 175px;
+  font-weight: 600;
+`;
+
+const SectionTitleP = styled.h2`
+  display: flex;
+  justify-content: center;
+  color: rgb(22, 77, 9);
+  font-size: 18px;
+  margin-bottom: 15px;
+  margin-left: 375px;
+  font-weight: 600;
+`;
+
+const SectionTitleC = styled.h2`
+  display: flex;
+  justify-content: center;
+  color: rgb(22, 77, 9);
+  font-size: 18px;
+  margin-bottom: 15px;
+  margin-left: 375px;
   font-weight: 600;
 `;
 
@@ -114,6 +137,18 @@ const CarrinhoList = styled.ul`
   padding: 0;
   max-height: 200px;
   overflow-y: auto;
+  margin-left: 315px;
+  width: 70%;
+  border: 1px solid #e5e5e5;
+  border-radius: 30px;
+`;
+
+const CarrinhoListR = styled.ul`
+  list-style: none;
+  padding: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  
   width: 100%;
   border: 1px solid #e5e5e5;
   border-radius: 30px;
@@ -121,8 +156,6 @@ const CarrinhoList = styled.ul`
 
 const CarrinhoItem = styled.li`
   display: flex;
-  align-items: center;
-  justify-content: space-between;
   padding: 12px 15px;
   border-bottom: 1px solid #e5e5e5;
   background-color: white;
@@ -161,6 +194,18 @@ const SummaryContainer = styled.div`
   padding: 15px;
   border: 1px solid #28c702;
   height: fit-content;
+  width: 50%;
+  position: sticky;
+  margin-left: 375px;
+  top: 20px;
+`;
+
+const SummaryContainerR = styled.div`
+   background-color: #f5fff5;
+  border-radius: 30px;
+  padding: 15px;
+  border: 1px solid #28c702;
+  height: fit-content;
   position: sticky;
   top: 20px;
 `;
@@ -193,12 +238,13 @@ const EnderecosGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 15px;
-  width: 100%;
-  
+  width: max-content;
+  margin-left: 195px ;
+
   @media (max-width: 1100px) {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   @media (max-width: 600px) {
     grid-template-columns: 1fr;
   }
@@ -258,6 +304,9 @@ const PadraoTag = styled.span`
 `;
 
 const CheckoutButton = styled.button`
+  display: flex;
+  position: absolute;
+  justify-content: center;
   background-color: rgb(22, 77, 9);
   color: white;
   border: none;
@@ -267,8 +316,35 @@ const CheckoutButton = styled.button`
   border-radius: 50px;
   cursor: pointer;
   margin-top: 15px;
+  margin-left: 292px;
   transition: all 0.2s;
-  width: 100%;
+  box-shadow: 0 4px 6px rgba(40, 199, 2, 0.2);
+
+  &:hover {
+    background-color: #28c702;
+    transform: translateY(-2px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+`;
+
+const CheckoutButtonF = styled.button`
+  display: flex;
+  position: absolute;
+  justify-content: center;
+  background-color: rgb(22, 77, 9);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 50px;
+  cursor: pointer;
+  margin-top: 25px;
+  margin-left: 1002px;
+  transition: all 0.2s;
   box-shadow: 0 4px 6px rgba(40, 199, 2, 0.2);
 
   &:hover {
@@ -298,6 +374,7 @@ const PaymentMethodsContainer = styled.div`
   flex-direction: column;
   width: 100%;
   margin-bottom: 20px;
+  margin-left: 175px;
 `;
 
 const PaymentMethodTabs = styled.div`
@@ -307,7 +384,8 @@ const PaymentMethodTabs = styled.div`
 `;
 
 const PaymentTab = styled.div`
-  padding: 10px 20px;
+  padding: 10px 10px;
+  margin-left: 110px;
   cursor: pointer;
   border-bottom: ${props => props.$active ? '3px solid #28c702' : '3px solid transparent'};
   color: ${props => props.$active ? 'rgb(22, 77, 9)' : '#777'};
@@ -378,6 +456,7 @@ const QRCodeContainer = styled.div`
   align-items: center;
   justify-content: center;
   padding: 15px;
+  padding-bottom: 32px;
   border: 1px dashed #28c702;
   border-radius: 50px;
   background-color: #f9f9f9;
@@ -409,7 +488,13 @@ const QRCodeInfo = styled.p`
 const BoletoInfo = styled.div`
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  justify-items: center;
+  justify-self: center;
+  align-self: center;
+  align-items: center;
   padding: 15px;
+  padding-bottom: 242px;
   border: 1px dashed #28c702;
   border-radius: 50px;
   background-color: #f9f9f9;
@@ -503,7 +588,8 @@ const StepText = styled.span`
 const StepNavigation = styled.div`
   display: flex;
   justify-content: space-between;
-  margin-top: 30px;
+  width: 147%;
+  
 `;
 
 const StepButton = styled.button`
@@ -533,6 +619,7 @@ const StepButton = styled.button`
     transform: none;
   }
 `;
+
 
 // Modal de resumo do pedido
 const ModalOverlay = styled.div`
@@ -1161,7 +1248,7 @@ const Checkout = () => {
       case 3:
         return (
           <SectionContainer>
-            <SectionTitle>Forma de Pagamento</SectionTitle>
+            <SectionTitleP>Forma de Pagamento</SectionTitleP>
             <PaymentMethodsContainer>
               <PaymentMethodTabs>
                 <PaymentTab
@@ -1282,7 +1369,7 @@ const Checkout = () => {
       case 4:
         return (
           <SectionContainer>    
-                <SectionTitle>Itens do Carrinho</SectionTitle>
+                <SectionTitleC>Itens do Carrinho</SectionTitleC>
                 <CarrinhoList>
                   {carrinho.length === 0 ? (
                     <EmptyCartMessage>Seu carrinho está vazio</EmptyCartMessage>
@@ -1300,7 +1387,7 @@ const Checkout = () => {
                   )}
                 </CarrinhoList>
                 <ColumnSection>
-          <SectionTitle>Resumo do Pedido</SectionTitle>
+          <SectionTitleC>Resumo do Pedido</SectionTitleC>
           {carrinho.length > 0 ? (
             <SummaryContainer>
               <SummaryRow>
@@ -1323,9 +1410,9 @@ const Checkout = () => {
           )}
         </ColumnSection>
                   
-                <CheckoutButton onClick={handleFinalizarCompra}>
+                <CheckoutButtonF onClick={handleFinalizarCompra}>
                 Finalizar Pedido
-              </CheckoutButton>
+              </CheckoutButtonF>
               
           </SectionContainer>
         );
@@ -1346,7 +1433,7 @@ const Checkout = () => {
           
           <ModalSection>
             <ModalSectionTitle>Itens do Pedido</ModalSectionTitle>
-            <CarrinhoList>
+            <CarrinhoListR>
               {carrinho.map((item, index) => (
                 <CarrinhoItem key={index}>
                   <ItemInfo>
@@ -1361,7 +1448,7 @@ const Checkout = () => {
                   </ItemInfo>
                 </CarrinhoItem>
               ))}
-            </CarrinhoList>
+            </CarrinhoListR>
           </ModalSection>
           
           <ModalSection>
@@ -1404,7 +1491,7 @@ const Checkout = () => {
           
           <ModalSection>
             <ModalSectionTitle>Resumo de Valores</ModalSectionTitle>
-            <SummaryContainer>
+            <SummaryContainerR>
               <SummaryRow>
                 <span>Subtotal:</span>
                 <span>R$ {totalProdutos.toFixed(2)}</span>
@@ -1417,7 +1504,7 @@ const Checkout = () => {
                 <span>Total:</span>
                 <span>R$ {totalGeral.toFixed(2)}</span>
               </Total>
-            </SummaryContainer>
+            </SummaryContainerR>
           </ModalSection>
           
           <ModalButtonsContainer>
@@ -1494,10 +1581,10 @@ const Checkout = () => {
     </StepButton>
   )}
 
-  {currentStep < 4 && (
+  {currentStep < 4 && (   
     <StepButton onClick={nextStep}>
       Continuar
-    </StepButton>
+    </StepButton>  
   )}
 </StepNavigation>
         </ColumnSection>

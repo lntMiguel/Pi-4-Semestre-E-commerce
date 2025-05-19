@@ -3,6 +3,19 @@ import styled from "styled-components";
 import { createGlobalStyle } from "styled-components";
 import { useAuth } from "./authContext";
 
+// Cores principais
+const colors = {
+  primary: "#164d09", // Verde escuro
+  accent: "#30f003",  // Verde neon
+  lightAccent: "rgba(48, 240, 3, 0.2)",
+  background: "#f8faf6",
+  white: "#ffffff",
+  lightGray: "#f0f0f0",
+  textDark: "#1a2e12",
+  textLight: "#ffffff",
+  border: "#e6e8e3"
+};
+
 const GlobalStyle = createGlobalStyle`
   * {
     margin: 0;
@@ -13,7 +26,7 @@ const GlobalStyle = createGlobalStyle`
     width: 100%;
     height: 100%;
     overflow: hidden;
-    font-family: Arial, sans-serif;
+    font-family: 'Roboto', 'Segoe UI', Arial, sans-serif;
   }
 `;
 
@@ -21,12 +34,12 @@ const StyledPedidos = styled.div`
   background: radial-gradient(
       ellipse at top,
       rgba(48, 240, 3, 0.6) -5%,
-      rgba(18, 60, 7, 0.95) 70%
+      rgba(22, 77, 9, 0.95) 70%
     ),
     repeating-linear-gradient(
       45deg,
-      rgba(18, 60, 7, 0.15) 0px,
-      rgba(18, 60, 7, 0.15) 10px,
+      rgba(22, 77, 9, 0.15) 0px,
+      rgba(22, 77, 9, 0.15) 10px,
       rgba(48, 240, 3, 0.1) 10px,
       rgba(48, 240, 3, 0.1) 20px
     );
@@ -40,9 +53,9 @@ const StyledPedidos = styled.div`
 `;
 
 const TableContainer = styled.div`
-  background-color: #f0f0f0;
-  border-radius: 50px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background-color: ${colors.white};
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
   width: 90%;
   text-align: center;
   max-width: 1200px;
@@ -50,62 +63,109 @@ const TableContainer = styled.div`
 `;
 
 const TableHeader = styled.div`
-  background-color: #f0f0f0;
-  color: white;
-
-  padding: 16px 24px;
+  background: linear-gradient(to right, ${colors.primary}, #1a5c0e);
+  color: ${colors.white};
+  padding: 20px 24px;
+  position: relative;
+  overflow: hidden;
+  
+  &::after {
+    content: "";
+    position: absolute;
+    height: 2px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to right, transparent, ${colors.accent}, transparent);
+  }
 `;
 
 const TableTitle = styled.h1`
-  font-size: 24px;
-  color: black;
+  font-size: 26px;
+  color: ${colors.white};
   font-weight: bold;
   margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 `;
 
 const TableContent = styled.div`
-  padding: 16px;
+  padding: 20px;
 `;
 
 const StyledTable = styled.table`
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
 `;
 
 const TableHeaderRow = styled.tr`
-  background-color: #f9fafb;
+  background-color: ${colors.background};
 `;
 
 const TableHeaderCell = styled.th`
-  padding: 12px 16px;
+  padding: 14px 16px;
   text-align: left;
-  font-size: 12px;
-  font-weight: 500;
-  color: #6b7280;
+  font-size: 13px;
+  font-weight: 600;
+  color: ${colors.primary};
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  border-bottom: 2px solid ${colors.lightAccent};
+  
+  &:nth-child(2) { text-align: left; }
+  &:nth-child(3) { text-align: right; }
+  &:nth-child(4) { text-align: left; }
+  &:nth-child(5) { text-align: right; }
 `;
 
 const TableRow = styled.tr`
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid ${colors.border};
+  transition: all 0.2s ease;
+  
   &:hover {
-    background-color: #f9fafb;
+    background-color: rgba(48, 240, 3, 0.05);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+  
+  &:last-child td {
+    border-bottom: none;
   }
 `;
 
 const TableCell = styled.td`
   padding: 16px;
   font-size: 14px;
-  color: #1f2937;
+  color: ${colors.textDark};
+  border-bottom: 1px solid ${colors.border};
+  
+  &:nth-child(1) { text-align: left; }
+  &:nth-child(2) { text-align: left; }
+  &:nth-child(3) { text-align: right; }
+  &:nth-child(4) { text-align: left; }
+  &:nth-child(5) { text-align: right; }
 `;
 
 const StatusBadge = styled.span`
-  padding: 4px 8px;
-  border-radius: 9999px;
+  padding: 5px 10px;
+  border-radius: 20px;
   font-size: 12px;
   font-weight: 600;
   display: inline-flex;
-  cursor: pointer;
+  align-items: center;
+  transition: all 0.2s ease;
+  
+  &::before {
+    content: "";
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+    background-color: currentColor;
+  }
 `;
 
 const Button = styled.button`
@@ -114,23 +174,43 @@ const Button = styled.button`
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
+  transition: all 0.2s ease;
+  
   &:focus {
     outline: none;
   }
 `;
 
 const EditButton = styled(Button)`
-  color: #059669;
+  color: ${colors.primary};
   margin-right: 12px;
+  
   &:hover {
-    color: #047857;
+    color: ${colors.accent};
   }
 `;
 
 const StatusButton = styled(Button)`
-  color: #2563eb;
+  color: ${colors.primary};
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: 1px solid ${colors.primary};
+  margin-left: 10px;
+  font-weight: 600;
+  
   &:hover {
-    color: #1d4ed8;
+    background-color: ${colors.primary};
+    color: ${colors.white};
+  }
+`;
+
+const SaveButton = styled(StatusButton)`
+  background-color: ${colors.primary};
+  color: ${colors.white};
+  
+  &:hover {
+    background-color: transparent;
+    color: ${colors.primary};
   }
 `;
 
@@ -146,8 +226,8 @@ const LoadingSpinner = styled.div`
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    border: 6px solid #0c5c0c;
-    border-color: #0c5c0c transparent #0c5c0c transparent;
+    border: 6px solid ${colors.primary};
+    border-color: ${colors.primary} transparent ${colors.accent} transparent;
     animation: spin 1.2s linear infinite;
   }
 
@@ -162,16 +242,31 @@ const LoadingSpinner = styled.div`
 `;
 
 const StatusSelect = styled.select`
-  padding: 4px 8px;
-  border: 1px solid #d1d5db;
+  padding: 8px 12px;
+  border: 1px solid ${colors.primary};
   border-radius: 4px;
   font-size: 14px;
   width: 100%;
+  background-color: ${colors.white};
+  transition: all 0.2s ease;
+  
   &:focus {
     outline: none;
-    border-color: #0c5c0c;
-    box-shadow: 0 0 0 2px rgba(12, 92, 12, 0.2);
+    border-color: ${colors.accent};
+    box-shadow: 0 0 0 2px rgba(48, 240, 3, 0.2);
   }
+`;
+
+const StatusContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const EmptyState = styled.div`
+  padding: 40px;
+  text-align: center;
+  color: ${colors.primary};
 `;
 
 function GPedidos() {
@@ -179,6 +274,7 @@ function GPedidos() {
   const [loading, setLoading] = useState(true);
   const { dados, setDados } = useAuth();
   const [editandoStatus, setEditandoStatus] = useState(null);
+  const [statusSelecionado, setStatusSelecionado] = useState({});
 
   const statusMap = {
     "Aguardando pagamento": "AGUARDANDO_PAGAMENTO",
@@ -186,7 +282,7 @@ function GPedidos() {
     "Pagamento com sucesso": "PAGAMENTO_COM_SUCESSO",
     "Aguardando retirada": "AGUARDANDO_RETIRADA",
     "Em trânsito": "EM_TRANSITO",
-    Entregue: "ENTREGUE",
+    "Entregue": "ENTREGUE",
   };
 
   const statusOptions = Object.keys(statusMap);
@@ -268,37 +364,37 @@ function GPedidos() {
     switch (status) {
       case "Aguardando pagamento":
         return {
-          background: "rgba(253, 230, 138, 0.4)",
+          background: "rgba(253, 230, 138, 0.2)",
           color: "#854d0e",
         };
       case "Pagamento rejeitado":
         return {
-          background: "rgba(254, 202, 202, 0.4)",
+          background: "rgba(254, 202, 202, 0.2)",
           color: "#991b1b",
         };
       case "Pagamento com sucesso":
         return {
-          background: "rgba(187, 247, 208, 0.4)",
+          background: "rgba(48, 240, 3, 0.2)",
           color: "#166534",
         };
       case "Aguardando retirada":
         return {
-          background: "rgba(191, 219, 254, 0.4)",
+          background: "rgba(191, 219, 254, 0.2)",
           color: "#1e40af",
         };
       case "Em trânsito":
         return {
-          background: "rgba(221, 214, 254, 0.4)",
+          background: "rgba(221, 214, 254, 0.2)",
           color: "#5b21b6",
         };
       case "Entregue":
         return {
-          background: "rgba(209, 213, 219, 0.4)",
-          color: "#1f2937",
+          background: "rgba(22, 77, 9, 0.2)",
+          color: "#164d09",
         };
       default:
         return {
-          background: "rgba(209, 213, 219, 0.4)",
+          background: "rgba(209, 213, 219, 0.2)",
           color: "#1f2937",
         };
     }
@@ -318,12 +414,17 @@ function GPedidos() {
 
       <TableContainer>
         <TableHeader>
-          <TableTitle>Lista de Pedidos</TableTitle>
+          <TableTitle>Gerenciamento de Pedidos</TableTitle>
         </TableHeader>
 
         <TableContent>
           {loading ? (
             <LoadingSpinner />
+          ) : pedidos.length === 0 ? (
+            <EmptyState>
+              <h3>Nenhum pedido encontrado</h3>
+              <p>Não há pedidos disponíveis para exibição no momento.</p>
+            </EmptyState>
           ) : (
             <StyledTable>
               <thead>
@@ -341,30 +442,21 @@ function GPedidos() {
                 {pedidos.map((pedido) => (
                   <TableRow key={pedido.id}>
                     <TableCell>{formatarData(pedido.dataPedido)}</TableCell>
-                    <TableCell style={{ fontWeight: 500 }}>
-                      {pedido.numero}
+                    <TableCell style={{ fontWeight: 600 }}>
+                      #{pedido.numero}
                     </TableCell>
                     <TableCell>{formatarValor(pedido.valor)}</TableCell>
                     <TableCell>
                       {editandoStatus === pedido.id ? (
-                        <>
+                        <StatusContainer>
                           <StatusSelect
-                            value={statusOptions.find(
-                              (label) => statusMap[label] === pedido.status
-                            )}
-                            onChange={(e) =>
-                              setPedidos((prevPedidos) =>
-                                prevPedidos.map((p) =>
-                                  p.id === pedido.id
-                                    ? {
-                                        ...p,
-                                        novoStatusTemp:
-                                          statusMap[e.target.value],
-                                      }
-                                    : p
-                                )
-                              )
-                            }
+                            value={statusSelecionado[pedido.id] || getLabelFromEnum(pedido.status)}
+                            onChange={(e) => {
+                              setStatusSelecionado({
+                                ...statusSelecionado,
+                                [pedido.id]: e.target.value
+                              });
+                            }}
                           >
                             {statusOptions.map((label) => (
                               <option key={label} value={label}>
@@ -372,19 +464,17 @@ function GPedidos() {
                               </option>
                             ))}
                           </StatusSelect>
-                          <StatusButton
+                          <SaveButton
                             onClick={() => {
-                              const novoStatus =
-                                pedidos.find((p) => p.id === pedido.id)
-                                  ?.novoStatusTemp || pedido.status;
+                              const novoStatus = statusMap[statusSelecionado[pedido.id]] || pedido.status;
                               handleAlterarStatus(pedido.id, novoStatus);
                             }}
                           >
                             Salvar
-                          </StatusButton>
-                        </>
+                          </SaveButton>
+                        </StatusContainer>
                       ) : (
-                        <StatusBadge style={getStatusStyle(pedido.status)}>
+                        <StatusBadge style={getStatusStyle(getLabelFromEnum(pedido.status))}>
                           {getLabelFromEnum(pedido.status)}
                         </StatusBadge>
                       )}
@@ -392,7 +482,13 @@ function GPedidos() {
                     <TableCell style={{ textAlign: "right" }}>
                       {editandoStatus !== pedido.id && (
                         <StatusButton
-                          onClick={() => setEditandoStatus(pedido.id)}
+                          onClick={() => {
+                            setEditandoStatus(pedido.id);
+                            setStatusSelecionado({
+                              ...statusSelecionado,
+                              [pedido.id]: getLabelFromEnum(pedido.status)
+                            });
+                          }}
                         >
                           Alterar Status
                         </StatusButton>

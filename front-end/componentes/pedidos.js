@@ -17,6 +17,19 @@ const GlobalStyle = createGlobalStyle`
   }
 `;
 
+const StyledPedidos = styled.div`
+   background: 
+    radial-gradient(ellipse at top, rgba(48, 240, 3, 0.6) -5%, rgba(18, 60, 7, 0.95) 70%),
+    repeating-linear-gradient(45deg, rgba(18, 60, 7, 0.15) 0px, rgba(18, 60, 7, 0.15) 10px, rgba(48, 240, 3, 0.1) 10px, rgba(48, 240, 3, 0.1) 20px);
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+`;
+
 const PedidoCard = styled.div`
   background-color: #f9f9f9;
   border-radius: 30px;
@@ -213,6 +226,8 @@ export default function Pedidos() {
   }, []);
 
   return (
+    <StyledPedidos>
+      <GlobalStyle/>
    <>
   {pedidos.length === 0 ? (
     <NenhumPedido>
@@ -277,5 +292,6 @@ export default function Pedidos() {
     ))
   )}
 </>
+</StyledPedidos>
   );
 }
