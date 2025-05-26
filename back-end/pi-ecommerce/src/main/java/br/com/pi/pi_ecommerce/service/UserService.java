@@ -25,6 +25,14 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
+    private final Validator validator;
+
+    @Autowired // Opcional no construtor se houver apenas um a partir do Spring 4.3
+    public UserService(UserRepository userRepository, Validator validator) {
+        this.userRepository = userRepository;
+        this.validator = validator;
+    }
+
     public ResponseEntity<Map<String, String>> login(String email, String password) {
 
         Optional<User> userOptional = userRepository.findByEmail(email);
@@ -72,11 +80,11 @@ public class UserService {
 
     public User salvar(User user) {
 
-        if (Validator.isCpfExistente(user.getCpf())) {
+        if (validator.isCpfExistente(user.getCpf())) {
             throw new IllegalArgumentException("CPF já cadastrado!");
         }
 
-        if (Validator.isEmailExistente(user.getEmail())) {
+        if (validator.isEmailExistente(user.getEmail())) {
             throw new IllegalArgumentException("E-mail já cadastrado!");
         }
         

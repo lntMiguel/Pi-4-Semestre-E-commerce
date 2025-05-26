@@ -8,21 +8,34 @@ import org.springframework.stereotype.Component;
 @Component
 public class Validator {
 
-    @Autowired
-    private static UserRepository userRepository;
+    private final UserRepository userRepository; // Removido 'static', agora é um campo de instância
+    private final ClienteRepository clienteRepository; // Removido 'static'
 
-    @Autowired
-    private static ClienteRepository clienteRepository;
+    // Injeção de dependência via construtor (recomendado pelo Spring)
+    public Validator(UserRepository userRepository, ClienteRepository clienteRepository) {
+        this.userRepository = userRepository;
+        this.clienteRepository = clienteRepository;
+    }
 
-    public static boolean isCpfExistente(Long cpf) {
+    // Métodos agora são de instância, não estáticos
+    public boolean isCpfExistente(Long cpf) {
+        // userRepository agora é uma instância injetada e não deve ser null
+        if (cpf == null) return false; // Adicionar verificação para CPF nulo se necessário
         return userRepository.existsByCpf(cpf);
     }
 
-    public static boolean isEmailExistente(String email) {
+    public boolean isEmailExistente(String email) {
+        if (email == null || email.isEmpty()) return false; // Adicionar verificação
         return userRepository.existsByEmail(email);
     }
 
-    public static boolean exiteEmailCliente(String email){return clienteRepository.existsByEmail(email);}
-    public static boolean exiteCpfCliente(Long cpf){return clienteRepository.existsByCpf(cpf);}
+    public boolean exiteEmailCliente(String email) {
+        if (email == null || email.isEmpty()) return false;
+        return clienteRepository.existsByEmail(email);
+    }
 
+    public boolean exiteCpfCliente(Long cpf) { // Mantido Long, ajuste se CPF de cliente for String
+        if (cpf == null) return false;
+        return clienteRepository.existsByCpf(cpf);
+    }
 }
