@@ -201,7 +201,7 @@ const CardP = styled.div`
 const ImgProduto = styled.img`
   width: 100%;
   height: 180px;
-  object-fit: contain;
+  object-fit: cover;
   border-radius: 8px;
   margin-bottom: 10px;
 `;
@@ -449,28 +449,50 @@ const SuccessMessage = styled.p`
 `;
 
 const StyledSlider = styled(Slider)`
-  margin: 15px 0;
-  margin-bottom: 30px;
+  margin: 15px 0 30px;
 
   .slick-prev, .slick-next {
-    z-index: 1;
-    color: #333;
-  }
+  z-index: 1;
+  width: 80px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  color: black !important; 
+  font-size: 0px;
+}
+
+.slick-prev::before,
+.slick-next::before {
+  color: black !important; 
+  font-size: 20px;
+}
 
   .slick-dots {
     bottom: -25px;
   }
 
+  .slick-slide {
+    display: flex !important; 
+    justify-content: center; 
+    align-items: center;
+  }
+
+  .slick-track {
+    display: flex !important;       
+  }
+
   img {
-    width: 100%;
-    height: 250px;
-    object-fit: contain;
+    width: 180px;
+    height: 180px;
+    object-fit: cover;
     border-radius: 8px;
   }
 `;
 
 function Principal() {
-  const {user, setUser, setGrupo, setDados, dados, frete, setFrete, valorFrete, setValorFrete, handleLogout: contextLogout, isLoading: authIsLoading } = useAuth();
+  const { user, setUser, setGrupo, setDados, dados, frete, setFrete, valorFrete, setValorFrete, handleLogout: contextLogout, isLoading: authIsLoading } = useAuth();
   const [produtos, setProdutos] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const { carrinho, setCarrinho } = useAuth();
@@ -480,6 +502,7 @@ function Principal() {
   const [viewingProduct, setViewingProduct] = useState(null);
   const router = useRouter();
   const [errorHandled, setErrorHandled] = useState(false);
+  const [imagemSelecionada, setImagemSelecionada] = useState(null);
 
   const handleRedirect = () => {
     router.push('/cadastro');
@@ -497,9 +520,9 @@ function Principal() {
   }
 
   const limparPedidosSalvos = () => {
-  localStorage.removeItem("pedidosSalvos");
-  alert("Todos os pedidos foram removidos do histórico local.");
-};
+    localStorage.removeItem("pedidosSalvos");
+    alert("Todos os pedidos foram removidos do histórico local.");
+  };
 
   const handleFinalizarCompra = () => {
     if (!frete) {
@@ -508,7 +531,7 @@ function Principal() {
     }
 
     router.push("/checkout");
-    
+
   };
 
   useEffect(() => {
@@ -539,47 +562,47 @@ function Principal() {
         if (setCarrinho) setCarrinho([]);
         setErrorHandled(true);
         if (typeof window !== "undefined") {
-            window.location.reload();
+          window.location.reload();
         }
       }
     } else if (user && dados !== null && errorHandled) {
       console.log("pgPrincipal: Dados parecem válidos agora, resetando errorHandled.");
       setErrorHandled(false);
     } else if (!user && errorHandled) {
-        // Se o usuário foi deslogado (user é null) e o erro foi marcado,
-        // podemos resetar errorHandled para permitir futuras verificações se necessário.
-        console.log("pgPrincipal: Usuário deslogado, resetando errorHandled.");
-        setErrorHandled(false);
+      // Se o usuário foi deslogado (user é null) e o erro foi marcado,
+      // podemos resetar errorHandled para permitir futuras verificações se necessário.
+      console.log("pgPrincipal: Usuário deslogado, resetando errorHandled.");
+      setErrorHandled(false);
     }
 
   }, [user, dados, authIsLoading, contextLogout, setUser, setGrupo, setDados, setCarrinho, errorHandled, router]); // Adicionei router se for usado para redirecionar sem reload
 
   useEffect(() => {
-  axios.get('http://localhost:8081/produto')
-    .then(async (response) => {
-      // 1. Filtrar os produtos com status === true
-      const produtosAtivos = response.data.filter(produto => produto.status === true); // Ou simplesmente produto.status
+    axios.get('http://localhost:8081/produto')
+      .then(async (response) => {
+        // 1. Filtrar os produtos com status === true
+        const produtosAtivos = response.data.filter(produto => produto.status === true); // Ou simplesmente produto.status
 
-      // 2. Mapear APENAS os produtos ativos para buscar imagens
-      const produtosComImagens = await Promise.all(produtosAtivos.map(async (produto) => {
-        // Supondo que você tenha uma função fetchImages definida em algum lugar
-        // Exemplo: const fetchImages = async (produtoId) => { /* lógica para buscar imagens */ return []; };
-        const imagens = await fetchImages(produto.id);
+        // 2. Mapear APENAS os produtos ativos para buscar imagens
+        const produtosComImagens = await Promise.all(produtosAtivos.map(async (produto) => {
+          // Supondo que você tenha uma função fetchImages definida em algum lugar
+          // Exemplo: const fetchImages = async (produtoId) => { /* lógica para buscar imagens */ return []; };
+          const imagens = await fetchImages(produto.id);
 
-        const imagemPrincipal = imagens.find(img => img.principal) || imagens[0];
-        return {
-          ...produto,
-          imagemPrincipal: imagemPrincipal ? imagemPrincipal.caminhoArquivo : 'url_da_imagem_padrao.jpg',
-        };
-      }));
-      setProdutos(produtosComImagens);
-    })
-    .catch(error => {
-      console.error('Erro ao buscar produtos:', error);
-      // Mantenha sua lógica de erro, se necessário
-      // setCount(1);
-    });
-}, []);
+          const imagemPrincipal = imagens.find(img => img.principal) || imagens[0];
+          return {
+            ...produto,
+            imagemPrincipal: imagemPrincipal ? imagemPrincipal.caminhoArquivo : 'url_da_imagem_padrao.jpg',
+          };
+        }));
+        setProdutos(produtosComImagens);
+      })
+      .catch(error => {
+        console.error('Erro ao buscar produtos:', error);
+        // Mantenha sua lógica de erro, se necessário
+        // setCount(1);
+      });
+  }, []);
 
   const fetchImages = async (idProduto) => {
     try {
@@ -748,9 +771,6 @@ function Principal() {
     window.location.reload();
   };
 
-
-
-
   const settings = {
     dots: true,
     infinite: false,
@@ -770,17 +790,17 @@ function Principal() {
   }
 
   if (errorHandled && !(user && dados)) { // Se o erro foi tratado E o usuário não está mais logado corretamente
-      return (
-          <StyledMain>
-              <GlobalStyle />
-              <p style={{ color: 'white' }}>Corrigindo sessão, por favor aguarde...</p>
-          </StyledMain>
-      );
+    return (
+      <StyledMain>
+        <GlobalStyle />
+        <p style={{ color: 'white' }}>Corrigindo sessão, por favor aguarde...</p>
+      </StyledMain>
+    );
   }
 
   return (
     <StyledMain>
-        
+
       <GlobalStyle />
       <Header>
         <Logo src="imagens/logo.png" alt="Logo" />
@@ -800,7 +820,7 @@ function Principal() {
               </>
             ) : (
               <>
-                
+
                 <ButtonsContainerN>
                   <UserButtonN onClick={handleRedirectL}>Login</UserButtonN>
                   <UserButtonN $primary onClick={handleRedirect}>Cadastrar</UserButtonN>
@@ -890,14 +910,14 @@ function Principal() {
 
             <>
               {viewingProduct.imagens && viewingProduct.imagens.length > 0 ? (
-                <StyledSlider dots={true} infinite={false} speed={500} slidesToShow={2} slidesToScroll={1}>
+                <StyledSlider dots={true} infinite={false} speed={500} slidesToShow={1} slidesToScroll={1} arrows={true}>
                   {viewingProduct.imagens.map((imagem, index) => (
                     <div key={index}>
                       <img
                         src={`../` + imagem.caminhoArquivo.slice(22)}
                         alt={`Imagem ${index + 1}`}
-                        style={{ width: "100px", height: "auto", maxHeight: "300px", objectFit: "contain" }}
-
+                        onClick={() => setImagemSelecionada(`../${imagem.caminhoArquivo.slice(22)}`)}
+                        style={{ cursor: "pointer" }}
                       />
                     </div>
                   ))}
@@ -918,6 +938,35 @@ function Principal() {
 
           </ModalContent>
         </Modal>
+      )}
+
+      {imagemSelecionada && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            backgroundColor: "rgba(0, 0, 0, 0.8)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 1000
+          }}
+          onClick={() => setImagemSelecionada(null)} // Clica fora para fechar
+        >
+          <img
+            src={imagemSelecionada}
+            alt="Imagem ampliada"
+            style={{
+              Width: "90%",
+              Height: "90%",
+              borderRadius: "10px",
+              boxShadow: "0 0 15px rgba(0,0,0,0.5)"
+            }}
+          />
+        </div>
       )}
     </StyledMain>
   );

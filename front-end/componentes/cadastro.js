@@ -221,6 +221,35 @@ const EnderecoTitulo = styled.div`
   color: #164d09;
 `;
 
+const BotaoRetornar = styled.button`
+  position: absolute;
+  top: 20px; /* Distância do topo */
+  left: 20px; /* Distância da direita */
+  padding: 8px 15px;
+  background-color: rgba(255, 255, 255, 0.2); /* Um pouco transparente para se misturar */
+  color: #fff; /* Cor do texto branca para contrastar com o fundo escuro */
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Espaço entre o ícone e o texto */
+  transition: background-color 0.3s, border-color 0.3s;
+  z-index: 100; /* Para garantir que fique sobre outros elementos */
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.8);
+  }
+
+  /* Estilo para o ícone (pode ser um caractere de seta ou um SVG) */
+  .arrow-icon {
+    font-size: 18px; // Ajuste o tamanho conforme necessário
+    line-height: 1;
+  }
+`;
+
 function Cadastro() {
   const [form, setForm] = useState({
     nome: '',
@@ -259,6 +288,10 @@ function Cadastro() {
     setForm((prev) => ({ ...prev, [name]: value }));
   }
 
+  };
+
+  const handleRetornarLoja = () => {
+    router.push('/pgPrincipal');
   };
 
   const handleChangeEndereco = (e) => {
@@ -524,6 +557,10 @@ function Cadastro() {
   return (
     <StyledCadastro>
       <GlobalStyle />
+      <BotaoRetornar onClick={handleRetornarLoja}>
+        <span className="arrow-icon">←</span> {/* Seta para a esquerda Unicode */}
+        Voltar para a Loja
+      </BotaoRetornar>
       <Box>
         <Titulo>Cadastro de Cliente</Titulo>
         <form onSubmit={handleSubmit}>
