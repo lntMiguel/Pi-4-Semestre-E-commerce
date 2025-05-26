@@ -21,6 +21,44 @@ const GlobalStyle = createGlobalStyle`
   }
 `;
 
+
+
+
+const imageButtonsContainerStyles = {
+  marginTop: "auto",
+  display: "flex",
+  flexDirection: 'column',
+  gap: "5px",
+  width: '100%',
+};
+
+const imageActionButtonStyles = {
+  fontSize: '11px',
+  padding: '5px 8px',
+  cursor: 'pointer',
+  border: '1px solid #ccc',
+  borderRadius: '4px',
+  backgroundColor: '#fff',
+  width: '100%',
+  transition: 'background-color 0.2s',
+};
+
+const deleteButtonStyles = {
+  ...imageActionButtonStyles,
+  backgroundColor: '#ffdddd',
+  borderColor: '#ffaaaa',
+  color: '#d8000c',
+};
+
+const principalButtonStyles = {
+  ...imageActionButtonStyles,
+  backgroundColor: '#ddffdd',
+  borderColor: '#aaffaa',
+  color: '#006400',
+};
+
+
+
 const StyledProdutos = styled.div`
    background: 
     radial-gradient(ellipse at top, rgba(48, 240, 3, 0.6) -5%, rgba(18, 60, 7, 0.95) 70%),
@@ -33,6 +71,58 @@ const StyledProdutos = styled.div`
   margin: 0;
   padding: 0;
 `;
+
+const imagePreviewStyles = {
+  width: '100px',
+  height: '100px',
+  objectFit: 'cover', // 'cover' preenche o espaço, 'contain' mostra a imagem inteira
+  border: '1px solid #ddd',
+  borderRadius: '4px',
+  marginBottom: '5px',
+};
+
+const principalImageBorder = '3px solid green'; // Para imagem principal existente
+const principalNewImageBorder = '3px solid blue'; // Para nova imagem marcada como principal
+
+const imageItemContainerStyles = {
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  textAlign: 'center',
+  border: '1px solid #eee',
+  padding: '10px',
+  borderRadius: '8px',
+  width: '130px', // Largura total do card da imagem
+  position: 'relative', // Para a tag "Principal"
+  margin: '5px',
+};
+
+const imageNameStyles = {
+  fontSize: '12px',
+  wordBreak: 'break-all',
+  height: '30px', // Para garantir altura consistente mesmo com nomes curtos/longos
+  overflow: 'hidden',
+  marginBottom: '5px',
+};
+
+const imageButtonStyles = {
+  fontSize: '10px',
+  padding: '3px 6px',
+  margin: '0 2px',
+  cursor: 'pointer',
+};
+
+const principalTagStyles = {
+  position: 'absolute',
+  top: '5px',
+  left: '5px',
+  backgroundColor: 'rgba(0,0,0,0.6)',
+  color: 'white',
+  padding: '2px 5px',
+  fontSize: '10px',
+  borderRadius: '3px',
+  zIndex: 1,
+};
 
 const Header = styled.div`
   width: 90%;
@@ -306,7 +396,6 @@ function Produtos() {
   });
   const [viewingProduct, setViewingProduct] = useState(null);
   const [isViewModalOpen, setViewModalOpen] = useState(false);
-  const [selectedFiles, setSelectedFiles] = useState([]);
   const [nomeImagemPrincipal, setNomeImagemPrincipal] = useState("");
   const [imagemPrincipalIndex, setImagemPrincipalIndex] = useState(null);
   const { grupo } = useAuth();
@@ -314,7 +403,10 @@ function Produtos() {
     const principal = viewingProduct?.imagens?.find(img => img.principal);
     return principal ? principal.id : null;
   }); // imagemPrincipalId deve vir do backend
-
+  const [isDeletingImage, setIsDeletingImage] = useState(false); // Novo estado para feedback
+  const [deleteImageMessage, setDeleteImageMessage] = useState(""); // Para mensagens de sucesso/erro
+const [selectedFiles, setSelectedFiles] = useState([]); // Array de objetos: { file: FileObject, preview: string, idTemporal: string }
+  const [imagemPrincipalNovaId, setImagemPrincipalNovaId] = useState(null); // Armazena o idTemporal da NOVA imagem que é principal
   const handleImagemPrincipal = (event) => {
     const index = parseInt(event.target.value);
     
@@ -410,26 +502,35 @@ function Produtos() {
   
       const result = await response.json();
       console.log("Produto adicionado:", result);
-      const formDataImages = new FormData();
-      formDataImages.append("idProduto", result.id); // Usando o ID do produto recém-criado
-  
-      selectedFiles.forEach((file) => {
-        formDataImages.append("files", file.file);
-        if (file.isPrincipal) {
-          console.log(file.file.name)
-          formDataImages.append("nomeImagemPrincipal", file.file.name); // Adiciona a imagem principal
-        }
-      });
-  
+      if (selectedFiles.length > 0) {
+    const formDataImages = new FormData();
+    formDataImages.append("idProduto", result.id);
+
+    let nomeDaImagemPrincipalEnviada = null;
+    selectedFiles.forEach((sf) => {
+      formDataImages.append("files", sf.file);
+      if (sf.idTemporal === imagemPrincipalNovaId) {
+        nomeDaImagemPrincipalEnviada = sf.file.name;
+      }
+    });
+
+    if (nomeDaImagemPrincipalEnviada) {
+      formDataImages.append("nomeImagemPrincipal", nomeDaImagemPrincipalEnviada);
+    } else if (selectedFiles.length > 0) {
+      // Se nenhuma foi marcada explicitamente, mas há imagens, envia a primeira como principal
+      formDataImages.append("nomeImagemPrincipal", selectedFiles[0].file.name);
+    }
+
       const imageUploadResponse = await fetch("http://localhost:8081/imagens", {
         method: "POST",
         body: formDataImages,
       });
-
-      if (!imageUploadResponse.ok) {
+    if (!imageUploadResponse.ok) {
         throw new Error("Erro ao enviar imagens");
       }
   
+    }
+      
       alert("Produto e imagens adicionados com sucesso!");
       
       setProducts((prevProducts) => [
@@ -448,6 +549,32 @@ function Produtos() {
       setError("Erro ao adicionar produto");
     }
   };
+
+  const refreshProductImages = async (productId) => {
+    if (!productId) return;
+    try {
+      const novasImagens = await fetchImages(productId);
+      setViewingProduct(prev => {
+        if (prev && prev.id === productId) {
+          // Verifica se a imagem principal ainda existe na nova lista
+          const imagemPrincipalAtual = novasImagens.find(img => img.id === imagemPrincipal);
+          if (!imagemPrincipalAtual && novasImagens.length > 0) {
+            // Se a principal foi excluída e há outras imagens, define a primeira como principal
+            // ou limpa se não houver mais imagens.
+            // Esta lógica pode precisar de ajuste dependendo de como você quer lidar com a principal.
+            setImagemPrincipal(novasImagens[0]?.id || null);
+          } else if (novasImagens.length === 0) {
+            setImagemPrincipal(null);
+          }
+          return { ...prev, imagens: novasImagens };
+        }
+        return prev;
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar imagens do produto:", error);
+      // Tratar erro de atualização de UI aqui se necessário
+    }
+  };
   
   const resetForm = () => {
     setError({});
@@ -459,9 +586,13 @@ function Produtos() {
       descDetalhada: "",
       avaliacao: "",
     });
-    setSelectedFiles([]);  // Limpar arquivos selecionados
+    setSelectedFiles([]);
+    setImagemPrincipalNovaId(null);
     setImagemPrincipalIndex(null);  // Limpar a imagem principal selecionada
     setNomeImagemPrincipal("");
+    if (isEditModalOpen) {
+      setImagemPrincipal(null);
+  }
   };
 
   const fetchProdutos = async () => {
@@ -508,6 +639,7 @@ function Produtos() {
   };
 
   const handleEditProduct = async (product) => {
+    
     setEditingProduct(product);
     setFormData({
       nome: product.nome,
@@ -517,12 +649,15 @@ function Produtos() {
       descDetalhada: product.descDetalhada,
       avaliacao: product.avaliacao,
     });
-    const imagens = await fetchImages(product.id);
+    setSelectedFiles([]); // Limpa NOVAS imagens selecionadas de edições anteriores
+    setImagemPrincipalNovaId(null); // Limpa a principal das NOVAS imagens
+    setDeleteImageMessage("");
+    setError("");
+    const imagensAtuais = await fetchImages(product.id);
+    setViewingProduct({ ...product, imagens: imagensAtuais });
 
-    setViewingProduct({
-      ...product,
-      imagens, 
-    });
+    const principalExistente = imagensAtuais.find(img => img.principal);
+    setImagemPrincipal(principalExistente ? principalExistente.id : null); // 'imagemPrincipal' guarda o ID da imagem EXISTENTE que é principal
     setEditModalOpen(true);
   };
 
@@ -556,22 +691,36 @@ function Produtos() {
       }
   
       // Se houver imagens selecionadas, faz o upload
-      if (selectedFiles.length > 0) {
-        const formDataImages = new FormData();
-        formDataImages.append("idProduto", editingProduct.id);
-        selectedFiles.forEach((file) => {
-          formDataImages.append("files", file.file);
-        });
-  
-        const imageUploadResponse = await fetch("http://localhost:8081/imagens", {
-          method: "POST",
-          body: formDataImages,
-        });
-  
-        if (!imageUploadResponse.ok) {
-          throw new Error("Erro ao enviar imagens");
+       if (selectedFiles.length > 0) {
+      const formDataImages = new FormData();
+      formDataImages.append("idProduto", editingProduct.id);
+
+      let nomeDaImagemPrincipalEnviadaPeloUpload = null;
+      selectedFiles.forEach((sf) => {
+        formDataImages.append("files", sf.file);
+        if (sf.idTemporal === imagemPrincipalNovaId) { // Se esta NOVA imagem foi marcada como principal
+          nomeDaImagemPrincipalEnviadaPeloUpload = sf.file.name;
         }
+      });
+
+      // Se uma NOVA imagem é a principal, seu nome é enviado para o backend.
+      if (nomeDaImagemPrincipalEnviadaPeloUpload) {
+        formDataImages.append("nomeImagemPrincipal", nomeDaImagemPrincipalEnviadaPeloUpload);
       }
+
+const imageUploadResponse = await fetch("http://localhost:8081/imagens", {
+        method: "POST",
+        body: formDataImages,
+      });      if (!imageUploadResponse.ok) throw new Error("Erro ao enviar novas imagens");
+    }
+
+    // Atualizar a imagem principal no backend SE:
+    // 1. Uma imagem EXISTENTE foi definida como principal (`imagemPrincipal` tem um ID do backend)
+    // E
+    // 2. NENHUMA NOVA imagem foi definida como principal (`imagemPrincipalNovaId` é null ou não corresponde a `imagemPrincipal`)
+    if (imagemPrincipal && !imagemPrincipal.startsWith('temp-') && !imagemPrincipalNovaId) {
+      await fetch(`http://localhost:8081/imagens?idProduto=${editingProduct.id}&idImagem=${imagemPrincipal}`, { method: "PUT" });
+    }
 
       if (imagemPrincipal) {
         await fetch(`http://localhost:8081/imagens?idProduto=${editingProduct.id}&idImagem=${imagemPrincipal}`, {
@@ -580,7 +729,9 @@ function Produtos() {
       }
   
       alert("Produto atualizado com sucesso!");
-  
+    setSelectedFiles([]);
+    setImagemPrincipalNovaId(null);
+    // setImagemPrincipal(null); // Resetar a principal existente se a lógica exigir
       await fetchProdutos(); // Atualiza a lista de produtos após a atualização
       setEditModalOpen(false); // Fecha o modal de edição
   
@@ -591,42 +742,70 @@ function Produtos() {
   };
   
 
-  const handleDeleteImages = async (idImagem) => {
+   const handleDeleteImages = async (idImagemParaExcluir) => {
+    if (!viewingProduct || !viewingProduct.id) {
+      console.error("ID do produto não encontrado para exclusão de imagem.");
+      setError("Não foi possível identificar o produto para excluir a imagem.");
+      return;
+    }
+
+    const confirmacao = window.confirm("Tem certeza que deseja excluir esta imagem?");
+    if (!confirmacao) return;
+
+    setIsDeletingImage(true); // Ativa o estado de "carregando/excluindo"
+    setDeleteImageMessage(""); // Limpa mensagens anteriores
+    setError(""); // Limpa erros anteriores
+
     try {
-      const response = await fetch(`http://localhost:8081/imagens/${idImagem}`, {
+      const response = await fetch(`http://localhost:8081/imagens/${idImagemParaExcluir}`, {
         method: "DELETE",
       });
 
       if (response.ok) {
-        fetchImages(); // Atualiza a lista de imagens após a exclusão
+        setDeleteImageMessage("Imagem excluída com sucesso!");
+        console.log("Imagem excluída, atualizando lista de imagens...");
+        // Atualiza a lista de imagens do produto que está sendo visualizado/editado
+        await refreshProductImages(viewingProduct.id);
+
+        // Opcional: Limpar mensagem após alguns segundos
+        setTimeout(() => setDeleteImageMessage(""), 3000);
+
       } else {
         const errorMessage = await response.text();
         setError(errorMessage || "Erro ao excluir imagem.");
+        setDeleteImageMessage(""); // Limpa mensagem de sucesso em caso de erro
+        console.error("Falha ao excluir imagem no backend:", errorMessage);
       }
     } catch (error) {
-      console.error("Erro ao excluir imagem:", error);
-      setError("Erro ao excluir imagem.");
+      console.error("Erro na requisição de exclusão de imagem:", error);
+      setError("Erro de conexão ao excluir imagem.");
+      setDeleteImageMessage("");
+    } finally {
+      setIsDeletingImage(false); // Desativa o estado de "carregando/excluindo"
     }
   };
   const fetchImages = async (idProduto) => {
+    if (!idProduto) {
+      console.warn("fetchImages chamado sem idProduto");
+      return [];
+    }
     try {
       const response = await fetch(`http://localhost:8081/imagens/${idProduto}`);
-  
       if (!response.ok) {
-        throw new Error("Erro ao buscar imagens");
+        // Se for 404 (sem imagens), não é necessariamente um erro fatal, apenas retorna array vazio
+        if (response.status === 404) return [];
+        throw new Error(`Erro ao buscar imagens: ${response.statusText}`);
       }
-  
       const imagens = await response.json();
-      const caminhoBase = "http://localhost:8081/";
-      const imagensComCaminho = imagens.map(imagem => ({
+      const caminhoBase = "http://localhost:8081/"; // Certifique-se que esta é a base correta
+      return imagens.map(imagem => ({
         ...imagem,
-        url: `${caminhoBase}${imagem.caminho}`, 
+        // url: `${caminhoBase}${imagem.caminho}`, // Mantenha se usar 'url'
+        // Se 'caminhoArquivo' já for o caminho completo ou relativo correto para o src da img, pode não precisar de 'url'
       }));
-  
-      return imagensComCaminho;
     } catch (error) {
-      console.error("Erro ao buscar imagens:", error);
-      return [];
+      console.error(`Erro ao buscar imagens para o produto ${idProduto}:`, error);
+      return []; // Retorna array vazio em caso de erro para não quebrar a UI
     }
   };
   
@@ -642,16 +821,53 @@ function Produtos() {
     setCurrentPage(pageNumber);
   };
 
-   const handleFileChange = (event) => {
-    const files = Array.from(event.target.files);
-    const filesComPrincipal = files.map((file, index) => ({
-      file,
-      isPrincipal: index === 0, // Define a primeira imagem como principal por padrão
-    }));
-    setSelectedFiles(filesComPrincipal);
+  const handleFileChange = (event) => {
+  const novosArquivosInput = Array.from(event.target.files);
 
-  };
+  if (novosArquivosInput.length === 0) return;
 
+  const arquivosFormatados = novosArquivosInput.map(file => ({
+    file,
+    preview: URL.createObjectURL(file),
+    idTemporal: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+  }));
+
+  setSelectedFiles(prevFiles => {
+    const todosOsNovosArquivos = [...prevFiles, ...arquivosFormatados];
+    // Se nenhuma nova imagem foi marcada como principal E esta é a primeira leva de novas imagens,
+    // marca a primeira nova imagem como candidata a principal (entre as novas).
+    if (!imagemPrincipalNovaId && todosOsNovosArquivos.length > 0 && prevFiles.length === 0) {
+      setImagemPrincipalNovaId(todosOsNovosArquivos[0].idTemporal);
+    }
+    return todosOsNovosArquivos;
+  });
+
+  event.target.value = null; // Permite selecionar os mesmos arquivos novamente
+};
+
+const handleRemoveNewFile = (idTemporalParaRemover) => {
+  setSelectedFiles(prevFiles => {
+    const restantes = prevFiles.filter(f => f.idTemporal !== idTemporalParaRemover);
+    // Se a imagem removida era a principal das novas, limpa a seleção de principal nova
+    if (imagemPrincipalNovaId === idTemporalParaRemover) {
+      setImagemPrincipalNovaId(restantes.length > 0 ? restantes[0].idTemporal : null);
+    }
+    return restantes;
+  });
+};
+
+const handleSetNewFileAsPrincipal = (idTemporalParaDefinir) => {
+  setImagemPrincipalNovaId(idTemporalParaDefinir);
+  // No modal de edição, também precisamos desmarcar qualquer imagem existente como principal
+  if (isEditModalOpen) {
+      setImagemPrincipal(null); // Limpa a seleção de principal existente
+  }
+};
+
+const handleSetExistingImageAsPrincipal = (idImagemExistente) => {
+    setImagemPrincipal(idImagemExistente); // Define a existente como principal
+    setImagemPrincipalNovaId(null);      // Garante que nenhuma NOVA imagem esteja marcada como principal
+};
 
   return (
     <StyledProdutos>
@@ -781,19 +997,19 @@ function Produtos() {
       />
       {selectedFiles.length > 0 && ( 
         <div>
-          <h4>Imagens Selecionadas:</h4>
-          <ul>
-            {selectedFiles.map((file, index) => (
-              <li key={index}>{file.file.name}<input 
-              type="radio" 
-              name="principal" 
-              value={index}
-              onChange={handleImagemPrincipal}
-              checked={selectedFiles[index].isPrincipal} 
-            />Principal</li>
-            ))}
-          </ul>
-        </div>
+           <h4>Imagens Selecionadas para Novo Produto:</h4>
+           {/* Loop para mostrar selectedFiles com botões "Remover" e "Principal" */}
+           {selectedFiles.map((sf) => (
+             <div key={sf.idTemporal}>
+               <img src={sf.preview} alt={sf.file.name} style={{width: '80px', height: '80px', objectFit: 'cover', border: sf.idTemporal === imagemPrincipalNovaId ? '2px solid blue' : '1px solid #ddd'}} />
+               <p>{sf.file.name.substring(0,15)}...</p>
+               {sf.idTemporal !== imagemPrincipalNovaId && (
+                 <button onClick={() => handleSetNewFileAsPrincipal(sf.idTemporal)}>Principal</button>
+               )}
+               <button onClick={() => handleRemoveNewFile(sf.idTemporal)}>Remover</button>
+             </div>
+           ))}
+         </div>
       )}
             <GpBotoes>
               <Botao onClick={handleSave}>Salvar</Botao>
@@ -803,126 +1019,193 @@ function Produtos() {
         </Modal>
       )}
       
-      {isEditModalOpen && viewingProduct &&(
-        <Modal>
-        <ModalConteudo>
-          <ModalTitulo>Editar Produto</ModalTitulo>
-          <>
-            <Input
-              type="text"
-              name="nome"
-              placeholder="Nome do Produto"
-              value={formData.nome}
-              onChange={handleInputChange}
-              disabled={grupo === "estoquista"}
-            />
-            <Input
-              type="text"
-              name="codigo"
-              placeholder="Código do Produto"
-              value={formData.codigo}
-              onChange={handleInputChange}
-              disabled={grupo === "estoquista"}
-            />
-            <Input
-              type="number"
-              name="preco"
-              placeholder="Preço"
-              value={formData.preco}
-              onChange={handleInputChange}
-              disabled={grupo === "estoquista"}
-            />
-            <Input
-              type="number"
-              name="qtdEstoque"
-              placeholder="Quantidade em Estoque"
-              value={formData.qtdEstoque}
-              onChange={handleInputChange}
-            />
-            <TextoArea
-              name="descDetalhada"
-              placeholder="Descrição Detalhada"
-              value={formData.descDetalhada}
-              onChange={handleInputChange}
-              disabled={grupo === "estoquista"}
-            />
-            <Input
-              type="number"
-              name="avaliacao"
-              placeholder="Avaliação"
-              value={formData.avaliacao}
-              onChange={handleInputChange}
-              disabled={grupo === "estoquista"}
-            />
+      {isEditModalOpen && viewingProduct && (
+  <Modal> {/* Seu componente Modal */}
+    <ModalConteudo style={{ maxHeight: '90vh', overflowY: 'auto' }}> {/* Seu componente ModalConteudo */}
+      <ModalTitulo>Editar Produto</ModalTitulo> {/* Seu componente ModalTitulo */}
 
-<h3>Imagens do Produto</h3>
-{viewingProduct.imagens && viewingProduct.imagens.length > 0 ? (
-  <StyledSlider dots={true} infinite={false} speed={500} slidesToShow={2} slidesToScroll={1}>
-    {viewingProduct.imagens.map((imagem, index) => (
-      <div key={index}>
-        {/* Container relativo para cada slide */}
-        <div style={{ position: "relative", padding: "10px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-          <img 
-            src={`../${imagem.caminhoArquivo.slice(22)}`} 
-            alt={`Imagem ${index + 1}`} 
-            style={{
-              width: "100px",
-              height: "100px",
-              border: imagem.id === imagemPrincipal ? "3px solid green" : "1px solid #ccc",
-              borderRadius: "8px",
-              objectFit: "cover"
-            }}
-          />
+      {deleteImageMessage && <p style={{ color: 'green', textAlign: 'center', marginBottom: '15px', fontWeight: 'bold' }}>{deleteImageMessage}</p>}
+      {error && !deleteImageMessage && <p style={{ color: 'red', textAlign: 'center', marginBottom: '15px', fontWeight: 'bold' }}>{error}</p>}
 
-          {/* Tag "Principal" — só aparece se for a principal */}
-          {imagem.id === imagemPrincipal && (
-            <div style={{
-              position: "absolute",
-              top: 5,
-              left: 5,
-              backgroundColor: "green",
-              color: "white",
-              padding: "2px 6px",
-              fontSize: "12px",
-              borderRadius: "4px",
-              zIndex: 10
-            }}>
-              Principal
-            </div>
-          )}
-
-          {/* Botões */}
-          <div style={{ marginTop: "5px", display: "flex", gap: "5px" }}>
-            {imagem.id !== imagemPrincipal && (
-              <button onClick={() => setImagemPrincipal(imagem.id)}>
-                Definir como Principal
-              </button>
-            )}
-            <button onClick={() => handleDeleteImages(imagem.id)}>
-              Excluir
-            </button>
-          </div>
-        </div>
-      </div>
-    ))}
-  </StyledSlider>
-) : (
-  <p>Sem imagens para exibir.</p>
-)}
-        <input 
-          type="file" 
-          multiple 
-          onChange={handleFileChange} 
-          accept="image/*" 
+      <>
+        <Input // Seu componente Input
+          type="text"
+          name="nome"
+          placeholder="Nome do Produto"
+          value={formData.nome}
+          onChange={handleInputChange}
+          disabled={grupo === "estoquista"}
         />
-            </>
-            <GpBotoes>
-          <BotaoSalvar onClick={handUpdate}>Salvar</BotaoSalvar>
-          <BotaoCancelar onClick={() => setEditModalOpen(false)}>Cancelar</BotaoCancelar>
-        </GpBotoes>
-      </ModalConteudo>
-        </Modal>
-      )}
+        <Input
+          type="text"
+          name="codigo"
+          placeholder="Código do Produto"
+          value={formData.codigo}
+          onChange={handleInputChange}
+          disabled={grupo === "estoquista"}
+        />
+        <Input
+          type="number"
+          name="preco"
+          placeholder="Preço"
+          value={formData.preco}
+          onChange={handleInputChange}
+          disabled={grupo === "estoquista"}
+        />
+        <Input
+          type="number"
+          name="qtdEstoque"
+          placeholder="Quantidade em Estoque"
+          value={formData.qtdEstoque}
+          onChange={handleInputChange}
+        />
+        <TextoArea // Seu componente TextoArea
+          name="descDetalhada"
+          placeholder="Descrição Detalhada"
+          value={formData.descDetalhada}
+          onChange={handleInputChange}
+          disabled={grupo === "estoquista"}
+        />
+        <Input
+          type="number"
+          name="avaliacao"
+          placeholder="Avaliação"
+          value={formData.avaliacao}
+          onChange={handleInputChange}
+          disabled={grupo === "estoquista"}
+        />
+
+        <h3 style={{ marginTop: '25px', marginBottom: '10px', borderTop: '1px solid #eee', paddingTop: '15px' }}>Imagens Salvas</h3>
+        {viewingProduct.imagens && viewingProduct.imagens.length > 0 ? (
+          <StyledSlider // Seu componente StyledSlider
+            dots={true}
+            infinite={viewingProduct.imagens.length > 2} // Exemplo de prop
+            speed={500} // Exemplo de prop
+            slidesToShow={Math.min(viewingProduct.imagens.length, 3)} // Exemplo de prop
+            slidesToScroll={1} // Exemplo de prop
+            adaptiveHeight={true} // Exemplo de prop
+            // Adicione/remova props conforme sua configuração original do StyledSlider
+          >
+            {viewingProduct.imagens.map((imagem) => (
+              <div key={imagem.id}>
+                <div style={imageItemContainerStyles}>
+                  {imagem.id === imagemPrincipal && (
+                    <div style={{...principalTagStyles, backgroundColor: 'green'}}>Principal</div>
+                  )}
+                  <img
+                    src={`../${imagem.caminhoArquivo.slice(22)}`}
+                    alt={`Imagem ${imagem.id}`}
+                    style={{
+                      ...imagePreviewStyles,
+                      border: imagem.id === imagemPrincipal ? principalImageBorder : imagePreviewStyles.border,
+                    }}
+                  />
+                  <p style={imageNameStyles} title={imagem.nomeOriginal || `Imagem ${imagem.id}`}>
+                      {imagem.nomeOriginal || `Imagem ${imagem.id}`}
+                  </p>
+                  <div style={imageButtonsContainerStyles}>
+                    {imagem.id !== imagemPrincipal && (
+                      <button
+                        onClick={() => handleSetExistingImageAsPrincipal(imagem.id)}
+                        disabled={isDeletingImage}
+                        style={principalButtonStyles}
+                      >
+                        Tornar Principal
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleDeleteImages(imagem.id)}
+                      disabled={isDeletingImage}
+                      style={deleteButtonStyles}
+                    >
+                      {isDeletingImage ? "Excluindo..." : "Excluir"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </StyledSlider>
+        ) : (
+          <p style={{ textAlign: 'center', marginBottom: '20px' }}>Nenhuma imagem salva para este produto.</p>
+        )}
+
+        <h3 style={{ marginTop: '25px', marginBottom: '10px', borderTop: '1px solid #eee', paddingTop: '15px' }}>Adicionar Novas Imagens</h3>
+        <Input // Use seu componente Input ou <input>
+          type="file"
+          multiple
+          onChange={handleFileChange}
+          accept="image/*"
+          style={{ display: 'block', margin: '10px auto 20px auto', padding: '10px', border: '1px solid #ccc', borderRadius: '4px' }}
+        />
+
+        {selectedFiles.length > 0 && (
+          <div>
+            <h4 style={{ textAlign: 'center', marginBottom: '10px' }}>Imagens para Upload ({selectedFiles.length}):</h4>
+            <StyledSlider // Seu componente StyledSlider
+                dots={true}
+                infinite={selectedFiles.length > 2} // Exemplo
+                speed={500} // Exemplo
+                slidesToShow={Math.min(selectedFiles.length, 3)} // Exemplo
+                slidesToScroll={1} // Exemplo
+                adaptiveHeight={true} // Exemplo
+                // Adicione/remova props conforme sua configuração original do StyledSlider
+            >
+              {selectedFiles.map((sf) => (
+                <div key={sf.idTemporal}>
+                  <div style={imageItemContainerStyles}>
+                    {sf.idTemporal === imagemPrincipalNovaId && (
+                      <div style={{...principalTagStyles, backgroundColor: 'blue'}}>Principal</div>
+                    )}
+                    <img
+                      src={sf.preview}
+                      alt={sf.file.name}
+                      style={{
+                        ...imagePreviewStyles,
+                        border: sf.idTemporal === imagemPrincipalNovaId ? principalNewImageBorder : imagePreviewStyles.border,
+                      }}
+                      onClick={() => handleSetNewFileAsPrincipal(sf.idTemporal)}
+                    />
+                    <p style={imageNameStyles} title={sf.file.name}>
+                        {sf.file.name.length > 20 ? sf.file.name.substring(0, 17) + "..." : sf.file.name}
+                    </p>
+                    <div style={imageButtonsContainerStyles}>
+                      {sf.idTemporal !== imagemPrincipalNovaId && (
+                          <button
+                            onClick={() => handleSetNewFileAsPrincipal(sf.idTemporal)}
+                            style={principalButtonStyles}
+                          >
+                              Tornar Principal
+                          </button>
+                      )}
+                      <button
+                        onClick={() => handleRemoveNewFile(sf.idTemporal)}
+                        style={deleteButtonStyles}
+                      >
+                          Remover da Fila
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </StyledSlider>
+          </div>
+        )}
+      </>
+
+      <GpBotoes style={{ marginTop: '30px' }}> {/* Seu componente GpBotoes */}
+        <BotaoSalvar onClick={handUpdate}>Salvar Alterações</BotaoSalvar> {/* Seu componente BotaoSalvar */}
+        <BotaoCancelar onClick={() => { {/* Seu componente BotaoCancelar */}
+            setEditModalOpen(false);
+            setSelectedFiles([]);
+            setImagemPrincipal(null);
+            setImagemPrincipalNovaId(null);
+        }}>
+            Cancelar
+        </BotaoCancelar>
+      </GpBotoes>
+    </ModalConteudo>
+  </Modal>
+)}
 {isViewModalOpen && viewingProduct && (
   <Modal>
   <ModalConteudo>
