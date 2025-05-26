@@ -132,6 +132,7 @@ const Header = styled.div`
   align-items: center;
   justify-content: space-between;
   padding: 0 20px;
+  margin-top: 35px;
   color: black;
   border-radius: 50px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
@@ -358,23 +359,74 @@ const BotaoCancelar = styled.button`
 
 // Estilo do carrossel
 const StyledSlider = styled(Slider)`
-  margin: 15px 0;
-  margin-bottom: 30px;
+  margin: 15px 0 30px;
 
   .slick-prev, .slick-next {
-    z-index: 1;
-    color: #333;
-  }
+  z-index: 1;
+  width: 80px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  color: black !important; 
+  font-size: 0px;
+}
+
+.slick-prev::before,
+.slick-next::before {
+  color: black !important; 
+  font-size: 20px;
+}
 
   .slick-dots {
     bottom: -25px;
   }
 
+  .slick-slide {
+    display: flex !important; 
+    justify-content: center; 
+    align-items: center;
+  }
+
+  .slick-track {
+    display: flex !important;       
+  }
+
   img {
-    width: 100%;
-    height: 250px;
-    object-fit: contain;
+    width: 180px;
+    height: 180px;
+    object-fit: cover;
     border-radius: 8px;
+  }
+`;
+
+const BotaoRetornar = styled.button`
+  position: absolute;
+  top: 20px; /* Distância do topo */
+  left: 20px; /* Distância da direita */
+  padding: 8px 15px;
+  background-color: rgba(255, 255, 255, 0.2); /* Um pouco transparente para se misturar */
+  color: #fff; /* Cor do texto branca para contrastar com o fundo escuro */
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Espaço entre o ícone e o texto */
+  transition: background-color 0.3s, border-color 0.3s;
+  z-index: 100; /* Para garantir que fique sobre outros elementos */
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.8);
+  }
+
+  /* Estilo para o ícone (pode ser um caractere de seta ou um SVG) */
+  .arrow-icon {
+    font-size: 18px; // Ajuste o tamanho conforme necessário
+    line-height: 1;
   }
 `;
 
@@ -821,6 +873,10 @@ const imageUploadResponse = await fetch("http://localhost:8081/imagens", {
     setCurrentPage(pageNumber);
   };
 
+   const handleRetornarLoja = () => {
+    router.push('/main');
+  };
+  
   const handleFileChange = (event) => {
   const novosArquivosInput = Array.from(event.target.files);
 
@@ -872,6 +928,10 @@ const handleSetExistingImageAsPrincipal = (idImagemExistente) => {
   return (
     <StyledProdutos>
       <GlobalStyle />
+      <BotaoRetornar onClick={handleRetornarLoja}>
+        <span className="arrow-icon">←</span> {/* Seta para a esquerda Unicode */}
+        Voltar para o Painel de controle
+      </BotaoRetornar>
       <Header>
         <Logo src="imagens/logo.png" alt="Logo" />
         <Titulo>Produtos</Titulo>

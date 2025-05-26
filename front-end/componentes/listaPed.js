@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { createGlobalStyle } from "styled-components";
 import { useAuth } from "./authContext";
+import { useRouter } from "next/navigation";
 
 // Cores principais
 const colors = {
@@ -59,7 +60,24 @@ const TableContainer = styled.div`
   width: 90%;
   text-align: center;
   max-width: 1200px;
-  overflow: hidden;
+  max-height: 800px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #28c702 #f0f0f0;
+  
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: #f0f0f0;
+    border-radius: 50px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background-color: #28c702;
+    border-radius: 50px;
+  }
 `;
 
 const TableHeader = styled.div`
@@ -269,12 +287,42 @@ const EmptyState = styled.div`
   color: ${colors.primary};
 `;
 
+const BotaoRetornar = styled.button`
+  position: absolute;
+  top: 20px; /* Distância do topo */
+  left: 20px; /* Distância da direita */
+  padding: 8px 15px;
+  background-color: rgba(255, 255, 255, 0.2); /* Um pouco transparente para se misturar */
+  color: #fff; /* Cor do texto branca para contrastar com o fundo escuro */
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Espaço entre o ícone e o texto */
+  transition: background-color 0.3s, border-color 0.3s;
+  z-index: 100; /* Para garantir que fique sobre outros elementos */
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.8);
+  }
+
+  /* Estilo para o ícone (pode ser um caractere de seta ou um SVG) */
+  .arrow-icon {
+    font-size: 18px; // Ajuste o tamanho conforme necessário
+    line-height: 1;
+  }
+`;
+
 function GPedidos() {
   const [pedidos, setPedidos] = useState([]);
   const [loading, setLoading] = useState(true);
   const { dados, setDados } = useAuth();
   const [editandoStatus, setEditandoStatus] = useState(null);
   const [statusSelecionado, setStatusSelecionado] = useState({});
+  const router = useRouter();
 
   const statusMap = {
     "Aguardando pagamento": "AGUARDANDO_PAGAMENTO",
@@ -290,6 +338,7 @@ function GPedidos() {
   useEffect(() => {
     fetchPedidos();
   }, []);
+
 
   const fetchPedidos = async () => {
     try {
@@ -333,6 +382,10 @@ function GPedidos() {
   const handleEditarPedido = (id) => {
     // Função para editar pedido
     alert(`Editar pedido ${id}`);
+  };
+
+  const handleRetornarLoja = () => {
+    router.push('/main');
   };
 
   const handleAlterarStatus = async (id, novoStatus) => {
@@ -411,6 +464,10 @@ function GPedidos() {
   return (
     <StyledPedidos>
       <GlobalStyle />
+      <BotaoRetornar onClick={handleRetornarLoja}>
+        <span className="arrow-icon">←</span> {/* Seta para a esquerda Unicode */}
+        Voltar para o Painel de controle
+      </BotaoRetornar>
 
       <TableContainer>
         <TableHeader>
@@ -501,6 +558,7 @@ function GPedidos() {
           )}
         </TableContent>
       </TableContainer>
+
     </StyledPedidos>
   );
 }
