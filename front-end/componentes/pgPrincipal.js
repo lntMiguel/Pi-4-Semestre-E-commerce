@@ -470,8 +470,7 @@ const StyledSlider = styled(Slider)`
 `;
 
 function Principal() {
-  const { user } = useAuth();
-  const { setUser, setGrupo, setDados, dados, frete, setFrete, valorFrete, setValorFrete } = useAuth();
+  const {user, setUser, setGrupo, setDados, dados, frete, setFrete, valorFrete, setValorFrete, handleLogout: contextLogout, isLoading: authIsLoading } = useAuth();
   const [produtos, setProdutos] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const { carrinho, setCarrinho } = useAuth();
@@ -480,6 +479,7 @@ function Principal() {
   const [total, setTotal] = useState(0);
   const [viewingProduct, setViewingProduct] = useState(null);
   const router = useRouter();
+  const [errorHandled, setErrorHandled] = useState(false);
 
   const handleRedirect = () => {
     router.push('/cadastro');
@@ -512,25 +512,74 @@ function Principal() {
   };
 
   useEffect(() => {
-    axios.get('http://localhost:8081/produto')
-      .then(async (response) => {
-        const produtosComImagens = await Promise.all(response.data.map(async (produto) => {
-          const imagens = await fetchImages(produto.id);
+    if (authIsLoading) { // Boa prática: esperar o contexto carregar
+      console.log("pgPrincipal: AuthContext carregando, aguardando para verificar dados inconsistentes.");
+      return;
+    }
 
+    // Adicionar um log para ver os valores quando este efeito roda
+    console.log("pgPrincipal: Verificando dados inconsistentes. User:", user ? user.id || user.grupo : null, "Dados:", dados, "ErrorHandled:", errorHandled);
 
-          const imagemPrincipal = imagens.find(img => img.principal) || imagens[0]; // Pega a principal ou a primeira disponível
-          return {
-            ...produto,
-            imagemPrincipal: imagemPrincipal ? imagemPrincipal.caminhoArquivo : 'url_da_imagem_padrao.jpg',
-          };
-        }));
-        setProdutos(produtosComImagens);
-      })
-      .catch(error => {
-        console.error('Erro ao buscar produtos:', error);
-        setCount(1);
-      });
-  }, []);
+    if (user && dados === null && !errorHandled) {
+      console.warn("pgPrincipal: DETECTADO user existe mas dados é null. Limpando sessão...");
+
+      if (typeof contextLogout === 'function') {
+        console.log("pgPrincipal: Chamando contextLogout().");
+        contextLogout(); // Assumindo que contextLogout faz reload
+        setErrorHandled(true);
+      } else {
+        // ... sua lógica de limpeza manual ...
+        console.log("pgPrincipal: Fazendo limpeza manual da sessão e recarregando.");
+        localStorage.removeItem("user");
+        localStorage.removeItem("frete");
+        localStorage.removeItem("valorFrete");
+        if (setUser) setUser(null);
+        if (setGrupo) setGrupo(null);
+        if (setDados) setDados(null);
+        if (setCarrinho) setCarrinho([]);
+        setErrorHandled(true);
+        if (typeof window !== "undefined") {
+            window.location.reload();
+        }
+      }
+    } else if (user && dados !== null && errorHandled) {
+      console.log("pgPrincipal: Dados parecem válidos agora, resetando errorHandled.");
+      setErrorHandled(false);
+    } else if (!user && errorHandled) {
+        // Se o usuário foi deslogado (user é null) e o erro foi marcado,
+        // podemos resetar errorHandled para permitir futuras verificações se necessário.
+        console.log("pgPrincipal: Usuário deslogado, resetando errorHandled.");
+        setErrorHandled(false);
+    }
+
+  }, [user, dados, authIsLoading, contextLogout, setUser, setGrupo, setDados, setCarrinho, errorHandled, router]); // Adicionei router se for usado para redirecionar sem reload
+
+  useEffect(() => {
+  axios.get('http://localhost:8081/produto')
+    .then(async (response) => {
+      // 1. Filtrar os produtos com status === true
+      const produtosAtivos = response.data.filter(produto => produto.status === true); // Ou simplesmente produto.status
+
+      // 2. Mapear APENAS os produtos ativos para buscar imagens
+      const produtosComImagens = await Promise.all(produtosAtivos.map(async (produto) => {
+        // Supondo que você tenha uma função fetchImages definida em algum lugar
+        // Exemplo: const fetchImages = async (produtoId) => { /* lógica para buscar imagens */ return []; };
+        const imagens = await fetchImages(produto.id);
+
+        const imagemPrincipal = imagens.find(img => img.principal) || imagens[0];
+        return {
+          ...produto,
+          imagemPrincipal: imagemPrincipal ? imagemPrincipal.caminhoArquivo : 'url_da_imagem_padrao.jpg',
+        };
+      }));
+      setProdutos(produtosComImagens);
+    })
+    .catch(error => {
+      console.error('Erro ao buscar produtos:', error);
+      // Mantenha sua lógica de erro, se necessário
+      // setCount(1);
+    });
+}, []);
 
   const fetchImages = async (idProduto) => {
     try {
@@ -642,7 +691,6 @@ function Principal() {
   const handleCarrinhoClick = () => {
     setShowCarrinho(!showCarrinho);
     const pedidosSalvos = JSON.parse(localStorage.getItem("pedidosSalvos")) || [];
-    console.log(pedidosSalvos);
   };
 
   const handleIncreaseQuantity = (id) => {
@@ -712,6 +760,24 @@ function Principal() {
     adaptiveHeight: true,
   };
 
+  if (authIsLoading) {
+    return (
+      <StyledMain>
+        <GlobalStyle />
+        <p style={{ color: 'white' }}>Carregando página principal...</p>
+      </StyledMain>
+    );
+  }
+
+  if (errorHandled && !(user && dados)) { // Se o erro foi tratado E o usuário não está mais logado corretamente
+      return (
+          <StyledMain>
+              <GlobalStyle />
+              <p style={{ color: 'white' }}>Corrigindo sessão, por favor aguarde...</p>
+          </StyledMain>
+      );
+  }
+
   return (
     <StyledMain>
         
@@ -725,7 +791,7 @@ function Principal() {
             {user ? (
               <>
                 <UserGreeting>
-                  <UserName>{dados.nome || 'Usuário'}</UserName>
+                  <UserName>{dados?.nome || 'Usuário'}</UserName>
                 </UserGreeting>
                 <ButtonsContainer>
                   <UserButton onClick={handleRedirectPerfil}>Perfil</UserButton>

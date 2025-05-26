@@ -93,89 +93,146 @@ const Botao = styled.button`
   }
 `;
 
+// Novo botão para retornar à loja
+const BotaoRetornar = styled.button`
+  position: absolute;
+  top: 20px; /* Distância do topo */
+  left: 20px; /* Distância da direita */
+  padding: 8px 15px;
+  background-color: rgba(255, 255, 255, 0.2); /* Um pouco transparente para se misturar */
+  color: #fff; /* Cor do texto branca para contrastar com o fundo escuro */
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Espaço entre o ícone e o texto */
+  transition: background-color 0.3s, border-color 0.3s;
+  z-index: 100; /* Para garantir que fique sobre outros elementos */
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.8);
+  }
+
+  /* Estilo para o ícone (pode ser um caractere de seta ou um SVG) */
+  .arrow-icon {
+    font-size: 18px; // Ajuste o tamanho conforme necessário
+    line-height: 1;
+  }
+`;
+
 function LoginFun() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const router = useRouter();
+  const { setUser, setGrupo, setDados } = useAuth();
+  const [usuarioErro, setUsuarioErro] = useState(false);
+  const [senhaErro, setSenhaErro] = useState(false);
 
-const [email, setEmail] = useState("");
-const [password, setPassword] = useState("");
-const [error, setError] = useState("");
-const router = useRouter();
-const { setUser, setGrupo } = useAuth();
-const [usuarioErro, setUsuarioErro] = useState(false);
-const [senhaErro, setSenhaErro] = useState(false);
-
-
-const handleLogin = async (e) => {
-  e.preventDefault();
-  setError(""); 
-
-  if (!email.trim()) {
-    setUsuarioErro(true);
-  } else {
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError("");
     setUsuarioErro(false);
-  }
-
-  if (!password.trim()) {
-    setSenhaErro(true);
-  } else {
     setSenhaErro(false);
-  }
 
-  if (!email.trim() || !password.trim()) {
-    return; // Se qualquer um estiver vazio, não continua
-  }
-
-  try {
-    const response = await fetch("http://localhost:8081/users/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email, password }),
-    });
-
-    const text = await response.json();  // Lê a resposta uma vez
-
-    // Depuração: logar a resposta
-    console.log("Response status:", response.status);
-    console.log("Response message:", text.message);
-
-    if (!response.ok) {
-      if (response.status === 403 && text.message === "Usuário inativo") {
-        setError("Seu usuário está inativo. Contate o suporte.");
-      } else {
-        setError(text.message || "Credenciais inválidas");
-      }
+    let hasFormError = false;
+    if (!email.trim()) {
+      setUsuarioErro(true);
+      hasFormError = true;
+    }
+    if (!password.trim()) {
+      setSenhaErro(true);
+      hasFormError = true;
+    }
+    if (hasFormError) {
       return;
     }
 
-    // Se login for bem-sucedido
-    setUser(text);
-    setGrupo(text.grupo); 
-    localStorage.setItem("user", JSON.stringify(text));
+    try {
+      console.log("LoginFun: Tentando login de funcionário com:", { email });
+      const response = await fetch("http://localhost:8081/users/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-    router.push("/main"); 
-  } catch (error) {
-    setError(error.message || "Erro ao fazer login");
-  }
-};
+      const responseData = await response.json();
+      console.log("LoginFun: Resposta da API de login:", { status: response.status, body: responseData });
 
+      if (!response.ok) {
+        setError(responseData.message || `Erro ${response.status}: Credenciais inválidas ou usuário inativo.`);
+        return;
+      }
 
-const enterAcionado = (e) => {
-  if (e.key === "Enter") {
-    handleLogin(e);
-  }
-};
+      console.log("LoginFun: Login bem-sucedido. Dados recebidos:", responseData);
+      setUser(responseData);
+
+      // 1. Atualizar o usuário no contexto com o objeto simples da API
+      setUser(responseData); // user agora é { grupo, message }
+
+      // 2. Atualizar o GRUPO no contexto
+      if (responseData.grupo) {
+        setGrupo(responseData.grupo);
+        console.log("LoginFun: Grupo definido no contexto:", responseData.grupo);
+      } else {
+        console.error("LoginFun: API NÃO RETORNOU 'grupo'. Login falhou em essência.");
+        setError("Falha ao obter informações de grupo do usuário. Tente novamente.");
+        // Limpar qualquer estado parcial
+        setUser(null);
+        setGrupo(null);
+        setDados(null);
+        localStorage.removeItem("user");
+        return; // Não prosseguir
+      }
+
+      // 3. Como não há 'nome' ou 'dados' na resposta, setDados será null
+      setDados(null);
+      console.log("LoginFun: 'dados' definido como null pois API não retorna nome/dados detalhados.");
+
+      // 4. Salvar no localStorage o objeto simples { grupo, message }
+      localStorage.setItem("user", JSON.stringify(responseData));
+      console.log("LoginFun: Usuário (simplificado) salvo no localStorage.");
+
+      const targetRoute = "/main";
+      console.log(`LoginFun: Redirecionando para ${targetRoute}...`);
+      router.push(targetRoute);
+
+    } catch (err) {
+      console.error("LoginFun: Erro no try-catch do handleLogin:", err);
+      setError(err.message || "Erro ao processar o login. Tente novamente.");
+    }
+  };
+
+  const enterAcionado = (e) => {
+    if (e.key === "Enter") {
+      if (!usuarioErro && !senhaErro) {
+         handleLogin(e);
+      }
+    }
+  };
+
+   const handleRetornarLoja = () => {
+    router.push('/pgPrincipal');
+  };
+
   return (
     <StyledLoginFun>
       <GlobalStyle />
+       <BotaoRetornar onClick={handleRetornarLoja}>
+        <span className="arrow-icon">←</span> {/* Seta para a esquerda Unicode */}
+        Voltar para a Loja
+      </BotaoRetornar>
       <Box>
-        <Titulo>Login Funcionario</Titulo>
+        <Titulo>Login Funcionário</Titulo>
         <InputWrapper>
           <Input
             type="text"
-            placeholder="Nome de usuário"
+            placeholder="Email do funcionário"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => { setEmail(e.target.value); if (e.target.value.trim()) setUsuarioErro(false); }}
             onKeyDown={enterAcionado}
           />
           {usuarioErro && <Popup>Campo obrigatório</Popup>}
@@ -185,15 +242,12 @@ const enterAcionado = (e) => {
             type="password"
             placeholder="Senha"
             value={password}
-            onChange={(e) => {
-              setPassword(e.target.value);
-              setSenhaErro(false); 
-            }}
+            onChange={(e) => { setPassword(e.target.value); if (e.target.value.trim()) setSenhaErro(false); }}
             onKeyDown={enterAcionado}
           />
           {senhaErro && <Popup>Campo obrigatório</Popup>}
         </InputWrapper>
-        {error && <p style={{ color: "red" }}>{error}</p>}
+        {error && <p style={{ color: "red", marginTop: "10px" }}>{error}</p>}
         <Botao onClick={handleLogin}>Entrar</Botao>
       </Box>
     </StyledLoginFun>

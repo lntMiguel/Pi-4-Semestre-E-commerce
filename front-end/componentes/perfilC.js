@@ -1157,6 +1157,11 @@ function Perfil() {
             <PedidoNumero>Pedido #{pedido.numero}</PedidoNumero>
             <PedidoStatus status={pedido.status}>{pedido.status}</PedidoStatus>
           </PedidoHeader>
+
+          <PedidoInfoItem>
+                  <PedidoLabel>Data do Pedido</PedidoLabel>
+                  <PedidoValue>{new Date(pedido.dataPedido).toLocaleString()}</PedidoValue>
+                </PedidoInfoItem>
           
           <PedidoValorTotal>
             Total: R$ {pedido.valor.toFixed(2)}

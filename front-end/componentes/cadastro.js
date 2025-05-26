@@ -250,6 +250,15 @@ function Cadastro() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+
+    if (name === 'cpf') {
+    const apenasNumeros = value.replace(/\D/g, ''); // \D corresponde a qualquer caractere que não seja um dígito
+    // Limita o CPF a 11 dígitos
+    setForm((prev) => ({ ...prev, [name]: apenasNumeros.slice(0, 11) }));
+  } else {
+    setForm((prev) => ({ ...prev, [name]: value }));
+  }
+
   };
 
   const handleChangeEndereco = (e) => {
@@ -320,25 +329,80 @@ function Cadastro() {
     return rev === parseInt(cpf.charAt(10));
   };
 
-  const validarFormulario = () => {
-    const e = {};
+ const validarFormulario = () => {
+  const newErrors = {}; // Mudei 'e' para 'newErrors' para clareza
 
-    if (!validateNome(form.nome)) e.nome = 'Nome inválido';
-    if (!validateCPF(form.cpf)) e.cpf = 'CPF inválido';
-    if (!form.email) e.email = 'Email obrigatório';
-    if (!formEndereco.cepFaturamento || !formEndereco.logradouro || !formEndereco.numero || !formEndereco.bairro || !formEndereco.cidade || !formEndereco.uf) {
-      e.endereco = 'Endereço de faturamento incompleto';
-    }
-    if (!form.senha) e.senha = "Campo obrigatório";
-    if (!form.confirmSenha) e.confirmSenha = "Campo obrigatório";
-    if(form.senha !== form.confirmSenha) e.senha = 'Senhas não Coincidem';
-    if (entregas.length === 0) e.entrega = 'Adicione ao menos um endereço de entrega';
+  // Validação do Nome
+  if (!form.nome.trim()) {
+    newErrors.nome = 'Nome Completo é obrigatório.';
+  } else if (!validateNome(form.nome)) {
+    newErrors.nome = 'Nome Completo inválido (mínimo 2 nomes, 3 letras cada).';
+  }
+
+  // Validação do CPF
+  if (!form.cpf.trim()) {
+    newErrors.cpf = 'CPF é obrigatório.';
+  } else if (!validateCPF(form.cpf.replace(/\D/g, ''))) { // Validar CPF sem máscara
+    newErrors.cpf = 'CPF inválido.';
+  }
+
+  // Validação do Email
+  if (!form.email.trim()) {
+    newErrors.email = 'E-mail é obrigatório.';
+  } else if (!/\S+@\S+\.\S+/.test(form.email)) { // Validação simples de formato de email
+    newErrors.email = 'Formato de e-mail inválido.';
+  }
+
+  // Validação Data de Nascimento
+  if (!form.dataNasc) {
+    newErrors.dataNasc = 'Data de Nascimento é obrigatória.';
+  }
+
+  // Validação Gênero
+  if (!form.genero) {
+    newErrors.genero = 'Gênero é obrigatório.';
+  }
+
+  // Validação Senha
+  if (!form.senha) {
+    newErrors.senha = "Senha é obrigatória.";
+  } else if (form.senha.length < 6) { // Exemplo de regra de senha
+    newErrors.senha = "Senha deve ter no mínimo 6 caracteres.";
+  }
+
+  // Validação Confirmar Senha
+  if (!form.confirmSenha) {
+    newErrors.confirmSenha = "Confirmação de senha é obrigatória.";
+  } else if (form.senha !== form.confirmSenha) {
+    newErrors.confirmSenha = 'As senhas não coincidem.'; // Mais específico para o campo de confirmação
+  }
+
+  // Validação Endereço de Faturamento
+  if (!formEndereco.cepFaturamento || !formEndereco.logradouro || !formEndereco.numero || !formEndereco.bairro || !formEndereco.cidade || !formEndereco.uf) {
+    newErrors.enderecoFaturamento = 'Endereço de faturamento completo é obrigatório.';
+  }
+
+  // Validação Endereços de Entrega
+  if (entregas.length === 0) {
+    newErrors.entrega = 'Adicione ao menos um endereço de entrega.';
+  } else {
+    // Validar se todos os endereços de entrega estão completos
+    entregas.forEach((entrega, index) => {
+      if (!entrega.cep || !entrega.logradouro || !entrega.numero || !entrega.bairro || !entrega.cidade || !entrega.uf) {
+        newErrors[`entrega_${index}`] = `Endereço de entrega #${index + 1} está incompleto.`;
+      }
+    });
     if (!entregas.some((e) => e.padrao)) {
-      e.entrega = 'Selecione um endereço de entrega como padrão';
+      // Só adiciona este erro se não houver um erro mais geral de "nenhuma entrega"
+      if (!newErrors.entrega) {
+        newErrors.entregaPadrao = 'Selecione um endereço de entrega como padrão.';
+      }
     }
-    setErrors(e);
-    return Object.keys(e).length === 0;
-  };
+  }
+
+  setErrors(newErrors); // Atualiza o estado para exibir erros inline nos campos
+  return newErrors;     // Retorna o objeto de erros
+};
 
   const adicionarEntregaVazia = () => {
     setEntregas([...entregas, {
@@ -366,63 +430,96 @@ function Cadastro() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validarFormulario()) return;
+  e.preventDefault();
+  const currentErrors = validarFormulario(); // validarFormulario agora retorna o objeto de erros
 
-    try {
-      const response = await fetch("http://localhost:8081/cliente", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      if (!response.ok) {
-        const errorText = await response.text(); 
-        alert("Erro ao cadastrar: " + errorText);
-        return;
+  if (Object.keys(currentErrors).length > 0) {
+    // Monta a mensagem de erro para o alert
+    let alertMessage = "Por favor, corrija os seguintes erros:\n\n";
+    for (const key in currentErrors) {
+      if (currentErrors.hasOwnProperty(key)) {
+        alertMessage += `- ${currentErrors[key]}\n`;
       }
-      
-      const result = await response.json(); 
-
-      
-      const enderecoFaturamento = {
-        cep: formEndereco.cepFaturamento.replace(/\D/g, ''),
-        logradouro: formEndereco.logradouro,
-        numero: parseInt(formEndereco.numero),
-        complemento: formEndereco.complemento,
-        bairro: formEndereco.bairro,
-        cidade: formEndereco.cidade,
-        uf: formEndereco.uf,
-        padrao: false,
-        faturamento: true,
-        idCliente: result.id
-      };
-
-      await fetch(`http://localhost:8081/endereco?idCliente=${result.id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(enderecoFaturamento),
-      });
-
-      for (const endereco of entregas) {
-        const payload = {
-          ...endereco,
-          cep: endereco.cep.replace(/\D/g, ''),
-          numero: parseInt(endereco.numero),
-          idCliente: result.id,
-        };
-        await fetch(`http://localhost:8081/endereco?idCliente=${result.id}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-      }
-
-      alert("Cliente cadastrado com sucesso!");
-      router.push('/login');
-    } catch (error) {
-      console.error("Erro ao cadastrar usuário:", error);
     }
+    alert(alertMessage);
+    return; // Impede o envio do formulário
+  }
+
+  // Se não houver erros, prossiga com o cadastro
+  const dadosClienteParaEnvio = {
+    ...form,
+    cpf: form.cpf.replace(/[^\d]/g, '')
   };
+
+  try {
+    const response = await fetch("http://localhost:8081/cliente", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(dadosClienteParaEnvio),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      // Tenta parsear como JSON se for uma mensagem estruturada do backend
+      try {
+        const errorJson = JSON.parse(errorText);
+        alert("Erro ao cadastrar: " + (errorJson.message || errorJson.error || errorText));
+      } catch (parseError) {
+        alert("Erro ao cadastrar: " + errorText);
+      }
+      return;
+    }
+
+    const result = await response.json();
+
+    const enderecoFaturamento = {
+      cep: formEndereco.cepFaturamento.replace(/\D/g, ''),
+      logradouro: formEndereco.logradouro,
+      numero: parseInt(formEndereco.numero),
+      complemento: formEndereco.complemento,
+      bairro: formEndereco.bairro,
+      cidade: formEndereco.cidade,
+      uf: formEndereco.uf,
+      padrao: false,
+      faturamento: true,
+      idCliente: result.id
+    };
+
+    // Cadastrar endereço de faturamento
+    const fatResponse = await fetch(`http://localhost:8081/endereco?idCliente=${result.id}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(enderecoFaturamento),
+    });
+    if (!fatResponse.ok) throw new Error('Falha ao cadastrar endereço de faturamento.');
+
+
+    // Cadastrar endereços de entrega
+    for (const endereco of entregas) {
+      const payload = {
+        ...endereco,
+        cep: endereco.cep.replace(/\D/g, ''),
+        numero: parseInt(endereco.numero),
+        idCliente: result.id,
+        faturamento: false, // Certificar que faturamento é false para entrega
+        // padrao já está no objeto 'endereco'
+      };
+      const entregaResponse = await fetch(`http://localhost:8081/endereco?idCliente=${result.id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!entregaResponse.ok) throw new Error(`Falha ao cadastrar endereço de entrega: ${endereco.logradouro}`);
+    }
+
+    alert("Cliente cadastrado com sucesso!");
+    router.push('/login'); // Ou para a página de perfil, dashboard, etc.
+
+  } catch (error) {
+    console.error("Erro no processo de cadastro:", error);
+    alert(`Ocorreu um erro durante o cadastro: ${error.message}. Por favor, tente novamente.`);
+  }
+};
 
   return (
     <StyledCadastro>
@@ -446,7 +543,7 @@ function Cadastro() {
               </Field>
               <Field flex={1}>
                 <Label>CPF</Label>
-                <Input name="cpf" value={form.cpf} onChange={handleChange} placeholder="00000000000" />
+                <Input name="cpf" value={form.cpf} onChange={handleChange} placeholder="00000000000"   maxLength={11} />
                 {errors.cpf && <Error>{errors.cpf}</Error>}
               </Field>
             </FormRow>
@@ -644,7 +741,7 @@ function Cadastro() {
             </BotoesContainer>
           </FormSection>
 
-          <BotaoPrimario onClick={handleSubmit} type="submit">Cadastrar</BotaoPrimario>
+          <BotaoPrimario type="submit">Cadastrar</BotaoPrimario>
         </form>
       </Box>
     </StyledCadastro>
