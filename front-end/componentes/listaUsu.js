@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import { createGlobalStyle } from "styled-components";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 
 const GlobalStyle = createGlobalStyle`
@@ -41,6 +42,7 @@ const Modal = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
+  
 `;
 
 const ModalContent = styled.div`
@@ -49,6 +51,7 @@ const ModalContent = styled.div`
   border-radius: 30px;
   width: 400px;
   text-align: left;
+  
 `;
 
 const Select = styled.select`
@@ -65,8 +68,9 @@ const Box = styled.div`
   border-radius: 50px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
   text-align: center;
-  width: 850px;
-  height: 600px;
+  width: 1050px;
+  height: 800px;
+  
 `;
 
 const Titulo = styled.h2`
@@ -111,6 +115,8 @@ const AddBotoes = styled.button`
 const Tabela = styled.table`
   width: 100%;
   border-collapse: collapse;
+
+  
 `;
 
 const Th = styled.th`
@@ -118,6 +124,7 @@ const Th = styled.th`
   color: white;
   padding: 10px;
   text-align: center;
+  
 `;
 
 const Td = styled.td`
@@ -137,10 +144,20 @@ const TdStatus = styled.td`
 
 const Tbody = styled.tbody`
   display: block;
-  width: 100%;
-  height: 400px;  
+  width: 99%;
+  height: 600px;  
   overflow-y: auto; 
   overflow-x: hidden; 
+
+  /* Scrollbar transparente */
+  &::-webkit-scrollbar {
+    width: 0px;
+    background: transparent; /* ou 'none' */
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: transparent;
+  }
 `;
 
 const Tr = styled.tr`
@@ -169,12 +186,42 @@ const ErrorMessage = styled.p`
   color: red;
 `;
 
+const BotaoRetornar = styled.button`
+  position: absolute;
+  top: 20px; /* Distância do topo */
+  left: 20px; /* Distância da direita */
+  padding: 8px 15px;
+  background-color: rgba(255, 255, 255, 0.2); /* Um pouco transparente para se misturar */
+  color: #fff; /* Cor do texto branca para contrastar com o fundo escuro */
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Espaço entre o ícone e o texto */
+  transition: background-color 0.3s, border-color 0.3s;
+  z-index: 100; /* Para garantir que fique sobre outros elementos */
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.8);
+  }
+
+  /* Estilo para o ícone (pode ser um caractere de seta ou um SVG) */
+  .arrow-icon {
+    font-size: 18px; // Ajuste o tamanho conforme necessário
+    line-height: 1;
+  }
+`;
+
 function Usuario() {
   const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showCadastroModal, setShowCadastroModal] = useState(false);
   const [showAlterarModal, setShowAlterarModal] = useState(false)
   const [editingUser, setEditingUser] = useState(null);
+  const router = useRouter();
   const [formData, setFormData] = useState({
     nome: "",
     cpf: "",
@@ -237,6 +284,41 @@ function Usuario() {
       console.error("Erro ao alternar status:", error);
     }
   };
+  const handleCPFInput = (valor, setFormData) => {
+  // Remove caracteres que não sejam números, pontos ou traços
+  const valorLimpo = valor.replace(/[^\d.\-]/g, '');
+  
+  // Limita o comprimento total a 14 caracteres (CPF formatado completo)
+  if (valorLimpo.length > 14) {
+    return;
+  }
+  
+  // Formata automaticamente
+  const valorFormatado = formatarCPF(valorLimpo);
+  
+  // Atualiza o estado do formulário
+  setFormData(prev => ({
+    ...prev,
+    cpf: valorFormatado
+  }));
+};
+
+const handleCPFKeyDown = (e) => {
+  // Permite: backspace, delete, tab, escape, enter, home, end, setas
+  if ([8, 9, 27, 13, 46, 35, 36, 37, 38, 39, 40].indexOf(e.keyCode) !== -1 ||
+      // Permite: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+      (e.keyCode === 65 && e.ctrlKey === true) ||
+      (e.keyCode === 67 && e.ctrlKey === true) ||
+      (e.keyCode === 86 && e.ctrlKey === true) ||
+      (e.keyCode === 88 && e.ctrlKey === true)) {
+    return;
+  }
+  // Bloqueia se não for número
+  if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+    e.preventDefault();
+  }
+};
+
   const validarCPF = (cpf) => {
     // Remove caracteres não numéricos
     cpf = cpf.replace(/[^\d]+/g, "");
@@ -272,12 +354,31 @@ function Usuario() {
     return true;
   };
 
+const formatarCPF = (valor) => {
+  // Remove todos os caracteres não numéricos
+  const numeroLimpo = valor.replace(/[^\d]/g, '');
+  
+  // Limita a 11 dígitos
+  const numeroLimitado = numeroLimpo.slice(0, 11);
+  
+  // Aplica a formatação conforme o tamanho
+  if (numeroLimitado.length <= 3) {
+    return numeroLimitado;
+  } else if (numeroLimitado.length <= 6) {
+    return `${numeroLimitado.slice(0, 3)}.${numeroLimitado.slice(3)}`;
+  } else if (numeroLimitado.length <= 9) {
+    return `${numeroLimitado.slice(0, 3)}.${numeroLimitado.slice(3, 6)}.${numeroLimitado.slice(6)}`;
+  } else {
+    return `${numeroLimitado.slice(0, 3)}.${numeroLimitado.slice(3, 6)}.${numeroLimitado.slice(6, 9)}-${numeroLimitado.slice(9)}`;
+  }
+};
+
   const validateFields = () => {
     let newErrors = {};
 
     if (!formData.nome) newErrors.nome = "Campo obrigatório";
     if (!formData.cpf) newErrors.cpf = "Campo obrigatório";
-    else if (!validarCPF(formData.cpf)) newErrors.cpf = "CPF inválido";
+    else if (!validarCPF (formatarCPF(formData.cpf))) newErrors.cpf = "CPF inválido";
     if (!formData.email) newErrors.email = "Campo obrigatório";
     if (!formData.senha) newErrors.senha = "Campo obrigatório";
     if (!formData.confirmSenha) newErrors.confirmSenha = "Campo obrigatório";
@@ -348,6 +449,9 @@ function Usuario() {
     resetForm(); 
     setShowCadastroModal(false); 
   };
+  const handleRetornarLoja = () => {
+    router.push('/main');
+  };
 
   const handleEditUser = (user) => {
     setEditingUser(user);
@@ -400,6 +504,10 @@ function Usuario() {
   return (
     <StyledUsuario>
       <GlobalStyle />
+      <BotaoRetornar onClick={handleRetornarLoja}>
+        <span className="arrow-icon">←</span> {/* Seta para a esquerda Unicode */}
+        Voltar para o Painel de controle
+      </BotaoRetornar>
       <Box>
         <Titulo>Lista de Usuários</Titulo>
         <Pesquisar>
@@ -448,9 +556,12 @@ function Usuario() {
     />
     <Input
       name="cpf"
-      placeholder="CPF"
+      
       value={formData.cpf}
-      onChange={handleInputChange}
+      onChange={(e) => handleCPFInput(e.target.value, setFormData)}
+      onKeyDown={handleCPFKeyDown}
+      maxLength={14}
+      placeholder="000.000.000-00"
     />
     <Input
        name="email"

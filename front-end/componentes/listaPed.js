@@ -62,21 +62,15 @@ const TableContainer = styled.div`
   max-width: 1200px;
   max-height: 800px;
   overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: #28c702 #f0f0f0;
   
+/* Scrollbar transparente */
   &::-webkit-scrollbar {
-    width: 8px;
+    width: 0px;
+    background: transparent; /* ou 'none' */
   }
-  
-  &::-webkit-scrollbar-track {
-    background: #f0f0f0;
-    border-radius: 50px;
-  }
-  
+
   &::-webkit-scrollbar-thumb {
-    background-color: #28c702;
-    border-radius: 50px;
+    background: transparent;
   }
 `;
 
@@ -95,6 +89,8 @@ const TableHeader = styled.div`
     left: 0;
     right: 0;
     background: linear-gradient(to right, transparent, ${colors.accent}, transparent);
+
+    
   }
 `;
 
@@ -110,6 +106,8 @@ const TableTitle = styled.h1`
 
 const TableContent = styled.div`
   padding: 20px;
+
+  
 `;
 
 const StyledTable = styled.table`

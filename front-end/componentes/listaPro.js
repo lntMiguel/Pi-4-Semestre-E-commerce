@@ -21,9 +21,6 @@ const GlobalStyle = createGlobalStyle`
   }
 `;
 
-
-
-
 const imageButtonsContainerStyles = {
   marginTop: "auto",
   display: "flex",
@@ -47,17 +44,15 @@ const deleteButtonStyles = {
   ...imageActionButtonStyles,
   backgroundColor: '#ffdddd',
   borderColor: '#ffaaaa',
-  color: '#d8000c',
+  color: '#d8000c', 
 };
 
 const principalButtonStyles = {
   ...imageActionButtonStyles,
-  backgroundColor: '#ddffdd',
-  borderColor: '#aaffaa',
-  color: '#006400',
-};
-
-
+  color: 'white', 
+  borderColor: 'rgb(39, 180, 7)',
+  backgroundColor: 'rgb(22, 77, 9)',
+}
 
 const StyledProdutos = styled.div`
    background: 
@@ -112,7 +107,7 @@ const imageButtonStyles = {
   cursor: 'pointer',
 };
 
-const principalTagStyles = {
+const principalTagStyles =  {
   position: 'absolute',
   top: '5px',
   left: '5px',
@@ -249,15 +244,35 @@ const Modal = styled.div`
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  
+  /* Scrollbar transparente */
+  &::-webkit-scrollbar {
+    width: 0px;
+    background: transparent; /* ou 'none' */
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: transparent;
+  }
 `;
 
 const ModalConteudo = styled.div`
   background: #f0f0f0;
   padding: 25px;
-  width: 450px;
+  width: 550px;
   border-radius: 50px;
   box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
   text-align: center;
+
+  /* Scrollbar transparente */
+  &::-webkit-scrollbar {
+    width: 0px;
+    background: transparent; /* ou 'none' */
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: transparent;
+  }
 `;
 
 const ModalTitulo = styled.h3`
@@ -274,9 +289,9 @@ const ProdutoInfo = styled.p`
 `;
 
 const Input = styled.input`
-  width: 100%;
+  width: 40%;
   padding: 10px;
-  margin-bottom: 12px;
+  margin: 12px;
   border: 1px solid #ccc;
   border-radius: 50px;
   font-size: 16px;
@@ -304,11 +319,21 @@ const TextoArea = styled.textarea`
   padding: 10px;
   margin-bottom: 12px;
   border: 1px solid #ccc;
-  border-radius: 50px;
+  border-radius: 20px;
   font-size: 16px;
   resize: none;
   height: 80px;
   transition: border 0.3s;
+
+  /* Scrollbar transparente */
+  &::-webkit-scrollbar {
+    width: 0px;
+    background: transparent; /* ou 'none' */
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: transparent;
+  }
 
   &:focus {
     border-color: #007bff;
@@ -387,6 +412,7 @@ const StyledSlider = styled(Slider)`
     display: flex !important; 
     justify-content: center; 
     align-items: center;
+    height: 220px;
   }
 
   .slick-track {
@@ -1135,7 +1161,7 @@ const handleSetExistingImageAsPrincipal = (idImagemExistente) => {
           disabled={grupo === "estoquista"}
         />
 
-        <h3 style={{ marginTop: '25px', marginBottom: '10px', borderTop: '1px solid #eee', paddingTop: '15px' }}>Imagens Salvas</h3>
+        <h3 style={{ marginTop: '25px', marginBottom: '10px', borderTop: '1px solid #eee' }}>Imagens Salvas</h3>
         {viewingProduct.imagens && viewingProduct.imagens.length > 0 ? (
           <StyledSlider // Seu componente StyledSlider
             dots={true}
@@ -1144,7 +1170,6 @@ const handleSetExistingImageAsPrincipal = (idImagemExistente) => {
             slidesToShow={Math.min(viewingProduct.imagens.length, 3)} // Exemplo de prop
             slidesToScroll={1} // Exemplo de prop
             adaptiveHeight={true} // Exemplo de prop
-            // Adicione/remova props conforme sua configuração original do StyledSlider
           >
             {viewingProduct.imagens.map((imagem) => (
               <div key={imagem.id}>
@@ -1189,7 +1214,7 @@ const handleSetExistingImageAsPrincipal = (idImagemExistente) => {
           <p style={{ textAlign: 'center', marginBottom: '20px' }}>Nenhuma imagem salva para este produto.</p>
         )}
 
-        <h3 style={{ marginTop: '25px', marginBottom: '10px', borderTop: '1px solid #eee', paddingTop: '15px' }}>Adicionar Novas Imagens</h3>
+        <h3 style={{ marginTop: '25px', marginBottom: '10px', borderTop: '1px solid #eee', paddingTop: '1px' }}>Adicionar Novas Imagens</h3>
         <Input // Use seu componente Input ou <input>
           type="file"
           multiple

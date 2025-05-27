@@ -40,21 +40,14 @@ const Box = styled.div`
   width: 650px;
   max-height: 85vh;
   overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color:rgba(41, 199, 2, 0) #f0f0f0;
-  
+  /* Scrollbar transparente */
   &::-webkit-scrollbar {
-    width: 8px;
+    width: 0px;
+    background: transparent; /* ou 'none' */
   }
-  
-  &::-webkit-scrollbar-track {
-    background: #f0f0f0;
-    border-radius: 50px;
-  }
-  
+
   &::-webkit-scrollbar-thumb {
-    background-color: #28c702;
-    border-radius: 50px;
+    background: transparent;
   }
 `;
 
