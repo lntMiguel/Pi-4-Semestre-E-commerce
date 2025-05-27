@@ -19,11 +19,7 @@ const GlobalStyle = createGlobalStyle`
   }
 `;
 
-const FormRow2 = styled.div`
-  display: flex;
-  gap: 10px;
-  margin-bottom: 0;
-`;
+// ... (todos os seus styled-components permanecem os mesmos até StepsContainer)
 
 const StyledCheckout = styled.div`
    background: 
@@ -78,28 +74,48 @@ const SectionTitle = styled.h2`
   color: rgb(22, 77, 9);
   font-size: 18px;
   margin-bottom: 15px;
-  margin-left: 175px;
+  /* margin-left: 175px; // REMOVER OU AJUSTAR ESSA MARGEM ESQUERDA FIXA */
   font-weight: 600;
+  width: 100%; // Garantir que o título possa se centralizar
+  text-align: center; // Adicionar para centralizar o texto dentro do h2
 `;
 
-const SectionTitleP = styled.h2`
+const SectionTitleP = styled(SectionTitle)``; // Herda os estilos de SectionTitle, incluindo centralização
+const SectionTitleC = styled(SectionTitle)``; // Herda os estilos de SectionTitle
+
+// Componentes para formas de pagamento
+const PaymentMethodsContainer = styled.div`
   display: flex;
-  justify-content: center;
-  color: rgb(22, 77, 9);
-  font-size: 18px;
-  margin-bottom: 15px;
-  margin-left: 375px;
-  font-weight: 600;
+  flex-direction: column;
+  width: 100%; // Ocupar a largura disponível da ColumnSection
+  max-width: 600px; // Adicionar um max-width para melhor controle em telas largas
+  margin: 0 auto 20px auto; // Centralizar o container e adicionar margem inferior
+  /* margin-left: 175px; // REMOVER OU AJUSTAR */
 `;
 
-const SectionTitleC = styled.h2`
+const PaymentMethodTabs = styled.div`
   display: flex;
-  justify-content: center;
-  color: rgb(22, 77, 9);
-  font-size: 18px;
+  justify-content: center; // Centralizar as abas
   margin-bottom: 15px;
-  margin-left: 375px;
-  font-weight: 600;
+  border-bottom: 1px solid #e0e0e0;
+  width: 100%; // Ocupar a largura do PaymentMethodsContainer
+`;
+
+const PaymentTab = styled.div`
+  padding: 10px 15px; // Aumentar um pouco o padding horizontal
+  /* margin-left: 110px; // REMOVER MARGIN-LEFT FIXA */
+  cursor: pointer;
+  border-bottom: ${props => props.$active ? '3px solid #28c702' : '3px solid transparent'};
+  color: ${props => props.$active ? 'rgb(22, 77, 9)' : '#777'};
+  font-weight: ${props => props.$active ? '600' : '400'};  
+  transition: all 0.2s;
+  text-align: center; // Centralizar texto dentro da aba
+  flex-grow: 1; // Fazer as abas ocuparem espaço igualmente se desejar
+  max-width: 180px; // Limitar a largura de cada aba
+
+  &:hover {
+    color: rgb(22, 77, 9);
+  }
 `;
 
 const Input = styled.input`
@@ -116,31 +132,99 @@ const Input = styled.input`
   }
 `;
 
-const TwoColumnLayout = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 350px;
-  gap: 20px;
-  width: 100%;
-  
-  @media (max-width: 900px) {
-    grid-template-columns: 1fr;
-  }
-`;
-
-const ColumnSection = styled.div`
-  display: flex;
-  flex-direction: column;
-`;
-
 const CarrinhoList = styled.ul`
   list-style: none;
   padding: 0;
   max-height: 200px;
   overflow-y: auto;
-  margin-left: 315px;
-  width: 70%;
+  /* margin-left: 315px; // REMOVER OU AJUSTAR */
+  width: 100%; // Ocupar largura disponível
+  max-width: 500px; // Definir uma largura máxima para melhor visualização
   border: 1px solid #e5e5e5;
   border-radius: 30px;
+  margin-bottom: 20px; // Adicionar margem inferior
+`;
+
+const SummaryContainer = styled.div`
+  background-color: #f5fff5;
+  border-radius: 30px;
+  padding: 15px;
+  border: 1px solid #28c702;
+  height: fit-content;
+  width: 100%; // Ocupar largura disponível
+  max-width: 500px; // Definir uma largura máxima
+  /* position: sticky; // Pode remover se não for mais necessário na lateral */
+  /* margin-left: 375px; // REMOVER OU AJUSTAR */
+  /* top: 20px; // Pode remover se não for mais sticky */
+  margin-bottom: 30px; // Adicionar margem para o botão
+`;
+
+
+const CheckoutButtonF = styled.button`
+  display: flex;
+  /* position: absolute; // REMOVER SE NÃO FOR POSICIONAMENTO ABSOLUTO */
+  justify-content: center;
+  align-items: center; // Para alinhar o texto verticalmente se necessário
+  background-color: rgb(22, 77, 9);
+  color: white;
+  border: none;
+  padding: 12px 25px; // Ajustar padding
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 50px;
+  cursor: pointer;
+  margin-top: 20px; // Ajustar margem superior
+  /* margin-left: 1002px; // REMOVER MARGIN-LEFT FIXA */
+  transition: all 0.2s;
+  box-shadow: 0 4px 6px rgba(40, 199, 2, 0.2);
+  width: auto; // Deixar o botão se ajustar ao conteúdo
+  min-width: 250px; // Dar uma largura mínima
+
+  &:hover {
+    background-color: #28c702;
+    transform: translateY(-2px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+`;
+
+// Verifique também o TwoColumnLayout e ColumnSection:
+const TwoColumnLayout = styled.div`
+  display: grid;
+  /* grid-template-columns: 1fr 350px; // Removido ou ajustado se não houver coluna lateral */
+  grid-template-columns: 1fr; // Se for sempre uma coluna
+  gap: 20px;
+  width: 100%;
+`;
+
+const ColumnSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  /* grid-column: 1 / -1; // Não é necessário se TwoColumnLayout for 1fr */
+  width: 100%; // Garante que ocupe a largura do container
+  align-items: center; // Centralizar o conteúdo da etapa atual
+`;
+
+// E o StepNavigation para que os botões fiquem bem posicionados
+const StepNavigation = styled.div`
+  display: flex;
+  justify-content: space-between; // Mantém "Voltar" à esquerda e "Continuar" à direita
+  width: 100%;
+  max-width: 600px; // Ou a largura que fizer sentido para seu layout
+  margin: 40px auto 20px auto; // Aumentar margem superior, centralizar, margem inferior
+  padding: 0 10px; // Um pequeno padding para não colar nas bordas em telas menores
+
+  /* Se houver apenas um botão (ex: apenas "Continuar"),
+     e você quiser que ele fique à direita, você pode precisar de lógica condicional
+     ou um wrapper extra, mas 'space-between' geralmente funciona bem
+     mesmo com um filho se o outro estiver ausente.
+     Se o botão "Continuar" estiver sozinho e aparecer no meio, e você o quiser à direita:
+  */
+  & > button:only-child { // Se houver apenas um botão filho
+    margin-left: auto; // Empurra para a direita
+  }
 `;
 
 const CarrinhoListR = styled.ul`
@@ -188,17 +272,7 @@ const ItemInfo = styled.div`
   text-align: left;
 `;
 
-const SummaryContainer = styled.div`
-  background-color: #f5fff5;
-  border-radius: 30px;
-  padding: 15px;
-  border: 1px solid #28c702;
-  height: fit-content;
-  width: 50%;
-  position: sticky;
-  margin-left: 375px;
-  top: 20px;
-`;
+
 
 const SummaryContainerR = styled.div`
    background-color: #f5fff5;
@@ -236,37 +310,33 @@ const Total = styled.div`
 // Grid para endereços
 const EnderecosGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 15px;
-  width: max-content;
-  margin-left: 195px ;
-
-  @media (max-width: 1100px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  @media (max-width: 600px) {
-    grid-template-columns: 1fr;
-  }
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); // Mais responsivo
+  gap: 20px; // Aumentar o gap um pouco
+  width: 100%;
+  max-width: 900px; // Definir uma largura máxima para a grid
+  margin: 20px auto; // Centralizar a grid e adicionar margem vertical
+  /* margin-left: 195px; // REMOVER */
 `;
 
 const EnderecoCard = styled.div`
   border: ${props => props.selected ? "2px solid #28c702" : "1px solid #e0e0e0"};
-  padding: 12px;
-  background-color: ${props => props.isPadrao ? "#f0fff0" : "white"};
-  border-radius: 30px;
+  padding: 15px; // Um pouco mais de padding
+  background-color: ${props => props.$isPadrao ? "#f0fff0" : "white"};
+  border-radius: 15px; // Reduzir um pouco o border-radius para um look mais clean
   transition: all 0.2s;
   cursor: pointer;
-  height: 140px;
+  min-height: 150px; // Altura mínima para consistência
   display: flex;
   flex-direction: column;
-  position: relative;
+  justify-content: space-between; // Para espaçar o conteúdo e o rádio/tag
+  position: relative; // Mantido para o caso de elementos posicionados internamente
   
   &:hover {
     border-color: #28c702;
     box-shadow: 0 2px 8px rgba(40, 199, 2, 0.15);
   }
 `;
+
 
 const EnderecoHeader = styled.div`
   display: flex;
@@ -305,20 +375,22 @@ const PadraoTag = styled.span`
 
 const CheckoutButton = styled.button`
   display: flex;
-  position: absolute;
+  /* position: absolute; // REMOVER POSICIONAMENTO ABSOLUTO */
   justify-content: center;
+  align-items: center;
   background-color: rgb(22, 77, 9);
   color: white;
   border: none;
-  padding: 12px 20px;
-  font-size: 16px;
+  padding: 10px 20px; // Ajustar padding
+  font-size: 15px; // Ajustar tamanho da fonte
   font-weight: 600;
   border-radius: 50px;
   cursor: pointer;
-  margin-top: 15px;
-  margin-left: 292px;
+  margin: 20px auto 0 auto; // Centralizar o botão e adicionar margem superior
+  /* margin-left: 292px; // REMOVER */
   transition: all 0.2s;
   box-shadow: 0 4px 6px rgba(40, 199, 2, 0.2);
+  min-width: 200px; // Largura mínima
 
   &:hover {
     background-color: #28c702;
@@ -330,32 +402,6 @@ const CheckoutButton = styled.button`
   }
 `;
 
-const CheckoutButtonF = styled.button`
-  display: flex;
-  position: absolute;
-  justify-content: center;
-  background-color: rgb(22, 77, 9);
-  color: white;
-  border: none;
-  padding: 12px 20px;
-  font-size: 16px;
-  font-weight: 600;
-  border-radius: 50px;
-  cursor: pointer;
-  margin-top: 25px;
-  margin-left: 1002px;
-  transition: all 0.2s;
-  box-shadow: 0 4px 6px rgba(40, 199, 2, 0.2);
-
-  &:hover {
-    background-color: #28c702;
-    transform: translateY(-2px);
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
-`;
 
 const EmptyCartMessage = styled.p`
   color: #777;
@@ -369,33 +415,10 @@ const SectionContainer = styled.div`
 `;
 
 // Componentes para formas de pagamento
-const PaymentMethodsContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  margin-bottom: 20px;
-  margin-left: 175px;
-`;
 
-const PaymentMethodTabs = styled.div`
-  display: flex;
-  margin-bottom: 15px;
-  border-bottom: 1px solid #e0e0e0;
-`;
 
-const PaymentTab = styled.div`
-  padding: 10px 10px;
-  margin-left: 110px;
-  cursor: pointer;
-  border-bottom: ${props => props.$active ? '3px solid #28c702' : '3px solid transparent'};
-  color: ${props => props.$active ? 'rgb(22, 77, 9)' : '#777'};
-  font-weight: ${props => props.$active ? '600' : '400'};  
-  transition: all 0.2s;
-  
-  &:hover {
-    color: rgb(22, 77, 9);
-  }
-`;
+
+
 
 const PaymentForm = styled.div`
   padding: 15px 0;
@@ -520,7 +543,7 @@ const BoletoButton = styled.button`
 
 const StepsContainer = styled.div`
   display: flex;
-  justify-content: space-between;
+  justify-content: space-around; /* Ajustado para distribuir melhor 3 itens */
   margin-bottom: 30px;
   position: relative;
 `;
@@ -528,8 +551,8 @@ const StepsContainer = styled.div`
 const StepLine = styled.div`
   position: absolute;
   top: 25px;
-  left: 10%;
-  right: 10%;
+  left: 15%; /* Ajustado para 3 etapas */
+  right: 15%; /* Ajustado para 3 etapas */
   height: 3px;
   background-color: #e0e0e0;
   z-index: 1;
@@ -541,11 +564,10 @@ const StepLineProgress = styled.div`
   left: 0;
   height: 100%;
   background-color: #28c702;
-  width: ${props => {
-    switch (props.currentStep) {
-      case 1: return '0%';
-      case 2: return '33.3%';
-      case 3: return '66.6%';
+  width: ${props => { // Mude aqui
+    switch (props.$currentStep) { // <<<< Use $currentStep
+      case 2: return '0%';
+      case 3: return '50%';
       case 4: return '100%';
       default: return '0%';
     }
@@ -559,14 +581,14 @@ const Step = styled.div`
   align-items: center;
   position: relative;
   z-index: 2;
-  width: 20%;
+  width: 30%; /* Ajustado para 3 etapas */
 `;
 
 const StepCircle = styled.div`
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background-color: ${props => props.active ? '#28c702' : props.completed ? '#28c702' : '#e0e0e0'};
+  background-color: ${props => props.$active ? '#28c702' : props.$completed ? '#28c702' : '#e0e0e0'}; {/* <<<< $active, $completed */}
   display: flex;
   justify-content: center;
   align-items: center;
@@ -574,42 +596,39 @@ const StepCircle = styled.div`
   font-weight: 600;
   margin-bottom: 10px;
   transition: all 0.3s ease;
-  box-shadow: ${props => props.active ? '0 0 10px rgba(40, 199, 2, 0.5)' : 'none'};
+  box-shadow: ${props => props.$active ? '0 0 10px rgba(40, 199, 2, 0.5)' : 'none'}; {/* <<<< $active */}
 `;
 
 const StepText = styled.span`
-  color: ${props => props.active ? 'rgb(22, 77, 9)' : props.completed ? 'rgb(22, 77, 9)' : '#777'};
-  font-weight: ${props => props.active || props.completed ? '600' : '400'};
+  color: ${props => props.$active ? 'rgb(22, 77, 9)' : props.$completed ? 'rgb(22, 77, 9)' : '#777'}; {/* <<<< $active, $completed */}
+  font-weight: ${props => props.$active || props.$completed ? '600' : '400'}; {/* <<<< $active, $completed */}
   font-size: 14px;
   text-align: center;
 `;
 
-// Botões de navegação entre etapas
-const StepNavigation = styled.div`
-  display: flex;
-  justify-content: space-between;
-  width: 147%;
-  
-`;
 
 const StepButton = styled.button`
   background-color: ${props => props.back ? 'white' : 'rgb(22, 77, 9)'};
   color: ${props => props.back ? 'rgb(22, 77, 9)' : 'white'};
   border: ${props => props.back ? '1px solid rgb(22, 77, 9)' : 'none'};
-  padding: 10px 20px;
+  padding: 12px 25px; // Aumentar um pouco o padding para melhor toque
   font-size: 16px;
   font-weight: 600;
   border-radius: 50px;
   cursor: pointer;
   transition: all 0.2s;
-  
+  min-width: 150px; // Garantir uma largura mínima para os botões
+  text-align: center; // Garantir que o texto dentro do botão esteja centralizado
+
   &:hover {
     background-color: ${props => props.back ? '#f5f5f5' : '#28c702'};
     transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); // Adicionar uma leve sombra no hover
   }
 
   &:active {
     transform: translateY(0);
+    box-shadow: none;
   }
 
   &:disabled {
@@ -617,7 +636,10 @@ const StepButton = styled.button`
     color: #999;
     cursor: not-allowed;
     transform: none;
+    border-color: #e0e0e0; // Para o botão 'back' desabilitado
   }
+
+  
 `;
 
 
@@ -701,7 +723,7 @@ const FormRow = styled.div`
   }
 `;
 const Checkout = () => {
-  const { user, carrinho, setCarrinho, frete, setFrete, dados, valorFrete, setValorFrete } = useAuth();
+  const { user, carrinho, setCarrinho, frete, valorFrete, dados } = useAuth(); // Removido setFrete, setValorFrete se não forem usados aqui
   const [enderecos, setEnderecos] = useState([]);
   const [enderecoSelecionado, setEnderecoSelecionado] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('Cartão de Crédito');
@@ -715,40 +737,55 @@ const Checkout = () => {
     bairro: '',
     cidade: '',
     uf: '',
-    padrao: false
+    padrao: false // Usuário logado pode querer cadastrar um novo não padrão
   });
-  const [usuarioSemLogin , setUsuarioSemLogin] = useState({
-    nome: '',
-    cpf:'',
-    email:''
+
+  const [errors, setErrors] = useState({
+    endereco: {},
+    pagamento: {} // Adicionado para erros de pagamento
   });
-   const [errors, setErrors] = useState({
-    endereco: {}
-  });
+
   // Estados para campos do cartão
   const [cardNumber, setCardNumber] = useState('');
   const [cardName, setCardName] = useState('');
   const [cardExpiry, setCardExpiry] = useState('');
   const [cardCVV, setCardCVV] = useState('');
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(2); // Inicia na etapa de Endereço
   const [cardInstallments, setCardInstallments] = useState('1');
   const [showModal, setShowModal] = useState(false);
+
   // Calcular total dos produtos
   const totalProdutos = carrinho.reduce((total, item) => total + item.preco * item.quantidade, 0);
   const totalGeral = totalProdutos + valorFrete;
+
   // Carregar os endereços de entrega do usuário
   const fetchEnderecos = async () => {
+    if (!dados || !dados.id) {
+    console.warn("fetchEnderecos: dados ou dados.id ainda não disponíveis. Abortando fetch."); // Mude para warn ou log
+    return;
+  }
     try {
       const response = await fetch(`http://localhost:8081/endereco/${dados.id}`);
       if (!response.ok) throw new Error("Erro ao buscar endereços");
       const enderecosCliente = await response.json();
       const enderecosEntrega = enderecosCliente.filter(end => end.faturamento === false);
       setEnderecos(enderecosEntrega);
+      const padrao = enderecosEntrega.find(end => end.padrao);
+      if (padrao) {
+        setEnderecoSelecionado(padrao);
+      } else if (enderecosEntrega.length > 0) {
+        setEnderecoSelecionado(enderecosEntrega[0]); // Seleciona o primeiro se não houver padrão
+      }
     } catch (error) {
       console.error("Erro ao buscar endereços:", error);
     }
   };
 
+  useEffect(() => {
+     if (dados && dados.id) { // Adicione esta verificação AQUI
+    fetchEnderecos();
+  }
+  }, [dados]); // Depender de `dados` para refazer o fetch se `dados` mudar.
 
   const produtosFormatados = carrinho.map((produto) => ({
     idProduto: produto.id,
@@ -757,145 +794,99 @@ const Checkout = () => {
     precoUnitario: produto.preco
   }));
 
-  // Define o pedido de forma geral, com dados comuns
+  // Define o pedido de forma geral
   const pedidoBase = {
     dataPedido: new Date(),
     status: "AGUARDANDO_PAGAMENTO",
     valor: totalGeral,
     produtos: produtosFormatados,
-    enderecoCliente: user ? enderecoSelecionado : novoEndereco,
-    metodoDePagamento: paymentMethod
+    enderecoCliente: enderecoSelecionado, // Sempre usa enderecoSelecionado
+    metodoDePagamento: paymentMethod,
+    idCliente: dados ? dados.id : null // Sempre usa dados.id
   };
-
-  if (user != null) {
-    // Usuário logado: idCliente do usuário logado
-    pedidoBase.idCliente = dados.id;
-  } else {
-    // Usuário não logado: idCliente pode ser CPF ou outro identificador
-    pedidoBase.idCliente = usuarioSemLogin.cpf;
-  }
-
- 
-  
     
-    const validatePagamento = () => {
-      const newErrors = { pagamento: {} };
-      
-      if (paymentMethod === 'Cartão de Crédito') {
-        if (!cardNumber || cardNumber.replace(/\s/g, '').length < 16) {
-          newErrors.pagamento.cardNumber = 'Número de cartão inválido';
-        }
-        
-        if (!cardName) {
-          newErrors.pagamento.cardName = 'Nome no cartão é obrigatório';
-        }
-        
-        if (!cardExpiry || cardExpiry.length < 5) {
-          newErrors.pagamento.cardExpiry = 'Data de validade inválida';
-        }
-        
-        if (!cardCVV || cardCVV.length < 3) {
-          newErrors.pagamento.cardCVV = 'CVV inválido';
-        }
+  const validatePagamento = () => {
+    const newErrorsPagamento = {}; // Usar um objeto local para erros desta validação
+    
+    if (paymentMethod === 'Cartão de Crédito') {
+      if (!cardNumber || cardNumber.replace(/\s/g, '').length < 16) {
+        newErrorsPagamento.cardNumber = 'Número de cartão inválido';
       }
-      
-      setErrors(prev => ({ ...prev, ...newErrors }));
-      return Object.keys(newErrors.pagamento).length === 0;
-    };
-
-    const validateEndereco = () => {
-      // Se há endereços salvos e um foi selecionado
-      if (enderecos.length > 0 && enderecoSelecionado) {
-        return true;
+      if (!cardName) {
+        newErrorsPagamento.cardName = 'Nome no cartão é obrigatório';
       }
-      
-      // Se está cadastrando novo endereço
-      const newErrors = { endereco: {} };
-      const requiredFields = ['cep', 'logradouro', 'numero', 'bairro', 'cidade', 'uf'];
-      
-      requiredFields.forEach(field => {
-        if (!novoEndereco[field]) {
-          newErrors.endereco[field] = `Campo obrigatório`;
-        }
-      });
-      
-      if (novoEndereco.cep && novoEndereco.cep.length < 8) {
-        newErrors.endereco.cep = 'CEP inválido';
+      if (!cardExpiry || cardExpiry.length < 5) { // MM/AA
+        newErrorsPagamento.cardExpiry = 'Data de validade inválida';
       }
-      
-      if (novoEndereco.uf && novoEndereco.uf.length !== 2) {
-        newErrors.endereco.uf = 'UF deve ter 2 caracteres';
+      if (!cardCVV || cardCVV.length < 3) {
+        newErrorsPagamento.cardCVV = 'CVV inválido';
       }
-      
-      setErrors(prev => ({ ...prev, ...newErrors }));
-      return Object.keys(newErrors.endereco).length === 0;
-    };
-
-
-    const validateCPF = (cpf) => {
-    cpf = cpf.replace(/[^\d]+/g, '');
-    if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
-    let sum = 0;
-    for (let i = 0; i < 9; i++) sum += parseInt(cpf.charAt(i)) * (10 - i);
-    let rev = 11 - (sum % 11);
-    if (rev === 10 || rev === 11) rev = 0;
-    if (rev !== parseInt(cpf.charAt(9))) return false;
-    sum = 0;
-    for (let i = 0; i < 10; i++) sum += parseInt(cpf.charAt(i)) * (11 - i);
-    rev = 11 - (sum % 11);
-    if (rev === 10 || rev === 11) rev = 0;
-    return rev === parseInt(cpf.charAt(10));
+    }
+    
+    setErrors(prev => ({ ...prev, pagamento: newErrorsPagamento }));
+    return Object.keys(newErrorsPagamento).length === 0;
   };
 
-    useEffect(() => {
-   if (user != null) {
-    setCurrentStep(2);
-  }
-    // você pode chamar uma API, carregar dados do localStorage, etc.
-  }, []);
+  const validateEndereco = () => {
+    // Se há endereços salvos e um foi selecionado
+    if (enderecos.length > 0 && enderecoSelecionado) {
+      setErrors(prev => ({ ...prev, endereco: {} })); // Limpa erros de endereço se um existente foi selecionado
+      return true;
+    }
+    
+    // Se está cadastrando novo endereço (enderecos.length === 0 OU nenhum selecionado e está no form de novo endereço)
+    const newErrorsEndereco = {}; // Usar um objeto local para erros desta validação
+    const requiredFields = ['cep', 'logradouro', 'numero', 'bairro', 'cidade', 'uf'];
+    
+    requiredFields.forEach(field => {
+      if (!novoEndereco[field]) {
+        newErrorsEndereco[field] = `Campo obrigatório`;
+      }
+    });
+    
+    if (novoEndereco.cep && novoEndereco.cep.replace(/\D/g, '').length < 8) {
+      newErrorsEndereco.cep = 'CEP inválido';
+    }
+    
+    if (novoEndereco.uf && novoEndereco.uf.length !== 2) {
+      newErrorsEndereco.uf = 'UF deve ter 2 caracteres';
+    }
+    
+    setErrors(prev => ({ ...prev, endereco: newErrorsEndereco }));
+    return Object.keys(newErrorsEndereco).length === 0;
+  };
 
-   const handleEnderecoChange = (e) => {
+  const handleEnderecoChange = (e) => {
     const { name, value } = e.target;
     setNovoEndereco((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleRedirect = () => {
-    router.push('/pgPrincipal');
-  };
-
   const handleClearCarrinho = () => {
     setCarrinho([]);
-
-    // Limpa o carrinho do localStorage
     localStorage.removeItem("carrinho");
   };
 
-  // Formatação do número do cartão
   const formatCardNumber = (value) => {
     const digits = value.replace(/\D/g, '');
     const groups = [];
-
     for (let i = 0; i < digits.length && i < 16; i += 4) {
       groups.push(digits.slice(i, i + 4));
     }
-
     return groups.join(' ');
   };
 
-  // Formatação da data de validade
   const formatExpiryDate = (value) => {
     const digits = value.replace(/\D/g, '');
-
-    if (digits.length <= 2) {
-      return digits;
-    }
-
+    if (digits.length <= 2) return digits;
     return `${digits.slice(0, 2)}/${digits.slice(2, 4)}`;
   };
 
-   const buscarCep = async () => {
+  const buscarCep = async () => {
     const cep = novoEndereco.cep.replace(/\D/g, '');
-    if (cep.length !== 8) return;
+    if (cep.length !== 8) {
+        setErrors((prev) => ({ ...prev, endereco: { ...prev.endereco, cep: 'CEP deve ter 8 dígitos' } }));
+        return;
+    }
 
     try {
       const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
@@ -908,108 +899,45 @@ const Checkout = () => {
           cidade: data.localidade,
           uf: data.uf,
         }));
-        setErrors((prev) => ({ 
-          ...prev, 
-          endereco: { ...prev.endereco, cep: '' } 
-        }));
+        setErrors((prev) => ({ ...prev, endereco: { ...prev.endereco, cep: '' } }));
       } else {
-        setErrors((prev) => ({ 
-          ...prev, 
-          endereco: { ...prev.endereco, cep: 'CEP inválido' } 
-        }));
+        setErrors((prev) => ({ ...prev, endereco: { ...prev.endereco, cep: 'CEP não encontrado' } }));
       }
     } catch (err) {
-      setErrors((prev) => ({ 
-        ...prev, 
-        endereco: { ...prev.endereco, cep: 'Erro ao buscar CEP' } 
-      }));
+      setErrors((prev) => ({ ...prev, endereco: { ...prev.endereco, cep: 'Erro ao buscar CEP' } }));
     }
   };
 
-  const validateDadosPessoais = () => {
-    const newErrors = {};
-    
-    if (!usuarioSemLogin.nome) {
-      newErrors.nome = 'Nome é obrigatório';
-    }
-    
-    if (!usuarioSemLogin.email) {
-      newErrors.email = 'E-mail é obrigatório';
-    } else if (!/\S+@\S+\.\S+/.test(usuarioSemLogin.email)) {
-      newErrors.email = 'E-mail inválido';
-    }
-    
-    if (!usuarioSemLogin.cpf) {
-      newErrors.cpf = 'CPF é obrigatório';
-    } else if (!validateCPF(usuarioSemLogin.cpf)) {
-      newErrors.cpf = 'CPF inválido';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleCardNumberChange = (e) => {
-    const formatted = formatCardNumber(e.target.value);
-    setCardNumber(formatted);
-  };
-
-  const handleExpiryChange = (e) => {
-    const formatted = formatExpiryDate(e.target.value);
-    setCardExpiry(formatted);
-  };
-
-  const handleCVVChange = (e) => {
-    const digits = e.target.value.replace(/\D/g, '');
-    console.log(carrinho);
-    setCardCVV(digits.slice(0, 3));
-  };
-
-  useEffect(() => {
-    if (user) {
-      fetchEnderecos();
-    }
-  }, [user]);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setUsuarioSemLogin((prev) => ({ ...prev, [name]: value }));
-  };
-
-  useEffect(() => {
-    const padrao = enderecos.find(end => end.padrao);
-    if (padrao) {
-      setEnderecoSelecionado(padrao);
-    }
-  }, [enderecos]);
+  const handleCardNumberChange = (e) => setCardNumber(formatCardNumber(e.target.value));
+  const handleExpiryChange = (e) => setCardExpiry(formatExpiryDate(e.target.value));
+  const handleCVVChange = (e) => setCardCVV(e.target.value.replace(/\D/g, '').slice(0, 3));
 
   // Ordenar endereços para que o padrão apareça primeiro
   const enderecosOrdenados = [...enderecos].sort((a, b) => {
-    if (a.padrao) return -1;
-    if (b.padrao) return 1;
+    if (a.padrao && !b.padrao) return -1;
+    if (!a.padrao && b.padrao) return 1;
     return 0;
   });
 
   const nextStep = () => {
-    if (currentStep === 1 && !user) {
-      // Validar dados pessoais para usuário não logado
-      if (!validateDadosPessoais()) return;
-    } else if (currentStep === 2) {
-      // Validar endereço
+    if (currentStep === 2) { // Endereço
       if (!validateEndereco()) return;
       
-      // Se o endereço for válido e novo, adiciona à lista
-      if (enderecos.length === 0) {
+      // Se o endereço for válido e novo (ou seja, enderecos.length === 0 e o form foi preenchido)
+      // E nenhum enderecoSelecionado ainda (o que seria o caso se o form foi usado)
+      if (enderecos.length === 0 && !enderecoSelecionado) {
+         // Simula a adição do novo endereço à lista para que possa ser selecionado
+         // No mundo real, este novo endereço seria salvo no backend e o fetchEnderecos seria chamado novamente
+         // ou o novo endereço retornado pela API de salvar seria adicionado ao estado 'enderecos'
         const novoEnderecoObj = {
           ...novoEndereco,
-          id: 1,
-          padrao: true
+          id: `temp-${Date.now()}`, // ID temporário
+          padrao: true // Assume como padrão se for o único
         };
-        setEnderecos([novoEnderecoObj]);
-        setEnderecoSelecionado(novoEnderecoObj);
+        // setEnderecos([novoEnderecoObj]); // Não faremos isso para não confundir com os do backend
+        setEnderecoSelecionado(novoEnderecoObj); // Seleciona o endereço recém-criado
       }
-    } else if (currentStep === 3) {
-      // Validar pagamento
+    } else if (currentStep === 3) { // Pagamento
       if (!validatePagamento()) return;
     }
     
@@ -1018,255 +946,191 @@ const Checkout = () => {
     }
   };
   
-  // Função para voltar para a etapa anterior
   const prevStep = () => {
-    if (currentStep > 1) {
+    if (currentStep > 2) { // Não pode voltar da etapa de endereço (2)
       setCurrentStep(currentStep - 1);
     }
   };
   
-  // Função para abrir o modal de resumo do pedido
   const handleFinalizarCompra = () => {
+    // Revalida o endereço e o pagamento antes de mostrar o modal
+    if (!validateEndereco()) {
+        setCurrentStep(2); // Volta para a etapa de endereço se inválido
+        return;
+    }
+    if (!validatePagamento()) {
+        setCurrentStep(3); // Volta para a etapa de pagamento se inválido
+        return;
+    }
     setShowModal(true);
   };
 
-   const handleConcluirCompra = async () => {
-    
-
-  try {
-    const response = await fetch("http://localhost:8081/pedidos/criar", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(pedidoBase)
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Erro desconhecido ao criar o pedido");
+  const handleConcluirCompra = async () => {
+    if (!dados || !dados.id) {
+        alert("Erro: Dados do usuário não encontrados. Por favor, faça login novamente.");
+        router.push('/login');
+        return;
+    }
+    if (!enderecoSelecionado) {
+        alert("Erro: Endereço de entrega não selecionado.");
+        setCurrentStep(2);
+        setShowModal(false);
+        return;
     }
 
-    const data = await response.json();
-    setResposta(data);
+    const pedidoFinal = {
+        ...pedidoBase,
+        idCliente: dados.id, // Garante que o idCliente está atualizado
+        enderecoCliente: enderecoSelecionado, // Garante que o enderecoSelecionado está atualizado
+    };
 
-    if(user == null){
-    const pedidosSalvos = JSON.parse(localStorage.getItem("pedidosSalvos")) || [];
-    pedidosSalvos.push(data);
-    localStorage.setItem("pedidosSalvos", JSON.stringify(pedidosSalvos));
-    
-  }
-    
+    try {
+      const response = await fetch("http://localhost:8081/pedidos/criar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(pedidoFinal)
+      });
 
-    handleClearCarrinho();
-    alert(`Pedido realizado com sucesso! Número do pedido: ${data.numero} \n Visite "Meus pedidos" no perfil para visualizar suas compras`);
-     router.push('/pgPrincipal');
-    setShowModal(false);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Erro desconhecido ao criar o pedido");
+      }
 
-  } catch (error) {
-    console.error("Erro ao criar pedido:", error);
-    alert(`Não foi possível finalizar o pedido: ${error.message}`);
-  }
+      const data = await response.json();
+      setResposta(data);
+      handleClearCarrinho();
+      alert(`Pedido realizado com sucesso! Número do pedido: ${data.numero} \n Visite "Meus pedidos" no perfil para visualizar suas compras`);
+      router.push('/pgPrincipal');
+      setShowModal(false);
+    } catch (error) {
+      console.error("Erro ao criar pedido:", error);
+      alert(`Não foi possível finalizar o pedido: ${error.message}`);
+      setShowModal(false); // Fecha o modal em caso de erro também
+    }
   };
 
-  const BotaoIrParaEndereco = () => {
-    return (
-      <a href="/perfil?tab=enderecos">
-        <CheckoutButton>Adicionar Endereço</CheckoutButton>
-      </a>
-    );
-  };
+  const BotaoIrParaEndereco = () => (
+    <a href="/perfil?tab=enderecos" target="_blank" rel="noopener noreferrer">
+      <CheckoutButton>Gerenciar Endereços</CheckoutButton>
+    </a>
+  );
 
   const renderStepContent = () => {
     switch (currentStep) {
-      case 1:
-        return (
-          <SectionContainer>
-            {user == null && (
-              // Se o usuário está logado, mostra apenas os itens do carrinho e avança
-            <>
-               
-                <SectionTitle style={{ marginTop: '20px' }}>Dados Pessoais</SectionTitle>
-                <Field>
-                  <Label>Nome Completo</Label>
-                  <Input 
-                    name="nome" 
-                    value={usuarioSemLogin.nome} 
-                    onChange={handleChange} 
-                    placeholder="Digite seu nome completo" 
-                  />
-                  {errors.nome && <Error>{errors.nome}</Error>}
-                </Field>
-                
-                <FormRow>
-                  <Field flex={2}>
-                    <Label>E-mail</Label>
-                    <Input 
-                      name="email" 
-                      type="email" 
-                      value={usuarioSemLogin.email} 
-                      onChange={handleChange} 
-                      placeholder="seu@email.com" 
-                    />
-                    {errors.email && <Error>{errors.email}</Error>}
-                  </Field>
-                  <Field flex={1}>
-                    <Label>CPF</Label>
-                    <Input 
-                      name="cpf" 
-                      value={usuarioSemLogin.cpf} 
-                      onChange={handleChange} 
-                      placeholder="00000000000" 
-                    />
-                    {errors.cpf && <Error>{errors.cpf}</Error>}
-                  </Field>
-                </FormRow>
-              </>
-            ) }
-          </SectionContainer>
-        );
-      
-      case 2:
+      // case 1 foi removido
+      case 2: // Endereço
         return (
           <SectionContainer>
             <SectionTitle>Endereço de Entrega</SectionTitle>
+            {/* Se não houver endereços cadastrados, mostra o formulário para novo endereço */}
+            {/* Se houver, mostra a lista */}
             {enderecos.length === 0 ? (
               <>
+                <p style={{textAlign: 'center', marginBottom: '15px', color: '#555'}}>
+                  Nenhum endereço cadastrado. Por favor, adicione um novo endereço.
+                </p>
                 <FormRow>
                   <Field flex={1}>
                     <Label>CEP</Label>
-                    <Input 
-                      name="cep" 
-                      value={novoEndereco.cep} 
-                      onChange={handleEnderecoChange} 
-                      onBlur={buscarCep}
-                      placeholder="00000-000" 
-                    />
+                    <Input name="cep" value={novoEndereco.cep} onChange={handleEnderecoChange} onBlur={buscarCep} placeholder="00000-000" />
                     {errors.endereco?.cep && <Error>{errors.endereco.cep}</Error>}
                   </Field>
                   <Field flex={2}>
                     <Label>Logradouro</Label>
-                    <Input 
-                      name="logradouro" 
-                      value={novoEndereco.logradouro} 
-                      onChange={handleEnderecoChange} 
-                      placeholder="Rua, Avenida, etc." 
-                    />
+                    <Input name="logradouro" value={novoEndereco.logradouro} onChange={handleEnderecoChange} placeholder="Rua, Avenida, etc." />
                     {errors.endereco?.logradouro && <Error>{errors.endereco.logradouro}</Error>}
                   </Field>
                 </FormRow>
-                
                 <FormRow>
                   <Field flex={1}>
                     <Label>Número</Label>
-                    <Input 
-                      name="numero" 
-                      value={novoEndereco.numero} 
-                      onChange={handleEnderecoChange} 
-                      placeholder="Nº" 
-                    />
+                    <Input name="numero" value={novoEndereco.numero} onChange={handleEnderecoChange} placeholder="Nº" />
                     {errors.endereco?.numero && <Error>{errors.endereco.numero}</Error>}
                   </Field>
                   <Field flex={2}>
                     <Label>Complemento</Label>
-                    <Input 
-                      name="complemento" 
-                      value={novoEndereco.complemento} 
-                      onChange={handleEnderecoChange} 
-                      placeholder="Apto, Bloco, etc." 
-                    />
+                    <Input name="complemento" value={novoEndereco.complemento} onChange={handleEnderecoChange} placeholder="Apto, Bloco, etc. (Opcional)" />
                   </Field>
                 </FormRow>
-                
                 <FormRow>
                   <Field>
                     <Label>Bairro</Label>
-                    <Input 
-                      name="bairro" 
-                      value={novoEndereco.bairro} 
-                      onChange={handleEnderecoChange} 
-                      placeholder="Bairro" 
-                    />
+                    <Input name="bairro" value={novoEndereco.bairro} onChange={handleEnderecoChange} placeholder="Bairro" />
                     {errors.endereco?.bairro && <Error>{errors.endereco.bairro}</Error>}
                   </Field>
                   <Field>
                     <Label>Cidade</Label>
-                    <Input 
-                      name="cidade" 
-                      value={novoEndereco.cidade} 
-                      onChange={handleEnderecoChange} 
-                      placeholder="Cidade" 
-                    />
+                    <Input name="cidade" value={novoEndereco.cidade} onChange={handleEnderecoChange} placeholder="Cidade" />
                     {errors.endereco?.cidade && <Error>{errors.endereco.cidade}</Error>}
                   </Field>
                   <Field flex={0.5}>
                     <Label>UF</Label>
-                    <Input 
-                      name="uf" 
-                      value={novoEndereco.uf} 
-                      onChange={handleEnderecoChange} 
-                      maxLength={2}
-                      placeholder="UF" 
-                    />
+                    <Input name="uf" value={novoEndereco.uf} onChange={handleEnderecoChange} maxLength={2} placeholder="UF" />
                     {errors.endereco?.uf && <Error>{errors.endereco.uf}</Error>}
                   </Field>
                 </FormRow>
+                {/* <div style={{ marginTop: '10px' }}>
+                    <input type="checkbox" id="padraoNovo" name="padrao" checked={novoEndereco.padrao} onChange={(e) => setNovoEndereco(prev => ({...prev, padrao: e.target.checked}))} />
+                    <label htmlFor="padraoNovo" style={{ marginLeft: '5px', fontSize: '14px' }}> Definir como endereço padrão</label>
+                </div> */}
+                <BotaoIrParaEndereco /> {/* Sugere ir para a página de perfil para adicionar de forma mais completa */}
+
               </>
             ) : (
-              <EnderecosGrid>
-                {enderecosOrdenados.map((endereco, index) => (
-                  <EnderecoCard
-                    key={index}
-                    selected={enderecoSelecionado?.id === endereco.id}
-                    $isPadrao={endereco.padrao}
-                    onClick={() => setEnderecoSelecionado(endereco)}
-                  >
-                    <EnderecoHeader>
-                      <EnderecoRadio
-                        type="radio"
-                        name="endereco"
-                        value={endereco.id}
-                        checked={enderecoSelecionado?.id === endereco.id}
-                        onChange={() => setEnderecoSelecionado(endereco)}
-                      />
-                      {endereco.padrao && <PadraoTag>Padrão</PadraoTag>}
-                    </EnderecoHeader>
-                    <EnderecoContent>
-                      <EnderecoLine>{endereco.logradouro}, {endereco.numero}</EnderecoLine>
-                      <EnderecoLine>{endereco.bairro}</EnderecoLine>
-                      <EnderecoLine>{endereco.cidade}/{endereco.uf}</EnderecoLine>
-                      <EnderecoLine>CEP: {endereco.cep}</EnderecoLine>
-                    </EnderecoContent>
-                  </EnderecoCard>
-                ))}
-                <BotaoIrParaEndereco/>
-              </EnderecosGrid>
+              <>
+                <EnderecosGrid>
+                  {enderecosOrdenados.map((endereco) => (
+                    <EnderecoCard
+                      key={endereco.id} // Use o ID real do endereço
+                      selected={enderecoSelecionado?.id === endereco.id}
+                      $isPadrao={endereco.padrao} // Use $isPadrao para props transientes em styled-components
+                      onClick={() => setEnderecoSelecionado(endereco)}
+                    >
+                      <EnderecoHeader>
+                        <EnderecoRadio
+                          type="radio"
+                          name="endereco"
+                          value={endereco.id}
+                          checked={enderecoSelecionado?.id === endereco.id}
+                          onChange={() => setEnderecoSelecionado(endereco)}
+                        />
+                        {endereco.padrao && <PadraoTag>Padrão</PadraoTag>}
+                      </EnderecoHeader>
+                      <EnderecoContent>
+                        <EnderecoLine>{endereco.logradouro}, {endereco.numero}</EnderecoLine>
+                        <EnderecoLine>{endereco.complemento}</EnderecoLine>
+                        <EnderecoLine>{endereco.bairro}</EnderecoLine>
+                        <EnderecoLine>{endereco.cidade}/{endereco.uf}</EnderecoLine>
+                        <EnderecoLine>CEP: {endereco.cep}</EnderecoLine>
+                      </EnderecoContent>
+                    </EnderecoCard>
+                  ))}
+                </EnderecosGrid>
+                <BotaoIrParaEndereco />
+              </>
+            )}
+             {/* Mensagem se nenhum endereço estiver selecionado e houver endereços */}
+             {enderecos.length > 0 && !enderecoSelecionado && (
+                <Error style={{ textAlign: 'center', marginTop: '15px' }}>
+                    Por favor, selecione um endereço de entrega ou cadastre um novo na sua <a href="/perfil?tab=enderecos">página de perfil</a>.
+                </Error>
             )}
           </SectionContainer>
         );
       
-      case 3:
+      case 3: // Pagamento
         return (
           <SectionContainer>
             <SectionTitleP>Forma de Pagamento</SectionTitleP>
             <PaymentMethodsContainer>
               <PaymentMethodTabs>
-                <PaymentTab
-                  $active={paymentMethod === 'Cartão de Crédito'}
-                  onClick={() => setPaymentMethod('Cartão de Crédito')}
-                >
+                <PaymentTab $active={paymentMethod === 'Cartão de Crédito'} onClick={() => setPaymentMethod('Cartão de Crédito')}>
                   Cartão de Crédito
                 </PaymentTab>
-                <PaymentTab
-                  $active={paymentMethod === 'Boleto'}
-                  onClick={() => setPaymentMethod('Boleto')}
-                >
+                <PaymentTab $active={paymentMethod === 'Boleto'} onClick={() => setPaymentMethod('Boleto')}>
                   Boleto
                 </PaymentTab>
-                <PaymentTab
-                  $active={paymentMethod === 'Pix'}
-                  onClick={() => setPaymentMethod('Pix')}
-                >
+                <PaymentTab $active={paymentMethod === 'Pix'} onClick={() => setPaymentMethod('Pix')}>
                   PIX
                 </PaymentTab>
               </PaymentMethodTabs>
@@ -1276,70 +1140,38 @@ const Checkout = () => {
                   <>
                     <FormGroup>
                       <FormLabel>Número do Cartão</FormLabel>
-                      <FormInput
-                        type="text"
-                        placeholder="0000 0000 0000 0000"
-                        value={cardNumber}
-                        onChange={handleCardNumberChange}
-                        maxLength={19}
-                      />
+                      <FormInput type="text" placeholder="0000 0000 0000 0000" value={cardNumber} onChange={handleCardNumberChange} maxLength={19} />
                       {errors.pagamento?.cardNumber && <Error>{errors.pagamento.cardNumber}</Error>}
                     </FormGroup>
-
                     <FormGroup>
                       <FormLabel>Nome no Cartão</FormLabel>
-                      <FormInput
-                        type="text"
-                        placeholder="Como aparece no cartão"
-                        value={cardName}
-                        onChange={(e) => setCardName(e.target.value)}
-                      />
+                      <FormInput type="text" placeholder="Como aparece no cartão" value={cardName} onChange={(e) => setCardName(e.target.value)} />
                       {errors.pagamento?.cardName && <Error>{errors.pagamento.cardName}</Error>}
                     </FormGroup>
-
                     <CardInputsRow>
                       <FormGroup>
                         <FormLabel>Data de Validade</FormLabel>
-                        <FormInput
-                          type="text"
-                          placeholder="MM/AA"
-                          value={cardExpiry}
-                          onChange={handleExpiryChange}
-                          maxLength={5}
-                        />
+                        <FormInput type="text" placeholder="MM/AA" value={cardExpiry} onChange={handleExpiryChange} maxLength={5}/>
                         {errors.pagamento?.cardExpiry && <Error>{errors.pagamento.cardExpiry}</Error>}
                       </FormGroup>
-
                       <FormGroup>
                         <FormLabel>CVV</FormLabel>
-                        <FormInput
-                          type="text"
-                          placeholder="123"
-                          value={cardCVV}
-                          onChange={handleCVVChange}
-                          maxLength={3}
-                        />
+                        <FormInput type="text" placeholder="123" value={cardCVV} onChange={handleCVVChange} maxLength={3}/>
                         {errors.pagamento?.cardCVV && <Error>{errors.pagamento.cardCVV}</Error>}
                       </FormGroup>
                     </CardInputsRow>
-
                     <FormGroup>
                       <FormLabel>Parcelas</FormLabel>
-                      <FormSelect
-                        value={cardInstallments}
-                        onChange={(e) => setCardInstallments(e.target.value)}
-                      >
-                        <option value="1">1x de R$ {totalGeral.toFixed(2)} sem juros</option>
-                        <option value="2">2x de R$ {(totalGeral / 2).toFixed(2)} sem juros</option>
-                        <option value="3">3x de R$ {(totalGeral / 3).toFixed(2)} sem juros</option>
-                        <option value="4">4x de R$ {(totalGeral / 4).toFixed(2)} sem juros</option>
-                        <option value="5">5x de R$ {(totalGeral / 5).toFixed(2)} sem juros</option>
-                        <option value="6">6x de R$ {(totalGeral / 6).toFixed(2)} sem juros</option>
+                      <FormSelect value={cardInstallments} onChange={(e) => setCardInstallments(e.target.value)}>
+                        {[1, 2, 3, 4, 5, 6].map(numParcelas => (
+                            <option key={numParcelas} value={numParcelas.toString()}>
+                                {numParcelas}x de R$ {(totalGeral / numParcelas).toFixed(2)} sem juros
+                            </option>
+                        ))}
                       </FormSelect>
                     </FormGroup>
                   </>
                 )}
-
                 {paymentMethod === 'Boleto' && (
                   <BoletoInfo>
                     <p>Ao finalizar a compra, você receberá o boleto para pagamento.</p>
@@ -1347,18 +1179,11 @@ const Checkout = () => {
                     <p>O boleto tem vencimento em 3 dias úteis.</p>
                   </BoletoInfo>
                 )}
-
                 {paymentMethod === 'Pix' && (
                   <QRCodeContainer>
-                    <QRCodePlaceholder>
-                      QR Code do PIX será gerado ao finalizar o pedido
-                    </QRCodePlaceholder>
-                    <QRCodeInfo>
-                      Faça o pagamento instantâneo com PIX
-                    </QRCodeInfo>
-                    <QRCodeInfo>
-                      Após finalizar o pedido, escaneie o QR Code com o app do seu banco
-                    </QRCodeInfo>
+                    <QRCodePlaceholder>QR Code do PIX será gerado ao finalizar o pedido</QRCodePlaceholder>
+                    <QRCodeInfo>Faça o pagamento instantâneo com PIX</QRCodeInfo>
+                    <QRCodeInfo>Após finalizar o pedido, escaneie o QR Code com o app do seu banco</QRCodeInfo>
                   </QRCodeContainer>
                 )}
               </PaymentForm>
@@ -1366,57 +1191,43 @@ const Checkout = () => {
           </SectionContainer>
         );
       
-      case 4:
-        return (
-          <SectionContainer>    
-                <SectionTitleC>Itens do Carrinho</SectionTitleC>
-                <CarrinhoList>
-                  {carrinho.length === 0 ? (
-                    <EmptyCartMessage>Seu carrinho está vazio</EmptyCartMessage>
-                  ) : (
-                    carrinho.map((item, index) => (
-                      <CarrinhoItem key={index}>
-                        <ItemInfo>
-                          <div>
-                            <ItemName>{item.nome}</ItemName>
-                            <ItemPrice>R$ {item.preco.toFixed(2)} x {item.quantidade}</ItemPrice>
-                          </div>
-                        </ItemInfo>
-                      </CarrinhoItem>
-                    ))
-                  )}
-                </CarrinhoList>
-                <ColumnSection>
-          <SectionTitleC>Resumo do Pedido</SectionTitleC>
-          {carrinho.length > 0 ? (
-            <SummaryContainer>
-              <SummaryRow>
-                <span>Subtotal:</span>
-                <span>R$ {totalProdutos.toFixed(2)}</span>
-              </SummaryRow>
-              <SummaryRow>
-                <span>Frete ({frete}):</span>
-                <span>R$ {valorFrete.toFixed(2)}</span>
-              </SummaryRow>
-              <Total>
-                <span>Total:</span>
-                <span>R$ {totalGeral.toFixed(2)}</span>
-              </Total>
-            </SummaryContainer>
-          ) : (
-            <SummaryContainer>
-              <EmptyCartMessage>Adicione produtos ao carrinho</EmptyCartMessage>
-            </SummaryContainer>
-          )}
-        </ColumnSection>
-                  
-                <CheckoutButtonF onClick={handleFinalizarCompra}>
-                Finalizar Pedido
-              </CheckoutButtonF>
-              
-          </SectionContainer>
-        );
+      case 4: // Confirmação (Resumo antes do modal)
+  return (
+    <SectionContainer style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}> {/* Adiciona flex para centralizar filhos */}
+      <SectionTitleC>Itens do Carrinho</SectionTitleC>
+      <CarrinhoList> {/* CarrinhoList precisa de ajustes de estilo abaixo */}
+        {carrinho.length === 0 ? (
+          <EmptyCartMessage>Seu carrinho está vazio</EmptyCartMessage>
+        ) : (
+          carrinho.map((item, index) => (
+            <CarrinhoItem key={index}>
+              <ItemInfo>
+                <div>
+                  <ItemName>{item.nome}</ItemName>
+                  <ItemPrice>R$ {item.preco.toFixed(2)} x {item.quantidade}</ItemPrice>
+                </div>
+              </ItemInfo>
+            </CarrinhoItem>
+          ))
+        )}
+      </CarrinhoList>
+
+      <SectionTitleC style={{ marginTop: '30px' }}>Resumo do Pedido</SectionTitleC> {/* Adiciona margem superior */}
+      {carrinho.length > 0 ? (
+        <SummaryContainer> {/* SummaryContainer precisa de ajustes de estilo abaixo */}
+          <SummaryRow><span>Subtotal:</span><span>R$ {totalProdutos.toFixed(2)}</span></SummaryRow>
+          <SummaryRow><span>Frete ({frete}):</span><span>R$ {valorFrete.toFixed(2)}</span></SummaryRow>
+          <Total><span>Total:</span><span>R$ {totalGeral.toFixed(2)}</span></Total>
+        </SummaryContainer>
+      ) : (
+        <SummaryContainer><EmptyCartMessage>Adicione produtos ao carrinho</EmptyCartMessage></SummaryContainer>
+      )}
       
+      <CheckoutButtonF onClick={handleFinalizarCompra}> {/* CheckoutButtonF precisa de ajustes de estilo abaixo */}
+        Revisar e Finalizar Pedido
+      </CheckoutButtonF>
+    </SectionContainer>
+  );
       default:
         return null;
     }
@@ -1430,7 +1241,6 @@ const Checkout = () => {
         <ModalContent>
           <ModalTitle>Confirmação do Pedido</ModalTitle>
           <ModalCloseButton onClick={() => setShowModal(false)}>×</ModalCloseButton>
-          
           <ModalSection>
             <ModalSectionTitle>Itens do Pedido</ModalSectionTitle>
             <CarrinhoListR>
@@ -1439,7 +1249,7 @@ const Checkout = () => {
                   <ItemInfo>
                     <div>
                       <ItemName>{item.nome}</ItemName>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', width: '300px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%'/*era 300px*/, fontSize: '13px' }}>
                         <span>Qtd: {item.quantidade}</span>
                         <span>Unitário: R$ {item.preco.toFixed(2)}</span>
                         <span>Total: R$ {(item.preco * item.quantidade).toFixed(2)}</span>
@@ -1450,23 +1260,18 @@ const Checkout = () => {
               ))}
             </CarrinhoListR>
           </ModalSection>
-          
           <ModalSection>
             <ModalSectionTitle>Endereço de Entrega</ModalSectionTitle>
             <div style={{ padding: '10px', backgroundColor: '#f5fff5', borderRadius: '10px' }}>
               {enderecoSelecionado ? (
                 <>
-                  <p>{enderecoSelecionado.logradouro}, {enderecoSelecionado.numero} {enderecoSelecionado.complemento}</p>
+                  <p>{enderecoSelecionado.logradouro}, {enderecoSelecionado.numero} {enderecoSelecionado.complemento || ''}</p>
                   <p>{enderecoSelecionado.bairro}</p>
-                  <p>{enderecoSelecionado.cidade}/{enderecoSelecionado.uf}</p>
-                  <p>CEP: {enderecoSelecionado.cep}</p>
+                  <p>{enderecoSelecionado.cidade}/{enderecoSelecionado.uf} - CEP: {enderecoSelecionado.cep}</p>
                 </>
-              ) : (
-                <p>Nenhum endereço selecionado</p>
-              )}
+              ) : <p>Nenhum endereço selecionado.</p>}
             </div>
           </ModalSection>
-          
           <ModalSection>
             <ModalSectionTitle>Forma de Pagamento</ModalSectionTitle>
             <div style={{ padding: '10px', backgroundColor: '#f5fff5', borderRadius: '10px' }}>
@@ -1478,124 +1283,101 @@ const Checkout = () => {
                   <p>Parcelas: {cardInstallments}x de R$ {(totalGeral / parseInt(cardInstallments)).toFixed(2)}</p>
                 </>
               )}
-              
-              {paymentMethod === 'Boleto' && (
-                <p><strong>Boleto Bancário</strong></p>
-              )}
-              
-              {paymentMethod === 'Pix' && (
-                <p><strong>Pagamento via PIX</strong></p>
-              )}
+              {paymentMethod === 'Boleto' && <p><strong>Boleto Bancário</strong></p>}
+              {paymentMethod === 'Pix' && <p><strong>Pagamento via PIX</strong></p>}
             </div>
           </ModalSection>
-          
           <ModalSection>
             <ModalSectionTitle>Resumo de Valores</ModalSectionTitle>
             <SummaryContainerR>
-              <SummaryRow>
-                <span>Subtotal:</span>
-                <span>R$ {totalProdutos.toFixed(2)}</span>
-              </SummaryRow>
-              <SummaryRow>
-                <span>Frete ({frete}):</span>
-                <span>R$ {valorFrete.toFixed(2)}</span>
-              </SummaryRow>
-              <Total>
-                <span>Total:</span>
-                <span>R$ {totalGeral.toFixed(2)}</span>
-              </Total>
+              <SummaryRow><span>Subtotal:</span><span>R$ {totalProdutos.toFixed(2)}</span></SummaryRow>
+              <SummaryRow><span>Frete ({frete}):</span><span>R$ {valorFrete.toFixed(2)}</span></SummaryRow>
+              <Total><span>Total:</span><span>R$ {totalGeral.toFixed(2)}</span></Total>
             </SummaryContainerR>
           </ModalSection>
-          
           <ModalButtonsContainer>
-            <StepButton $back onClick={() => setShowModal(false)}>
-              Voltar e Revisar
-            </StepButton>
-            <StepButton onClick={handleConcluirCompra}>
-              Confirmar e Concluir Compra
-            </StepButton>
+            <StepButton back="true" onClick={() => setShowModal(false)}>Voltar e Revisar</StepButton>
+            <StepButton onClick={handleConcluirCompra}>Confirmar e Concluir Compra</StepButton>
           </ModalButtonsContainer>
         </ModalContent>
       </ModalOverlay>
     );
   };
 
+  // Se o user não estiver logado (hipoteticamente, pois removemos essa lógica, mas como um guarda), redirecionar.
+  // Esta verificação pode ser feita no _app.js ou em um HOC para proteger a rota.
+  // Por ora, confiaremos que `user` e `dados` estão presentes.
+  if (!user || !dados) {
+    // Idealmente, redirecionar ou mostrar um loader/mensagem de erro.
+    // router.push('/login'); // Exemplo de redirecionamento
+    return <StyledCheckout><CheckoutContainer><PageTitle>Carregando...</PageTitle></CheckoutContainer></StyledCheckout>;
+  }
+
   return (
-    
     <StyledCheckout>
       <GlobalStyle/>
-    <CheckoutContainer>
-      <PageTitle>Finalizar Compra</PageTitle>
-      {/* Sistema de etapas */}
-      <StepsContainer>
-        <StepLine>
-          <StepLineProgress currentstep={currentStep} />
-        </StepLine>
-        { user == null &&
-        <Step>
-          <StepCircle active={currentStep === 1 ? "true" : undefined} completed={currentStep > 1 ? "true" : undefined}>
-            {currentStep > 1 ? '✓' : ''}
-          </StepCircle>
-          <StepText active={currentStep === 1 ? "true" : undefined} completed={currentStep > 1 ? "true" : undefined}>
-            Identificação
-          </StepText>
-        </Step>
-        }
-        <Step>
-          <StepCircle active={currentStep === 2 ? "true" : undefined} completed={currentStep > 2 ? "true" : undefined}>
-            {currentStep > 2 ? '✓' : ''}
-          </StepCircle>
-          <StepText active={currentStep === 2 ? "true" : undefined} completed={currentStep > 2 ? "true" : undefined}>
-            Endereço
-          </StepText>
-        </Step>
-        
-        <Step>
-          <StepCircle active={currentStep === 3 ? "true" : undefined} completed={currentStep > 3 ? "true" : undefined}>
-            {currentStep > 3 ? '✓' : ''}
-          </StepCircle>
-          <StepText active={currentStep === 3 ? "true" : undefined} completed={currentStep > 3 ? "true" : undefined}>
-            Pagamento
-          </StepText>
-        </Step>
-        
-        <Step>
-          <StepCircle active={currentStep === 4 ? "true" : undefined} completed={currentStep > 4 ? "true" : undefined}>
-            
-          </StepCircle>
-          <StepText active={currentStep === 4 ? "true" : undefined} completed={currentStep > 4 ? "true" : undefined}>
-            Confirmação
-          </StepText>
-        </Step>
-      </StepsContainer>
+      <CheckoutContainer>
+        <PageTitle>Finalizar Compra</PageTitle>
+        <StepsContainer>
+          <StepLine>
+  <StepLineProgress $currentStep={currentStep} /> {/* <<<< Passe como $currentStep */}
+</StepLine>
+          
+          {/* Etapa 1 (Dados Pessoais) foi removida */}
+
+          <Step>
+  <StepCircle $active={currentStep === 2} $completed={currentStep > 2}> {/* <<<< $active, $completed */}
+    {currentStep > 2 ? '✓' : ''}
+  </StepCircle>
+  <StepText $active={currentStep === 2} $completed={currentStep > 2}> {/* <<<< $active, $completed */}
+    Endereço
+  </StepText>
+</Step>
+
+<Step>
+  <StepCircle $active={currentStep === 3} $completed={currentStep > 3}>
+    {currentStep > 3 ? '✓' : ''}
+  </StepCircle>
+  <StepText $active={currentStep === 3} $completed={currentStep > 3}>
+    Pagamento
+  </StepText>
+</Step>
+
+<Step>
+  <StepCircle $active={currentStep === 4} $completed={currentStep > 4}> {/* $completed aqui sempre será false */}
+    {/* Ícone para 'Confirmação' pode ser diferente, ou vazio até estar ativo */}
+  </StepCircle>
+  <StepText $active={currentStep === 4} $completed={currentStep > 4}> {/* $completed aqui sempre será false */}
+    Confirmação
+  </StepText>
+</Step>
+        </StepsContainer>
       
-      <TwoColumnLayout>
-        <ColumnSection>
+        {/* O TwoColumnLayout pode não ser mais necessário se o resumo for sempre mostrado na etapa 4 */}
+        {/* Ou pode ser usado para ter o conteúdo da etapa e um resumo lateral fixo */}
+        {/* Por simplicidade, faremos a ColumnSection ocupar todo o espaço */}
+        <ColumnSection> 
           {renderStepContent()}
           
-          {/* Navegação entre etapas */}
           <StepNavigation>
-  {currentStep > 1 && !(user !== null && currentStep === 2) && (
-    <StepButton back="true" onClick={prevStep}>
-      Voltar
-    </StepButton>
-  )}
+            {/* Botão Voltar: aparece se currentStep > 2 (ou seja, em Pagamento ou Confirmação) */}
+            {currentStep > 2 && (
+              <StepButton back="true" onClick={prevStep}>Voltar</StepButton>
+            )}
 
-  {currentStep < 4 && (   
-    <StepButton onClick={nextStep}>
-      Continuar
-    </StepButton>  
-  )}
-</StepNavigation>
+            {/* Botão Continuar: aparece se currentStep < 4 (ou seja, em Endereço ou Pagamento) */}
+            {/* Se estiver na etapa 4 (Confirmação), o botão de finalizar já está dentro do renderStepContent */}
+            {currentStep < 4 && (   
+              // Garante que o botão de continuar ocupe o lado direito se o de voltar não existir
+              <StepButton onClick={nextStep} style={{ marginLeft: currentStep <= 2 ? 'auto' : undefined }}> 
+                Continuar
+              </StepButton>  
+            )}
+          </StepNavigation>
         </ColumnSection>
         
-        {/* Coluna do resumo - sempre visível */}
-        
-      </TwoColumnLayout>
-      
-      {/* Modal de confirmação do pedido */}
-      {renderModal()}
-    </CheckoutContainer>
+        {renderModal()}
+      </CheckoutContainer>
     </StyledCheckout>
   );
 }

@@ -508,9 +508,6 @@ function Principal() {
     router.push('/cadastro');
   };
 
-  const handleRedirectPedidos = () => {
-    router.push('/pedidos');
-  }
   const handleRedirectL = () => {
     router.push('/login');
   };
@@ -519,11 +516,7 @@ function Principal() {
     router.push('/perfil');
   }
 
-  const limparPedidosSalvos = () => {
-    localStorage.removeItem("pedidosSalvos");
-    alert("Todos os pedidos foram removidos do histórico local.");
-  };
-
+  
   const handleFinalizarCompra = () => {
     if (!frete) {
       alert("Por favor, selecione uma opção de frete antes de finalizar a compra.");
@@ -824,7 +817,6 @@ function Principal() {
                 <ButtonsContainerN>
                   <UserButtonN onClick={handleRedirectL}>Login</UserButtonN>
                   <UserButtonN $primary onClick={handleRedirect}>Cadastrar</UserButtonN>
-                  <UserButtonN onClick={handleRedirectPedidos}>Meus Pedidos</UserButtonN>
                 </ButtonsContainerN>
               </>
             )}
