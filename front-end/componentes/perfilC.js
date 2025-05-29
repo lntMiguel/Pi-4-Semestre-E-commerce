@@ -448,114 +448,45 @@ const DetalhesContainer = styled.div`
 `;
 
 function Perfil() {
-  // Estado para as abas
-  const [activeTab, setActiveTab] = useState('dados');
-  const {dados, setDados} = useAuth();
-  const [pedidosExpandidos, setPedidosExpandidos] = useState([]);
-  const router = useRouter();
+    // =======================================================================
+  // 1. TODOS OS HOOKS DEVEM VIR PRIMEIRO, ANTES DE QUALQUER LÓGICA CONDICIONAL DE RETORNO
+  // =======================================================================
+  const router = useRouter(); // Hook
+  const {
+    user,
+    dados,
+    grupo,
+    updateUserDataInContext,
+    handleLogout: contextLogout,
+    isLoading: authIsLoading,
+    setDados: setAuthDados,
+  } = useAuth(); // Hook (useContext)
 
-  const dataFormatada = new Date(dados.dataNasc).toISOString().slice(0, 10);
-
-  // Estado para o formulário de dados pessoais
-  const [dadosPessoais, setDadosPessoais] = useState({
-    nome: dados.nome,
-    email: dados.email,
-    cpf: dados.cpf,
-    nascimento: dataFormatada,
-    genero: dados.genero,
+  const [activeTab, setActiveTab] = useState('dados'); // Hook
+  const [pedidosExpandidos, setPedidosExpandidos] = useState([]); // Hook
+  const [errorHandled, setErrorHandled] = useState(false); // Hook
+  const [dadosPessoais, setDadosPessoais] = useState({ // Hook
+    nome: '', email: '', cpf: '', nascimento: '', genero: '',
   });
-  
-  // Estado para o formulário de senha
-  const [senha, setSenha] = useState({
-    
-    nova: '',
-    confirmar: '',
+  const [senha, setSenha] = useState({ nova: '', confirmar: '' }); // Hook
+  const [enderecos, setEnderecos] = useState([]); // Hook
+  const [pedidos, setPedidos] = useState([]); // Hook
+  const [novoEndereco, setNovoEndereco] = useState({ // Hook
+    cep: '', logradouro: '', numero: '', complemento: '',
+    bairro: '', cidade: '', uf: '', padrao: false
   });
-  
-  // Estado para endereços de entrega
-  const [enderecos, setEnderecos] = useState([]);
-  const [pedidos, setPedidos] = useState([]);
-  
-  // Estado para novo endereço
-  const [novoEndereco, setNovoEndereco] = useState({
-    cep: '',
-    logradouro: '',
-    numero: '',
-    complemento: '',
-    bairro: '',
-    cidade: '',
-    uf: '',
-    padrao: false
+  const [feedback, setFeedback] = useState({ // Hook
+    dados: '', senha: '', enderecos: ''
   });
-  
-  // Estado para mensagens
-  const [feedback, setFeedback] = useState({
-    dados: '',
-    senha: '',
-    enderecos: ''
-  });
-  
-  // Estado para erros
-  const [errors, setErrors] = useState({
-    dados: {},
-    senha: {},
-    endereco: {}
+  const [errors, setErrors] = useState({ // Hook
+    dados: {}, senha: {}, endereco: {}
   });
 
-  // Função para mudar de aba
-  const changeTab = (tab) => {
-    setActiveTab(tab);
-  };
+  // --- DEFINA FUNÇÕES COM HOOKS (useCallback, useMemo) AQUI ---
+  const handleRedirect = useCallback(() => { // <<< MOVIDO PARA CIMA
+    router.push('/pgPrincipal');
+  }, [router]); // Dependência correta
 
-  const toggleDetalhes = (pedidoId) => {
-    setPedidosExpandidos(prev => 
-      prev.includes(pedidoId) 
-        ? prev.filter(id => id !== pedidoId) 
-        : [...prev, pedidoId]
-    );
-  };
-
-  useEffect(() => {
-    // Verifica se há um parâmetro 'tab' na URL
-    const params = new URLSearchParams(window.location.search);
-    const tabParam = params.get('tab');
-    
-    // Se houver e for uma tab válida, ativa-a
-    if (tabParam && ['dados', 'senha', 'enderecos', 'pedidos'].includes(tabParam)) {
-      setActiveTab(tabParam);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (activeTab === 'enderecos') {
-  
-      fetchEnderecos();
-    }
-  }, [activeTab]);
-
-  useEffect(() => {
-    if (activeTab === 'pedidos') {
-  
-      fetchPedidos();
-    }
-  }, [activeTab]);
-    
-  const fetchPedidos = async () => {
-      try{
-        const response = await fetch(`http://localhost:8081/pedidos/${dados.id}`);
-
-        if(!response.ok){
-          throw new Error("Erro ao buscar pedidos");
-  
-        }
-
-        const pedidosCliente = await response.json();
-        setPedidos(pedidosCliente);
-        
-      }catch(error){
-        console.error("Erro ao buscar pedidos:", error)
-      }
-  }
   const fetchEnderecos = async () => {
 
     try{
@@ -575,165 +506,279 @@ function Perfil() {
 
   }
 
-  const togglePrincipal = async (idEndereco, idCliente) => {
+  // =======================================================================
+  // 2. useEffects
+  // =======================================================================
+  useEffect(() => {
+    if (dados) {
+      const dataNascOriginal = dados.dataNasc;
+      let dataNascFormatada = '';
+      if (dataNascOriginal) {
+        try {
+          dataNascFormatada = new Date(dataNascOriginal).toISOString().slice(0, 10);
+        } catch (e) {
+          console.error("Erro ao formatar dataNasc:", e, "Valor original:", dataNascOriginal);
+        }
+      }
+      setDadosPessoais({
+        nome: dados.nome || '',
+        email: dados.email || '',
+        cpf: dados.cpf || '',
+        nascimento: dataNascFormatada,
+        genero: dados.genero || '',
+      });
+    }
+  }, [dados]);
+
+  useEffect(() => {
+    if (authIsLoading) {
+      console.log("Perfil: AuthContext carregando.");
+      return;
+    }
+    const userPresentButInvalid = user && !dados && !grupo;
+    if (userPresentButInvalid && !errorHandled) {
+      console.warn("Perfil: Estado de usuário inválido detectado. Forçando logout.");
+      if (typeof contextLogout === 'function') {
+        contextLogout();
+        setErrorHandled(true);
+      }
+    } else if (!userPresentButInvalid && errorHandled) {
+      setErrorHandled(false);
+    }
+  }, [user, dados, grupo, authIsLoading, contextLogout, errorHandled]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get('tab');
+    if (tabParam && ['dados', 'senha', 'enderecos', 'pedidos'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, []);
+
+  
+  useEffect(() => {
+    const fetchEnderecosInterno = async (clienteId) => {
+      console.log("Perfil: Tentando buscar endereços para clienteId:", clienteId);
+      try {
+        const response = await fetch(`http://localhost:8081/endereco/${clienteId}`);
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Erro ao buscar endereços: ${response.status} ${errorText}`);
+        }
+        const enderecosCliente = await response.json();
+        setEnderecos(Array.isArray(enderecosCliente) ? enderecosCliente : []);
+      } catch (error) {
+        console.error("Erro ao buscar endereços:", error);
+        setEnderecos([]);
+      }
+    };
+
+    if (activeTab === 'enderecos' && dados && dados.id) {
+      fetchEnderecosInterno(dados.id);
+    }
+  }, [activeTab, dados]);
+
+  useEffect(() => {
+    const fetchPedidosInterno = async (clienteId) => {
+      console.log("Perfil: Tentando buscar pedidos para clienteId:", clienteId);
+      try {
+        // Sua URL para buscar pedidos do cliente
+        const response = await fetch(`http://localhost:8081/pedidos/${dados.id}`);
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Erro ao buscar pedidos: ${response.status} ${errorText}`);
+        }
+        const pedidosCliente = await response.json();
+        setPedidos(Array.isArray(pedidosCliente) ? pedidosCliente : []);
+      } catch (error) {
+        console.error("Erro ao buscar pedidos:", error);
+        setPedidos([]);
+      }
+    };
+
+    if (activeTab === 'pedidos' && dados && dados.id) {
+      fetchPedidosInterno(dados.id);
+    }
+  }, [activeTab, dados]);
+
+
+  // =======================================================================
+  // 3. LÓGICA DE RETORNO CONDICIONAL (LOADERS, FALLBACKS)
+  // =======================================================================
+  if (authIsLoading || (!dados && user !== null)) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <p>Carregando perfil...</p>
+      </div>
+    );
+  }
+
+  if (!dados && !grupo && !authIsLoading) {
+    console.warn("Perfil: Sem dados do cliente e não é funcionário.");
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <p>Não foi possível carregar os dados do perfil. Tente fazer login novamente.</p>
+      </div>
+    );
+  }
+
+  // =======================================================================
+  // 4. DEFINIÇÃO DAS OUTRAS FUNÇÕES (HANDLERS, ETC.) - SEM HOOKS DENTRO DELAS
+  // =======================================================================
+  const changeTab = (tab) => { // Esta já estava no lugar certo
+    setActiveTab(tab);
+  };
+
+  const toggleDetalhes = (pedidoId) => { // Esta já estava no lugar certo
+    setPedidosExpandidos(prev =>
+      prev.includes(pedidoId)
+        ? prev.filter(id => id !== pedidoId)
+        : [...prev, pedidoId]
+    );
+  };
+
+  const togglePrincipal = async (idEndereco) => {
+    if (!dados || !dados.id) {
+        console.error("togglePrincipal: dados.id não disponível.");
+        return;
+    }
     try {
-      const response = await fetch(`http://localhost:8081/endereco?idEndereco=${idEndereco}&idCliente=${idCliente}`, {
+      const response = await fetch(`http://localhost:8081/endereco?idEndereco=${idEndereco}&idCliente=${dados.id}`, {
         method: 'PUT',
       });
-  
-      if (!response.ok) {
-        throw new Error("Erro ao definir endereço como principal");
-      }
-  
+      if (!response.ok) throw new Error("Erro ao definir endereço como principal");
       const msg = await response.text();
-      console.log(msg); // ou setFeedback(msg);
+      console.log(msg);
+      // Para refazer o fetch dos endereços, você precisaria chamar a lógica
+      // que está agora dentro do useEffect. A melhor forma seria ter a função fetchEnderecos
+      // memoizada com useCallback no topo e chamá-la aqui.
+      // Por agora, replicando (mas o ideal é refatorar para uma função useCallback):
+      const fetchEnderecosParaToggle = async () => {
+          try {
+            const res = await fetch(`http://localhost:8081/endereco/${dados.id}`);
+            if(!res.ok) throw new Error("Erro ao rebuscar endereços");
+            const data = await res.json();
+            setEnderecos(Array.isArray(data) ? data : []);
+          } catch(e) { console.error("Erro re-fetch endereços:", e); }
+      };
+      fetchEnderecosParaToggle();
     } catch (error) {
       console.error("Erro ao atualizar endereço principal:", error);
     }
-    fetchEnderecos();
-  }
+  };
 
-  // Função para atualizar dados pessoais
   const handleDadosChange = (e) => {
     const { name, value } = e.target;
     setDadosPessoais((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleRedirect = useCallback(() => {
-      router.push('/pgPrincipal');
-    }, [router]);
-  
-  // Função para atualizar senha
   const handleSenhaChange = (e) => {
     const { name, value } = e.target;
     setSenha((prev) => ({ ...prev, [name]: value }));
   };
-  
-  // Função para atualizar novo endereço
+
   const handleEnderecoChange = (e) => {
     const { name, value } = e.target;
     setNovoEndereco((prev) => ({ ...prev, [name]: value }));
   };
-  
-  // Buscar CEP
+
   const buscarCep = async () => {
     const cep = novoEndereco.cep.replace(/\D/g, '');
     if (cep.length !== 8) return;
-
     try {
       const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
       const data = await res.json();
       if (!data.erro) {
         setNovoEndereco((prev) => ({
           ...prev,
-          logradouro: data.logradouro,
-          bairro: data.bairro,
-          cidade: data.localidade,
-          uf: data.uf,
+          logradouro: data.logradouro, bairro: data.bairro,
+          cidade: data.localidade, uf: data.uf,
         }));
-        setErrors((prev) => ({ 
-          ...prev, 
-          endereco: { ...prev.endereco, cep: '' } 
-        }));
+        setErrors((prev) => ({ ...prev, endereco: { ...prev.endereco, cep: '' }  }));
       } else {
-        setErrors((prev) => ({ 
-          ...prev, 
-          endereco: { ...prev.endereco, cep: 'CEP inválido' } 
-        }));
+        setErrors((prev) => ({ ...prev, endereco: { ...prev.endereco, cep: 'CEP inválido' } }));
       }
     } catch (err) {
-      setErrors((prev) => ({ 
-        ...prev, 
-        endereco: { ...prev.endereco, cep: 'Erro ao buscar CEP' } 
-      }));
+      setErrors((prev) => ({ ...prev, endereco: { ...prev.endereco, cep: 'Erro ao buscar CEP' } }));
     }
   };
 
-  // Salvar dados pessoais
   const salvarDadosPessoais = async (e) => {
-    e.preventDefault(); // Para evitar reload da página
-  
+    e.preventDefault();
+    if (!dados || !dados.id) {
+      console.error("salvarDadosPessoais: dados.id não disponível.");
+      setFeedback({ ...feedback, dados: "Erro: dados do usuário não encontrados." });
+      return;
+    }
     setFeedback({ ...feedback, dados: '' });
     setErrors({ ...errors, dados: {} });
-  
     const updatedData = new URLSearchParams();
     if (dadosPessoais.nome) updatedData.append("nome", dadosPessoais.nome);
     if (dadosPessoais.nascimento) updatedData.append("dataNasc", dadosPessoais.nascimento);
     if (dadosPessoais.genero) updatedData.append("genero", dadosPessoais.genero);
-  
+
+     const dadosParaAtualizarNoContext = {
+    nome: dadosPessoais.nome,
+    dataNasc: dadosPessoais.nascimento, // Garanta que 'nascimento' está no formato esperado pelo backend/contexto
+    genero: dadosPessoais.genero,
+  };
+
     try {
       const response = await fetch(`http://localhost:8081/cliente/${dados.id}/dados`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
+        headers: { "Content-Type": "application/x-www-form-urlencoded", },
         body: updatedData.toString(),
       });
-  
-      if (!response.ok) {
-        throw new Error("Erro ao atualizar cliente");
-      }
-  
+      if (!response.ok) throw new Error("Erro ao atualizar cliente");
+
+      updateUserDataInContext(dadosParaAtualizarNoContext);
+
       setFeedback({ ...feedback, dados: "Dados atualizados com sucesso!" });
-      setDados(prev => ({
-        ...prev,
-        nome: dadosPessoais.nome,
-        dataNasc: dadosPessoais.nascimento,
-        genero: dadosPessoais.genero
-      }));
-      
-  
     } catch (error) {
       console.error(error);
       setFeedback({ ...feedback, dados: "Erro ao atualizar cliente" });
     }
   };
-  
- 
-  const salvarSenha = async (e) => {
-    e.preventDefault(); // Para evitar reload da página
 
+  const salvarSenha = async (e) => {
+    e.preventDefault();
+    if (!dados || !dados.id) {
+      console.error("salvarSenha: dados.id não disponível.");
+      alert("Erro: dados do usuário não encontrados.");
+      return;
+    }
     const errorsObj = {};
-    
     if (!senha.nova) errorsObj.nova = 'Nova senha é obrigatória';
     if (senha.nova !== senha.confirmar) errorsObj.confirmar = 'As senhas não coincidem';
-    
     if (Object.keys(errorsObj).length > 0) {
       setErrors({...errors, senha: errorsObj});
       return;
     }
-    
-  
-    setFeedback({ ...feedback, dados: '' });
-    setErrors({ ...errors, dados: {} });
-  
+    setFeedback({ ...feedback, senha: '' }); // Limpar feedback de senha antes de tentar
+    setErrors({ ...errors, senha: {} }); // Limpar erros de senha
     try {
       const senhaData = new URLSearchParams();
       senhaData.append("senha", senha.nova);
       const response = await fetch(`http://localhost:8081/cliente/${dados.id}/senha`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
+        headers: { "Content-Type": "application/x-www-form-urlencoded", },
         body: senhaData.toString(),
       });
-  
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({ message: "Erro ao processar resposta do servidor."})); // Adicionar .catch para segurança
         if (errorData.errors) {
           setErrors({ ...errors, senha: errorData.errors });
         }
-        throw new Error("Erro ao atualizar senha");
+        throw new Error(errorData.message || "Erro ao atualizar senha");
       }
-      alert("Senha atualizada!");
-    }catch (error) {
+      setFeedback({ ...feedback, senha: "Senha atualizada com sucesso!" }); // Usar feedback para sucesso
+      setSenha({nova: '', confirmar: ''}); // Limpar campos de senha
+    } catch (error) {
       console.error('Erro ao atualizar senha:', error);
-      alert('Erro ao atualizar senha!');
+      setFeedback({ ...feedback, senha: error.message || 'Erro ao atualizar senha!' }); // Usar feedback para erro
     }
   };
- 
-  
-  // Adicionar novo endereço
+
   const adicionarEndereco = async (e) => {
     e.preventDefault();
     const payload = {
@@ -778,38 +823,41 @@ function Perfil() {
         console.error("Erro ao cadastrar endereco:", error);
       }
     };
-  
-    const deletarEndereco = async (endereco) => {
-      try {
-        const response = await fetch('http://localhost:8081/endereco', {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(endereco) // o corpo da requisição DELETE
-        });
-    
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(errorText);
-        }
-    
-        const mensagem = await response.text();
-        alert("Endereço excluído com sucesso: " + mensagem);
-        fetchEnderecos();
-      } catch (error) {
-        console.error("Erro ao excluir endereço:", error);
-        alert("Erro ao excluir endereço: " + error.message);
-      }
-    };
-  
-  // Obter primeira letra do nome para o avatar
-  const getInitial = () => {
-    return dadosPessoais.nome.charAt(0).toUpperCase();
+
+  const deletarEndereco = async (endereco) => {
+    if (!dados || !dados.id) {
+      console.error("deletarEndereco: dados.id não disponível.");
+      alert("Erro: dados do usuário não encontrados.");
+      return;
+    }
+    try {
+      const response = await fetch('http://localhost:8081/endereco', { /* ... */ });
+      if (!response.ok) throw new Error(await response.text());
+      const mensagem = await response.text();
+      setFeedback({...feedback, enderecos: "Endereço excluído com sucesso!"}); // Usar feedback
+      // Re-fetch endereços
+      const fetchEnderecosParaDeletar = async () => {
+          try {
+            const res = await fetch(`http://localhost:8081/endereco/${dados.id}`);
+            if(!res.ok) throw new Error("Erro ao rebuscar endereços");
+            const data = await res.json();
+            setEnderecos(Array.isArray(data) ? data : []);
+          } catch(errFetch) { console.error("Erro re-fetch endereços:", errFetch); }
+      };
+      fetchEnderecosParaDeletar();
+    } catch (error) {
+      console.error("Erro ao excluir endereço:", error);
+      setFeedback({...feedback, enderecos: "Erro ao excluir endereço: " + error.message}); // Usar feedback
+    }
   };
 
+  const getInitial = () => {
+    return dadosPessoais.nome ? dadosPessoais.nome.charAt(0).toUpperCase() : '?';
+  };
 
-
+  // =======================================================================
+  // 5. JSX DE RETORNO PRINCIPAL
+  // =======================================================================
   return (
     
     <StyledPerfil>

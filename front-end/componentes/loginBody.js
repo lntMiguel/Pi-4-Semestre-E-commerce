@@ -1,8 +1,9 @@
 import styled from "styled-components";
 import { createGlobalStyle } from "styled-components";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "./authContext";
+
 
 const GlobalStyle = createGlobalStyle`
   * {
@@ -151,9 +152,18 @@ function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
-  const { setUser, setGrupo, setDados, setCarrinho, user, frete, setFrete } = useAuth();
+  const { processLogin, dados, grupo, isLoading: authIsLoading } = useAuth();  
   const [usuarioErro, setUsuarioErro] = useState(false);
   const [senhaErro, setSenhaErro] = useState(false);
+
+ useEffect(() => {
+    if (!authIsLoading && (dados || grupo)) { // Se não estiver carregando E for cliente OU funcionário logado
+      console.log("Login: Usuário já logado (dados ou grupo presente), redirecionando.");
+      router.push('/pgPrincipal');
+    } else {
+       console.log(`Login: Estado de login não definido ou carregando. authIsLoading: ${authIsLoading}, dados: ${dados ? 'present' : 'null'}, grupo: ${grupo ? 'present' : 'null'}`);
+    }
+  }, [dados, grupo, authIsLoading, router]);
 
   const handleRedirectCadastro = () => {
     router.push('/cadastro');
@@ -167,7 +177,7 @@ function Login() {
     router.push('/pgPrincipal');
   };
 
-  const handleLogin = async (e) => {
+   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
     setUsuarioErro(false);
@@ -185,43 +195,53 @@ function Login() {
     if (hasError) return;
 
     try {
-      const response = await fetch("http://localhost:8081/cliente/login", {
+      const response = await fetch("http://localhost:8081/cliente/login", { // Use API_URL se definido globalmente
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      const responseData = await response.json();
+
+      // Sempre tenta ler a resposta JSON, mesmo em caso de erro (a API pode enviar { message: ... })
+      const responseData = await response.json().catch(() => ({ message: "Resposta do servidor inválida." }));
+
       if (!response.ok) {
-        setError(responseData.message || (response.status === 403 && responseData.message === "Usuário inativo" ? "Seu usuário está inativo. Contate o suporte." : "Credenciais inválidas"));
-        return;
+        // Usa a mensagem da API se disponível, ou uma mensagem padrão/status
+        setError(responseData.message || (response.status === 403 && responseData.message === "Usuário inativo" ? "Seu usuário está inativo. Contate o suporte." : "Credenciais inválidas ou erro no servidor."));
+        return; // Para aqui se o login falhou
       }
-      setUser(responseData);
-      setGrupo(null);
-      localStorage.setItem("user", JSON.stringify(responseData));
-      const storedGuestCarrinho = localStorage.getItem('carrinho_guest');
-      if (storedGuestCarrinho) {
-        const guestCarrinho = JSON.parse(storedGuestCarrinho);
-        setCarrinho(guestCarrinho);
-        localStorage.setItem(`carrinho_${responseData.id}`, JSON.stringify(guestCarrinho));
-        localStorage.removeItem('carrinho_guest');
-      } else {
-        const userCarrinho = localStorage.getItem(`carrinho_${responseData.id}`);
-        setCarrinho(userCarrinho ? JSON.parse(userCarrinho) : []);
-      }
-      const storedfrete = localStorage.getItem('frete');
-      if (storedfrete) setFrete(JSON.parse(storedfrete));
-      router.push("/pgPrincipal");
+
+      // Sucesso no login
+      console.log("Login: Login bem-sucedido, chamando processLogin...");
+      await processLogin(responseData); // AuthContext agora lida com o carrinho e localStorage
+      
+      // A navegação para /pgPrincipal deve acontecer DENTRO DO useEffect
+      // que observa dados/grupo/authIsLoading se tornando válidos.
+      // Não chame router.push aqui diretamente após await processLogin,
+      // para evitar race conditions com o useEffect no AuthContext e na pgPrincipal.
+      // O useEffect [dados, grupo, authIsLoading] neste componente de Login
+      // já lida com o redirecionamento quando o estado de login se torna válido.
+
     } catch (err) {
-      console.error("Erro no login:", err);
+      console.error("Erro na requisição de login:", err);
       setError(err.message || "Erro ao fazer login. Verifique sua conexão.");
     }
   };
+
 
   const enterAcionado = (e) => {
     if (e.key === "Enter" && (document.activeElement.name === "password" || document.activeElement.name === "email")) {
       handleLogin(e);
     }
   };
+
+  if (authIsLoading) {
+       return (
+           <StyledLogin>
+               <GlobalStyle />
+               <Box><p>Carregando estado de autenticação...</p></Box> {/* Exemplo de loading */}
+           </StyledLogin>
+       );
+   }
 
   return (
     <StyledLogin>

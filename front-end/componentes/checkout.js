@@ -1,5 +1,5 @@
 import { useAuth } from "./authContext";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import styled from "styled-components";
 import { useRouter } from "next/navigation";
 import { createGlobalStyle } from "styled-components";
@@ -723,7 +723,7 @@ const FormRow = styled.div`
   }
 `;
 const Checkout = () => {
-  const { user, carrinho, setCarrinho, frete, valorFrete, dados } = useAuth(); // Removido setFrete, setValorFrete se não forem usados aqui
+  const { user, carrinho, limparCarrinho, frete, valorFrete, dados } = useAuth(); // Removido setFrete, setValorFrete se não forem usados aqui
   const [enderecos, setEnderecos] = useState([]);
   const [enderecoSelecionado, setEnderecoSelecionado] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('Cartão de Crédito');
@@ -755,7 +755,14 @@ const Checkout = () => {
   const [showModal, setShowModal] = useState(false);
 
   // Calcular total dos produtos
-  const totalProdutos = carrinho.reduce((total, item) => total + item.preco * item.quantidade, 0);
+  const totalProdutos = useMemo(() => {
+    return carrinho.reduce((total, item) => {
+      const preco = parseFloat(item.precoUnitario || item.preco) || 0;
+      const quantidade = parseInt(item.quantidade, 10) || 0;
+      return total + preco * quantidade;
+    }, 0);
+  }, [carrinho]);  
+  
   const totalGeral = totalProdutos + valorFrete;
 
   // Carregar os endereços de entrega do usuário
@@ -794,16 +801,8 @@ const Checkout = () => {
     precoUnitario: produto.preco
   }));
 
-  // Define o pedido de forma geral
-  const pedidoBase = {
-    dataPedido: new Date(),
-    status: "AGUARDANDO_PAGAMENTO",
-    valor: totalGeral,
-    produtos: produtosFormatados,
-    enderecoCliente: enderecoSelecionado, // Sempre usa enderecoSelecionado
-    metodoDePagamento: paymentMethod,
-    idCliente: dados ? dados.id : null // Sempre usa dados.id
-  };
+  const handleRedirectPerfil = () => router.push('/perfil');
+
     
   const validatePagamento = () => {
     const newErrorsPagamento = {}; // Usar um objeto local para erros desta validação
@@ -861,10 +860,26 @@ const Checkout = () => {
     setNovoEndereco((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleClearCarrinho = () => {
-    setCarrinho([]);
-    localStorage.removeItem("carrinho");
-  };
+  // Formatação para o pedido enviado à API
+  const produtosParaAPIPedido = useMemo(() => {
+    return carrinho.map((item) => ({
+      idProduto: item.idProduto || item.id, // Use idProduto se existir, senão id
+      nomeProduto: item.nomeProduto || item.nome, // nomeProduto ou nome
+      quantidade: parseInt(item.quantidade, 10) || 0,
+      precoUnitario: parseFloat(item.precoUnitario || item.preco) || 0,
+    }));
+  }, [carrinho]);
+
+
+  const pedidoBase = useMemo(() => ({ // Usar useMemo se os inputs não mudam tão frequentemente
+    dataPedido: new Date().toISOString(), // Melhor enviar como string ISO
+    status: "AGUARDANDO_PAGAMENTO",
+    valor: totalGeral,
+    produtos: produtosParaAPIPedido,
+    enderecoCliente: enderecoSelecionado,
+    metodoDePagamento: paymentMethod,
+    idCliente: dados ? dados.id : null,
+  }), [totalGeral, produtosParaAPIPedido, enderecoSelecionado, paymentMethod, dados]);
 
   const formatCardNumber = (value) => {
     const digits = value.replace(/\D/g, '');
@@ -978,42 +993,74 @@ const Checkout = () => {
         return;
     }
 
+    // Recalcula o pedidoFinal aqui para garantir que tem os dados mais recentes
+    // dos estados e useMemos, especialmente se algo pôde mudar entre o handleFinalizarCompra e este.
+    const freteNumericoParaPedido = parseFloat(valorFrete) || 0;
+    const totalProdutosParaPedido = carrinho.reduce((total, item) => {
+        const preco = parseFloat(item.precoUnitario || item.preco) || 0;
+        const quantidade = parseInt(item.quantidade, 10) || 0;
+        return total + preco * quantidade;
+    }, 0);
+    const totalGeralParaPedido = totalProdutosParaPedido + freteNumericoParaPedido;
+
+    const produtosFormatadosParaPedido = carrinho.map((item) => ({
+        idProduto: item.idProduto || item.id,
+        nomeProduto: item.nomeProduto || item.nome,
+        quantidade: parseInt(item.quantidade, 10) || 0,
+        precoUnitario: parseFloat(item.precoUnitario || item.preco) || 0,
+    }));
+    console.log(enderecoSelecionado);
     const pedidoFinal = {
-        ...pedidoBase,
-        idCliente: dados.id, // Garante que o idCliente está atualizado
-        enderecoCliente: enderecoSelecionado, // Garante que o enderecoSelecionado está atualizado
+        dataPedido: new Date().toISOString(),
+        status: "AGUARDANDO_PAGAMENTO",
+        valor: totalGeralParaPedido,
+        produtos: produtosFormatadosParaPedido,
+        enderecoCliente: enderecoSelecionado,
+        metodoDePagamento: paymentMethod,
+        idCliente: dados.id, // dados.id já foi verificado
     };
 
+    if (paymentMethod === 'Cartão de Crédito') {
+        pedidoFinal.detalhesPagamento = {
+            tipo: 'CartaoCredito',
+            numeroCartaoFinal: cardNumber.slice(-4),
+            nomeCartao: cardName,
+            parcelas: parseInt(cardInstallments, 10) || 1
+        };
+    } else if (paymentMethod === 'Boleto'){
+        pedidoFinal.detalhesPagamento = { tipo: 'Boleto' };
+    } else if (paymentMethod === 'Pix'){
+        pedidoFinal.detalhesPagamento = { tipo: 'Pix' };
+    }
+
     try {
-      const response = await fetch("http://localhost:8081/pedidos/criar", {
+      const response = await fetch(`http://localhost:8081/pedidos/criar`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(pedidoFinal)
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Erro desconhecido ao criar o pedido");
+        // Tenta parsear o JSON do erro, com um fallback caso falhe
+        const errorData = await response.json().catch(() => ({ message: `Erro HTTP ${response.status} ao criar o pedido.` }));
+        // USA globalThis.Error para garantir que está usando o construtor global
+        throw new globalThis.Error(errorData.message || "Erro desconhecido ao criar o pedido");
       }
 
       const data = await response.json();
-      setResposta(data);
-      handleClearCarrinho();
-      alert(`Pedido realizado com sucesso! Número do pedido: ${data.numero} \n Visite "Meus pedidos" no perfil para visualizar suas compras`);
+      setResposta(data); // Você pode usar 'data' para mostrar o número do pedido, por exemplo
+      limparCarrinho(); // Chama a função do AuthContext
+      alert(`Pedido realizado com sucesso! Número do pedido: ${data.id || data.numeroPedido || 'N/A'} \nVisite "Meus pedidos" no perfil para visualizar suas compras`);
       router.push('/pgPrincipal');
       setShowModal(false);
     } catch (error) {
+      // O 'error' capturado aqui agora deve ser uma instância de Error
       console.error("Erro ao criar pedido:", error);
+      // Mostra a mensagem do erro para o usuário
       alert(`Não foi possível finalizar o pedido: ${error.message}`);
       setShowModal(false); // Fecha o modal em caso de erro também
     }
   };
-
-  const BotaoIrParaEndereco = () => (
-    <a href="/perfil?tab=enderecos" target="_blank" rel="noopener noreferrer">
-      <CheckoutButton>Gerenciar Endereços</CheckoutButton>
-    </a>
-  );
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -1073,7 +1120,8 @@ const Checkout = () => {
                     <input type="checkbox" id="padraoNovo" name="padrao" checked={novoEndereco.padrao} onChange={(e) => setNovoEndereco(prev => ({...prev, padrao: e.target.checked}))} />
                     <label htmlFor="padraoNovo" style={{ marginLeft: '5px', fontSize: '14px' }}> Definir como endereço padrão</label>
                 </div> */}
-                <BotaoIrParaEndereco /> {/* Sugere ir para a página de perfil para adicionar de forma mais completa */}
+                  <CheckoutButton onClick={handleRedirectPerfil}>Gerenciar Endereços</CheckoutButton>
+ {/* Sugere ir para a página de perfil para adicionar de forma mais completa */}
 
               </>
             ) : (
@@ -1106,7 +1154,7 @@ const Checkout = () => {
                     </EnderecoCard>
                   ))}
                 </EnderecosGrid>
-                <BotaoIrParaEndereco />
+                  <CheckoutButton onClick={handleRedirectPerfil}>Gerenciar Endereços</CheckoutButton>
               </>
             )}
              {/* Mensagem se nenhum endereço estiver selecionado e houver endereços */}
@@ -1163,12 +1211,19 @@ const Checkout = () => {
                     <FormGroup>
                       <FormLabel>Parcelas</FormLabel>
                       <FormSelect value={cardInstallments} onChange={(e) => setCardInstallments(e.target.value)}>
-                        {[1, 2, 3, 4, 5, 6].map(numParcelas => (
-                            <option key={numParcelas} value={numParcelas.toString()}>
-                                {numParcelas}x de R$ {(totalGeral / numParcelas).toFixed(2)} sem juros
-                            </option>
-                        ))}
-                      </FormSelect>
+                      {[1, 2, 3, 4, 5, 6].map(num => { // Renomeado para num
+                          let valorDaParcela = 0;
+                          // Garante que totalGeral é um número e num é maior que 0
+                          if (typeof totalGeral === 'number' && totalGeral > 0 && num > 0) {
+                              valorDaParcela = totalGeral / num;
+                          }
+                          return (
+                              <option key={num} value={num.toString()}>
+                                  {num}x de R$ {valorDaParcela.toFixed(2)} sem juros
+                              </option>
+                          );
+                      })}
+                    </FormSelect>
                     </FormGroup>
                   </>
                 )}
@@ -1199,17 +1254,24 @@ const Checkout = () => {
         {carrinho.length === 0 ? (
           <EmptyCartMessage>Seu carrinho está vazio</EmptyCartMessage>
         ) : (
-          carrinho.map((item, index) => (
-            <CarrinhoItem key={index}>
-              <ItemInfo>
-                <div>
-                  <ItemName>{item.nome}</ItemName>
-                  <ItemPrice>R$ {item.preco.toFixed(2)} x {item.quantidade}</ItemPrice>
-                </div>
-              </ItemInfo>
-            </CarrinhoItem>
-          ))
-        )}
+          carrinho.map((item, index) => {
+                  // CONSISTÊNCIA: Use os mesmos fallbacks para nome e preço
+                  const nomeItem = item.nomeProduto || item.nome || "Produto";
+                  const precoItem = parseFloat(item.precoUnitario || item.preco) || 0;
+                  const quantidadeItem = parseInt(item.quantidade, 10) || 1; // Assume 1 se não especificado
+
+                  return (
+                    <CarrinhoItem key={item.idProduto || index}> {/* Use idProduto se disponível */}
+                      <ItemInfo>
+                        <div>
+                          <ItemName>{nomeItem}</ItemName>
+                          <ItemPrice>R$ {precoItem.toFixed(2)} x {quantidadeItem}</ItemPrice>
+                        </div>
+                      </ItemInfo>
+                    </CarrinhoItem>
+                  );
+                })
+              )}
       </CarrinhoList>
 
       <SectionTitleC style={{ marginTop: '30px' }}>Resumo do Pedido</SectionTitleC> {/* Adiciona margem superior */}
@@ -1244,20 +1306,26 @@ const Checkout = () => {
           <ModalSection>
             <ModalSectionTitle>Itens do Pedido</ModalSectionTitle>
             <CarrinhoListR>
-              {carrinho.map((item, index) => (
-                <CarrinhoItem key={index}>
-                  <ItemInfo>
-                    <div>
-                      <ItemName>{item.nome}</ItemName>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%'/*era 300px*/, fontSize: '13px' }}>
-                        <span>Qtd: {item.quantidade}</span>
-                        <span>Unitário: R$ {item.preco.toFixed(2)}</span>
-                        <span>Total: R$ {(item.preco * item.quantidade).toFixed(2)}</span>
+              {carrinho.map((item, index) => {
+                const nomeItem = item.nomeProduto || item.nome || "Produto";
+                const precoItem = parseFloat(item.precoUnitario || item.preco) || 0;
+                const quantidadeItem = parseInt(item.quantidade, 10) || 1;
+                const totalItem = precoItem * quantidadeItem;
+                return (
+                  <CarrinhoItem key={item.idProduto || index}> {/* Use idProduto se disponível */}
+                    <ItemInfo>
+                      <div>
+                        <ItemName>{nomeItem}</ItemName>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', fontSize: '13px' }}>
+                          <span>Qtd: {quantidadeItem}</span>
+                          <span>Unitário: R$ {precoItem.toFixed(2)}</span>
+                          <span>Total: R$ {totalItem.toFixed(2)}</span>
+                        </div>
                       </div>
-                    </div>
-                  </ItemInfo>
-                </CarrinhoItem>
-              ))}
+                    </ItemInfo>
+                  </CarrinhoItem>
+                );
+              })}
             </CarrinhoListR>
           </ModalSection>
           <ModalSection>

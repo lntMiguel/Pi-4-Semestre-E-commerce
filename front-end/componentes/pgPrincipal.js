@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { createGlobalStyle } from "styled-components";
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from "next/navigation";
 import axios from 'axios';
 import Slider from "react-slick";
@@ -492,302 +492,212 @@ const StyledSlider = styled(Slider)`
 `;
 
 function Principal() {
-  const { user, setUser, setGrupo, setDados, dados, frete, setFrete, valorFrete, setValorFrete, handleLogout: contextLogout, isLoading: authIsLoading } = useAuth();
+const {
+    user, // Objeto user completo do AuthContext
+    dados, // Dados específicos do cliente (ou null)
+    grupo, // Grupo do funcionário (ou null)
+    frete, setFrete, valorFrete, setValorFrete,
+    handleLogout: contextLogout, // Função de logout do AuthContext
+    isLoading: authIsLoading, // Flag de loading geral do AuthContext
+    isCartLoading, // Flag de loading para operações de carrinho
+    carrinho, // Array de itens do carrinho
+    adicionarAoCarrinho,
+    atualizarQuantidadeNoCarrinho,
+    limparCarrinho,
+    removerDoCarrinho
+  } = useAuth();
+
   const [produtos, setProdutos] = useState([]);
-  const [showModal, setShowModal] = useState(false);
-  const { carrinho, setCarrinho } = useAuth();
-  const [showCarrinho, setShowCarrinho] = useState(false);
+  const [showModalDetalhes, setShowModalDetalhes] = useState(false); // Renomeado para clareza
+  const [showModalCarrinho, setShowModalCarrinho] = useState(false); // Renomeado para clareza
   const [addedMessage, setAddedMessage] = useState('');
-  const [total, setTotal] = useState(0);
   const [viewingProduct, setViewingProduct] = useState(null);
   const router = useRouter();
-  const [errorHandled, setErrorHandled] = useState(false);
-  const [imagemSelecionada, setImagemSelecionada] = useState(null);
+  const [errorHandled, setErrorHandled] = useState(false); // Para lógica de tratamento de erro de sessão
+  const [imagemAmpliada, setImagemAmpliada] = useState(null); // Renomeado para clareza
 
-  const handleRedirect = () => {
-    router.push('/cadastro');
-  };
+  // --- Funções de Redirecionamento ---
+  const handleRedirectPerfil = () => router.push('/perfil');
+  const handleRedirectLogin = () => router.push('/login');
+  const handleRedirectCadastro = () => router.push('/cadastro');
 
-  const handleRedirectL = () => {
-    router.push('/login');
-  };
-
-  const handleRedirectPerfil = () => {
-    router.push('/perfil');
-  }
-
-  
-  const handleFinalizarCompra = () => {
-    if (!frete) {
-      alert("Por favor, selecione uma opção de frete antes de finalizar a compra.");
-      return;
-    }
-
-    router.push("/checkout");
-
-  };
-
+  // --- Efeito para verificar inconsistência de sessão ---
   useEffect(() => {
-    if (authIsLoading) { // Boa prática: esperar o contexto carregar
-      console.log("pgPrincipal: AuthContext carregando, aguardando para verificar dados inconsistentes.");
+    if (authIsLoading) {
+      console.log("pgPrincipal: AuthContext carregando, aguardando para verificar estado.");
       return;
     }
-
-    // Adicionar um log para ver os valores quando este efeito roda
-    console.log("pgPrincipal: Verificando dados inconsistentes. User:", user ? user.id || user.grupo : null, "Dados:", dados, "ErrorHandled:", errorHandled);
-
-    if (user && dados === null && !errorHandled) {
-      console.warn("pgPrincipal: DETECTADO user existe mas dados é null. Limpando sessão...");
-
+    const userPresentButInvalid = user && !dados && !grupo;
+    if (userPresentButInvalid && !errorHandled) {
+      console.warn("pgPrincipal: Estado de usuário inválido detectado. Forçando logout.");
       if (typeof contextLogout === 'function') {
-        console.log("pgPrincipal: Chamando contextLogout().");
-        contextLogout(); // Assumindo que contextLogout faz reload
+        contextLogout();
         setErrorHandled(true);
-      } else {
-        // ... sua lógica de limpeza manual ...
-        console.log("pgPrincipal: Fazendo limpeza manual da sessão e recarregando.");
-        localStorage.removeItem("user");
-        localStorage.removeItem("frete");
-        localStorage.removeItem("valorFrete");
-        if (setUser) setUser(null);
-        if (setGrupo) setGrupo(null);
-        if (setDados) setDados(null);
-        if (setCarrinho) setCarrinho([]);
-        setErrorHandled(true);
-        if (typeof window !== "undefined") {
-          window.location.reload();
-        }
       }
-    } else if (user && dados !== null && errorHandled) {
-      console.log("pgPrincipal: Dados parecem válidos agora, resetando errorHandled.");
-      setErrorHandled(false);
-    } else if (!user && errorHandled) {
-      // Se o usuário foi deslogado (user é null) e o erro foi marcado,
-      // podemos resetar errorHandled para permitir futuras verificações se necessário.
-      console.log("pgPrincipal: Usuário deslogado, resetando errorHandled.");
+    } else if (!userPresentButInvalid && errorHandled) {
       setErrorHandled(false);
     }
+  }, [user, dados, grupo, authIsLoading, contextLogout, errorHandled]);
 
-  }, [user, dados, authIsLoading, contextLogout, setUser, setGrupo, setDados, setCarrinho, errorHandled, router]); // Adicionei router se for usado para redirecionar sem reload
-
-  useEffect(() => {
-    axios.get('http://localhost:8081/produto')
-      .then(async (response) => {
-        // 1. Filtrar os produtos com status === true
-        const produtosAtivos = response.data.filter(produto => produto.status === true); // Ou simplesmente produto.status
-
-        // 2. Mapear APENAS os produtos ativos para buscar imagens
-        const produtosComImagens = await Promise.all(produtosAtivos.map(async (produto) => {
-          // Supondo que você tenha uma função fetchImages definida em algum lugar
-          // Exemplo: const fetchImages = async (produtoId) => { /* lógica para buscar imagens */ return []; };
-          const imagens = await fetchImages(produto.id);
-
-          const imagemPrincipal = imagens.find(img => img.principal) || imagens[0];
-          return {
-            ...produto,
-            imagemPrincipal: imagemPrincipal ? imagemPrincipal.caminhoArquivo : 'url_da_imagem_padrao.jpg',
-          };
-        }));
-        setProdutos(produtosComImagens);
-      })
-      .catch(error => {
-        console.error('Erro ao buscar produtos:', error);
-        // Mantenha sua lógica de erro, se necessário
-        // setCount(1);
-      });
-  }, []);
-
+  // --- Função para buscar imagens de um produto ---
   const fetchImages = async (idProduto) => {
     try {
       const response = await fetch(`http://localhost:8081/imagens/${idProduto}`);
       if (!response.ok) {
-        throw new Error("Erro ao buscar imagens");
+        if (response.status === 404) return []; // Sem imagens, retorna array vazio
+        throw new Error(`Erro ${response.status} ao buscar imagens.`);
       }
-      const imagens = await response.json();
-      const caminhoBase = "http://localhost:8081/";
-      const imagensComCaminho = imagens.map(imagem => ({
-        ...imagem,
-        url: `${caminhoBase}${imagem.caminho}`,
+      const imagensApi = await response.json();
+      return imagensApi.map(img => ({
+        ...img,
+        url: `http://localhost:8081/${img.caminhoArquivo}` // URL completa da imagem
       }));
-      return imagensComCaminho;
     } catch (error) {
-      console.error("Erro ao buscar imagens:", error);
+      console.error(`Erro em fetchImages para produto ${idProduto}:`, error);
       return [];
     }
   };
 
+  // --- Efeito para carregar produtos ---
   useEffect(() => {
-    // 1. Atualiza o total
-    const totalProdutos = carrinho.reduce((acc, item) => acc + (item.preco * item.quantidade), 0);
-    setTotal(totalProdutos + valorFrete);
+    axios.get('http://localhost:8081/produto')
+      .then(async (response) => {
+        const produtosAtivos = response.data.filter(p => p.status === true);
+        const produtosComDadosDeImagem = await Promise.all(produtosAtivos.map(async (produtoBackend) => {
+          const todasImagensDoProduto = await fetchImages(produtoBackend.id);
+          const imagemPrincipalObj = todasImagensDoProduto.find(img => img.principal) || todasImagensDoProduto[0];
+          return {
+            ...produtoBackend,
+            imagemPrincipalDisplay: imagemPrincipalObj ? imagemPrincipalObj.caminhoArquivo : null, // Para uso com slice, se mantiver
+            imagensComUrl: todasImagensDoProduto, // Array de objetos imagem com .url completa
+          };
+        }));
+        setProdutos(produtosComDadosDeImagem);
+      })
+      .catch(error => {
+         console.error('Erro ao buscar produtos:', error);
+      });
+  }, []);
 
-    // 2. Atualiza o localStorage
-    const carrinhoKey = user ? `carrinho_${user.id}` : 'carrinho_guest';
-    localStorage.setItem(carrinhoKey, JSON.stringify(carrinho));
-  }, [carrinho, valorFrete, user]);
+  // --- Calcular total do carrinho com frete ---
+  const totalCarrinhoComFrete = useMemo(() => {
+    if (!carrinho || carrinho.length === 0) return Number(valorFrete) || 0;
+    const totalProdutos = carrinho.reduce((acc, item) => {
+        const precoItem = item?.precoUnitario ?? item?.preco ?? 0;
+        const quantidadeItem = item?.quantidade ?? 0;
+        return acc + (Number(precoItem) * Number(quantidadeItem));
+    }, 0);
+    return totalProdutos + (Number(valorFrete) || 0);
+  }, [carrinho, valorFrete]);
 
-
-  const handleDetail = async (produto) => {
-
+  // --- Handlers para Modais e Ações ---
+  const handleDetail = (produtoSelecionado) => {
     setAddedMessage('');
-    const imagens = await fetchImages(produto.id); // Busca as imagens antes de atualizar o estado
-
-    setViewingProduct({
-      ...produto,
-      imagens,
-    });
-    setShowModal(true);
+    // As imagens já devem estar em produtoSelecionado.imagensComUrl
+    setViewingProduct(produtoSelecionado);
+    setShowModalDetalhes(true);
   };
 
-  const handleCloseModal = () => {
-
-    setShowModal(false);
+  const handleCloseModalDetalhes = () => {
+    setShowModalDetalhes(false);
+    setViewingProduct(null);
   };
 
   const handleFreteChange = (tipo) => {
     let valor = 0;
-    if (tipo === 'normal') {
-      valor = 10;
-    } else if (tipo === 'rapida') {
-      valor = 20;
-    } else if (tipo === 'retirada') {
-      valor = 0;
-    }
-
+    if (tipo === 'normal') valor = 10;
+    else if (tipo === 'rapida') valor = 20;
+    else if (tipo === 'retirada') valor = 0;
     setValorFrete(valor);
     setFrete(tipo);
-
-    localStorage.setItem("frete", JSON.stringify(tipo));
-    localStorage.setItem("valorFrete", JSON.stringify(valor));
-
   };
 
-  const handleAddToCart = () => {
-    setCarrinho(prevCarrinho => {
-      const existingProductIndex = prevCarrinho.findIndex(item => item.id === viewingProduct.id);
-
-      if (existingProductIndex !== -1) {
-        return prevCarrinho.map((item, index) =>
-          index === existingProductIndex ? { ...item, quantidade: item.quantidade + 1 } : item
-        );
-      } else {
-        return [...prevCarrinho, { ...viewingProduct, quantidade: 1 }];
-      }
-    });
-
-    setAddedMessage('Produto adicionado ao carrinho!');
-    setTimeout(() => setAddedMessage(''), 2000);
+  const handleAddToCartNoModal = async () => {
+    if (!viewingProduct) return;
+    try {
+       await adicionarAoCarrinho(viewingProduct, 1);
+       setAddedMessage('Produto adicionado ao carrinho!');
+       setTimeout(() => setAddedMessage(''), 2000);
+    } catch (error) {
+       console.error("Erro ao adicionar ao carrinho (modal):", error);
+       alert(`Erro: ${error.message || 'Não foi possível adicionar o item.'}`);
+    }
   };
 
-  const handleBuy = () => {
-    setCarrinho(prevCarrinho => {
-      const existingProductIndex = prevCarrinho.findIndex(item => item.id === viewingProduct.id);
-
-      let updatedCarrinho;
-      if (existingProductIndex !== -1) {
-        // Se o produto já existe, incrementa a quantidade
-        updatedCarrinho = [...prevCarrinho];
-        updatedCarrinho[existingProductIndex].quantidade += 1;
-      } else {
-        // Se o produto não existe, adiciona-o com quantidade 1
-        updatedCarrinho = [...prevCarrinho, { ...viewingProduct, quantidade: 1 }];
-      }
-
-      // Salva o carrinho atualizado no localStorage
-      localStorage.setItem("carrinho", JSON.stringify(updatedCarrinho));
-
-      return updatedCarrinho;
-    });
-
-    setShowModal(false);
-    setShowCarrinho(true);
+  const handleBuyNoModal = async () => {
+    if (!viewingProduct) return;
+     try {
+        await adicionarAoCarrinho(viewingProduct, 1);
+        setShowModalDetalhes(false);
+        setShowModalCarrinho(true);
+     } catch (error) {
+        console.error("Erro ao comprar agora (modal):", error);
+        alert(`Erro: ${error.message || 'Não foi possível adicionar o item para compra.'}`);
+     }
   };
 
+  const handleCarrinhoIconClick = () => setShowModalCarrinho(!showModalCarrinho);
 
-  const handleCarrinhoClick = () => {
-    setShowCarrinho(!showCarrinho);
-    const pedidosSalvos = JSON.parse(localStorage.getItem("pedidosSalvos")) || [];
+  const handleIncreaseQuantity = async (idProduto) => {
+    const item = carrinho.find(p => p.idProduto === idProduto);
+    if (item) {
+       try { await atualizarQuantidadeNoCarrinho(idProduto, item.quantidade + 1); }
+       catch (error) { console.error("Erro ao aumentar qtd:", error); alert(`Erro: ${error.message}`); }
+    }
   };
 
-  const handleIncreaseQuantity = (id) => {
-    setCarrinho(prevCarrinho =>
-      prevCarrinho.map(item =>
-        item.id === id ? { ...item, quantidade: item.quantidade + 1 } : item
-      )
-    );
+  const handleDecreaseQuantity = async (idProduto) => {
+    const item = carrinho.find(p => p.idProduto === idProduto);
+    if (item) {
+       try { await atualizarQuantidadeNoCarrinho(idProduto, item.quantidade - 1); } // AuthContext lida com remoção se <=0
+       catch (error) { console.error("Erro ao diminuir qtd:", error); alert(`Erro: ${error.message}`); }
+    }
   };
 
-  const handleRemoveUnit = (id) => {
-    setCarrinho(prevCarrinho => {
-      const updatedCarrinho = prevCarrinho.map(item => {
-        if (item.id === id && item.quantidade > 1) {
-          return { ...item, quantidade: item.quantidade - 1 };
-        }
-        return item;
-      }).filter(item => item.quantidade > 0); // Remove qualquer produto com quantidade 0
-
-      // Salva o carrinho atualizado no localStorage
-      localStorage.setItem("carrinho", JSON.stringify(updatedCarrinho));
-      return updatedCarrinho;
-    });
+  const handleRemoveItem = async (idProduto) => { // Renomeado para consistência
+     try { await removerDoCarrinho(idProduto); } // removerDoCarrinho no AuthContext faz qtd = 0
+     catch (error) { console.error("Erro ao remover item:", error); alert(`Erro: ${error.message}`); }
   };
 
-
-  const handleRemoveItem = (id) => {
-    setCarrinho(prevCarrinho => {
-      const updatedCarrinho = prevCarrinho.filter(item => item.id !== id);
-
-      // Salva o carrinho atualizado no localStorage
-      localStorage.setItem("carrinho", JSON.stringify(updatedCarrinho));
-      return updatedCarrinho;
-    });
+  const handleClearCart = async () => { // Renomeado para consistência
+     try { await limparCarrinho(); }
+     catch (error) { console.error("Erro ao limpar carrinho:", error); alert(`Erro: ${error.message}`); }
   };
 
-  const handleClearCarrinho = () => {
-    setCarrinho([]);
-
-    // Limpa o carrinho do localStorage
-    localStorage.removeItem("carrinho");
+  const handleFinalizarCompra = () => {
+    if (!carrinho || carrinho.length === 0) {
+        alert("Seu carrinho está vazio."); return;
+    }
+    if (!dados && !grupo) { // Não é cliente nem funcionário
+        alert("Você precisa estar logado para finalizar a compra.");
+        localStorage.setItem('redirectToCheckoutAfterLogin', 'true');
+        router.push('/login'); return;
+    }
+    if (!frete) {
+      alert("Por favor, selecione uma opção de frete."); return;
+    }
+    router.push("/checkout");
   };
 
-  const handleLogout = () => {
-    // Armazenando carrinho de visitante (caso o usuário queira retornar depois)
-    localStorage.setItem('carrinho_guest', JSON.stringify(carrinho));
+  useEffect(() => {
+    if (dados?.id && localStorage.getItem('redirectToCheckoutAfterLogin') === 'true') { // Verifica se é cliente
+        localStorage.removeItem('redirectToCheckoutAfterLogin');
+        router.push('/checkout');
+    }
+  }, [dados, router]); // Depende de dados (para ter dados.id)
 
-    localStorage.removeItem("user"); // limpa o localStorage
-    setUser(null); // limpa o estado
-    setGrupo(null);
-    setDados(null);
-    setCarrinho([]); // Limpa o carrinho no estado
-
-    // Redireciona ou recarrega a página
-    window.location.reload();
+  // Configurações do Slider (se usado)
+  const sliderSettings = {
+    dots: true, infinite: false, speed: 500,
+    slidesToShow: 1, slidesToScroll: 1, adaptiveHeight: true,
   };
 
-  const settings = {
-    dots: true,
-    infinite: false,
-    speed: 500,
-    slidesToShow: 1,
-    slidesToScroll: 1,
-    adaptiveHeight: true,
-  };
-
-  if (authIsLoading) {
+  // --- Renderização ---
+  if (authIsLoading) { // O isLoading do AuthContext é para o carregamento inicial da sessão
     return (
-      <StyledMain>
-        <GlobalStyle />
-        <p style={{ color: 'white' }}>Carregando página principal...</p>
-      </StyledMain>
-    );
-  }
-
-  if (errorHandled && !(user && dados)) { // Se o erro foi tratado E o usuário não está mais logado corretamente
-    return (
-      <StyledMain>
-        <GlobalStyle />
-        <p style={{ color: 'white' }}>Corrigindo sessão, por favor aguarde...</p>
-      </StyledMain>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <p>Carregando página principal...</p>
+      </div>
     );
   }
 
@@ -799,7 +709,7 @@ function Principal() {
         <Logo src="imagens/logo.png" alt="Logo" />
         <Titulo>Turn on the beck</Titulo>
         <Usuario>
-          <Carrinho title="Carrinho" onClick={handleCarrinhoClick}>🛒</Carrinho>
+          <Carrinho title="Carrinho" onClick={handleCarrinhoIconClick}>🛒</Carrinho>
           <UserSection>
             {user ? (
               <>
@@ -808,15 +718,15 @@ function Principal() {
                 </UserGreeting>
                 <ButtonsContainer>
                   <UserButton onClick={handleRedirectPerfil}>Perfil</UserButton>
-                  <UserButton $primary onClick={handleLogout}>Sair</UserButton>
+                  <UserButton $primary onClick={contextLogout}>Sair</UserButton>
                 </ButtonsContainer>
               </>
             ) : (
               <>
 
                 <ButtonsContainerN>
-                  <UserButtonN onClick={handleRedirectL}>Login</UserButtonN>
-                  <UserButtonN $primary onClick={handleRedirect}>Cadastrar</UserButtonN>
+                  <UserButtonN onClick={handleRedirectLogin}>Login</UserButtonN>
+                  <UserButtonN $primary onClick={handleRedirectCadastro}>Cadastrar</UserButtonN>
                 </ButtonsContainerN>
               </>
             )}
@@ -827,41 +737,55 @@ function Principal() {
       <Container>
         <TopBar />
         <Cards>
-          {produtos.map((produto) => (
-            <CardP key={produto.id}>
-              <NomeP>{produto.nome}</NomeP>
-              <PrecoP>R$ {produto.preco.toFixed(2)}</PrecoP>
-              <ImgProduto src={produto.imagemPrincipal.slice(22)}></ImgProduto>
-              <DetalheB onClick={() => handleDetail(produto)}>Ver Detalhes</DetalheB>
+          {produtos.map((produtos) => (
+            <CardP key={produtos.id}>
+              <NomeP>{produtos.nome}</NomeP>
+              <PrecoP>R$ {produtos.preco.toFixed(2)}</PrecoP>
+              <ImgProduto src={produtos.imagemPrincipalDisplay.slice(22)}></ImgProduto>
+              <DetalheB onClick={() => handleDetail(produtos)}>Ver Detalhes</DetalheB>
             </CardP>
           ))}
         </Cards>
       </Container>
-      {showCarrinho && (
-        <ModalBackground show={showCarrinho.toString()}>
+      {showModalCarrinho && (
+        <ModalBackground show={showModalCarrinho.toString()}>
           <ModalContent>
-            <CloseButton onClick={() => setShowCarrinho(false)}>✖</CloseButton>
+            <CloseButton onClick={() => setShowModalCarrinho(false)}>✖</CloseButton>
             <CarrinhoTitle>🛒 Carrinho de Compras</CarrinhoTitle>
             <CarrinhoList>
-              {carrinho.length === 0 ? (
+              {/* Verifica se carrinho é nulo ou vazio antes de mapear */}
+              {!carrinho || carrinho.length === 0 ? (
                 <p>O carrinho está vazio</p>
               ) : (
-                carrinho.map((item, index) => (
-                  <CarrinhoItem key={index}>
-                    <ItemInfo>
-                      <div>
-                        <ItemName>{item.nome}</ItemName>
-                        <ItemPrice>R$ {item.preco.toFixed(2)}</ItemPrice>
-                      </div>
-                    </ItemInfo>
-                    <QuantityControls>
-                      <QuantityButton onClick={() => handleIncreaseQuantity(item.id)}>+</QuantityButton>
-                      {item.quantidade}
-                      <QuantityButton onClick={() => handleRemoveUnit(item.id)}>-</QuantityButton>
-                    </QuantityControls>
-                    <RemoveButton onClick={() => handleRemoveItem(item.id)}>🗑️</RemoveButton>
-                  </CarrinhoItem>
-                ))
+                carrinho.map((item, index) => {
+                  // Adicionar um log para inspecionar cada item do carrinho
+                  // console.log("Item no carrinho (modal):", item);
+
+                  // Fallback para o preço e nome, e garantir que o preço é um número
+                  const nomeDoItem = item.nomeProduto || item.nome || "Produto sem nome";
+                  const precoDoItem = item.precoUnitario !== undefined ? item.precoUnitario : (item.preco !== undefined ? item.preco : 0);
+                  const idDoItem = item.idProduto || item.id || index; // Fallback para key
+
+                  return (
+                    <CarrinhoItem key={idDoItem}>
+                      <ItemInfo>
+                        <div>
+                          {/* USA nomeProduto ou um fallback */}
+                          <ItemName>{nomeDoItem}</ItemName>
+                          {/* USA precoUnitario ou um fallback e garante que é número antes de toFixed */}
+                          <ItemPrice>R$ {Number(precoDoItem).toFixed(2)}</ItemPrice>
+                        </div>
+                      </ItemInfo>
+                      <QuantityControls>
+                        {/* As funções de quantidade devem usar o ID correto do item (idProduto) */}
+                        <QuantityButton onClick={() => handleIncreaseQuantity(idDoItem)}>+</QuantityButton>
+                        {item.quantidade || 0} {/* Fallback para quantidade */}
+                        <QuantityButton onClick={() => handleDecreaseQuantity(idDoItem)}>-</QuantityButton>
+                      </QuantityControls>
+                      <RemoveButton onClick={() => handleRemoveItem(idDoItem)}>🗑️</RemoveButton>
+                    </CarrinhoItem>
+                  );
+                })
               )}
             </CarrinhoList>
 
@@ -887,23 +811,24 @@ function Principal() {
                   </label>
                 </div>
 
-                <Total>Total: R$ {total.toFixed(2)}</Total>
+                <Total>Total: R$ {totalCarrinhoComFrete.toFixed(2)}</Total>
                 <BotaoFinalizar onClick={handleFinalizarCompra}>Finalizar Compra 💳</BotaoFinalizar>
+                <RemoveButton onClick={handleClearCart} style={{marginTop: '10px', backgroundColor: '#e74c3c'}}>Limpar Carrinho</RemoveButton>
               </ResumoPedido>
             )}
           </ModalContent>
         </ModalBackground>
       )}
 
-      {showModal && viewingProduct && (
+      {showModalDetalhes && viewingProduct && (
         <Modal>
           <ModalContent>
-            <CloseButton onClick={handleCloseModal}>✖</CloseButton>
+            <CloseButton onClick={handleCloseModalDetalhes}>✖</CloseButton>
 
             <>
-              {viewingProduct.imagens && viewingProduct.imagens.length > 0 ? (
+              {viewingProduct.imagensComUrl && viewingProduct.imagensComUrl.length > 0 ? (
                 <StyledSlider dots={true} infinite={false} speed={500} slidesToShow={1} slidesToScroll={1} arrows={true}>
-                  {viewingProduct.imagens.map((imagem, index) => (
+                  {viewingProduct.imagensComUrl.map((imagem, index) => (
                     <div key={index}>
                       <img
                         src={`../` + imagem.caminhoArquivo.slice(22)}
@@ -922,9 +847,9 @@ function Principal() {
               <ProductPrice>R$ {viewingProduct.preco.toFixed(2)}</ProductPrice>
               <p><strong>Avaliação:</strong> ⭐ {viewingProduct.avaliacao}</p>
               <ButtonGroup>
-                <ActionButton onClick={handleAddToCart}>Adicionar ao Carrinho 🛒</ActionButton>
+                <ActionButton onClick={handleAddToCartNoModal}>Adicionar ao Carrinho 🛒</ActionButton>
                 {addedMessage && <SuccessMessage>{addedMessage}</SuccessMessage>}
-                <ActionButton onClick={handleBuy}>Comprar Agora 💳</ActionButton>
+                <ActionButton onClick={handleBuyNoModal}>Comprar Agora 💳</ActionButton>
               </ButtonGroup>
             </>
 
@@ -932,7 +857,7 @@ function Principal() {
         </Modal>
       )}
 
-      {imagemSelecionada && (
+      {imagemAmpliada && (
         <div
           style={{
             position: "fixed",
@@ -946,10 +871,10 @@ function Principal() {
             alignItems: "center",
             zIndex: 1000
           }}
-          onClick={() => setImagemSelecionada(null)} // Clica fora para fechar
+          onClick={() => setImagemAmpliada(null)} // Clica fora para fechar
         >
           <img
-            src={imagemSelecionada}
+            src={imagemAmpliada}
             alt="Imagem ampliada"
             style={{
               Width: "90%",

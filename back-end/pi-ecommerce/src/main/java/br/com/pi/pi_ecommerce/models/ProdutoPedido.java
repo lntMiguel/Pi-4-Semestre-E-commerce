@@ -1,7 +1,12 @@
 package br.com.pi.pi_ecommerce.models;
 
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+
 import java.math.BigDecimal;
 
+@NoArgsConstructor
+@AllArgsConstructor
 public class ProdutoPedido {
 
     private String idProduto;        // ID do produto comprado

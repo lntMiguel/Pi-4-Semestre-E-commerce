@@ -120,5 +120,10 @@ public class ProductService {
         }
     }
 
+    public Produto buscarPorId(String id) {
+        return productRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado com ID: " + id));
+    }
+
 }
  

@@ -1,20 +1,20 @@
 package br.com.pi.pi_ecommerce.service;
 
 
+import br.com.pi.pi_ecommerce.models.Carrinho;
 import br.com.pi.pi_ecommerce.models.Pedido;
 import br.com.pi.pi_ecommerce.models.ProdutoPedido;
 import br.com.pi.pi_ecommerce.models.statusPedido.StatusPedido;
+import br.com.pi.pi_ecommerce.repository.ClienteRepository;
 import br.com.pi.pi_ecommerce.repository.PedidoRepository;
 import br.com.pi.pi_ecommerce.utils.ConsultaEstoque;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static br.com.pi.pi_ecommerce.utils.GeradorDeNumeros.gerarNumeroPedido;
 
@@ -25,12 +25,16 @@ public class PedidoService {
     private PedidoRepository pedidoRepository;
     @Autowired
     private ProductService productService;
+    @Autowired
+    private CarrinhoService carrinhoService; // Injetar CarrinhoService
+    @Autowired
+    private ClienteRepository clienteRepository; // Para buscar o cliente
+    @Autowired
+    private ConsultaEstoque consultaEstoque;
 
     public Pedido criarPedido(Pedido pedido) {
 
-        if(!ConsultaEstoque.validarEstoque(pedido.getProdutos())){
-            return null;
-        }
+        consultaEstoque.validarEstoqueEStatus(pedido.getProdutos());
 
         diminuirQuantidade(pedido.getProdutos());
 
