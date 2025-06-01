@@ -128,7 +128,7 @@ function LoginFun() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
-  const { setUser, setGrupo, setDados } = useAuth();
+  const { processLogin } = useAuth();
   const [usuarioErro, setUsuarioErro] = useState(false);
   const [senhaErro, setSenhaErro] = useState(false);
 
@@ -168,35 +168,24 @@ function LoginFun() {
       }
 
       console.log("LoginFun: Login bem-sucedido. Dados recebidos:", responseData);
-      setUser(responseData);
 
-      // 1. Atualizar o usuário no contexto com o objeto simples da API
-      setUser(responseData); // user agora é { grupo, message }
-
-      // 2. Atualizar o GRUPO no contexto
-      if (responseData.grupo) {
-        setGrupo(responseData.grupo);
-        console.log("LoginFun: Grupo definido no contexto:", responseData.grupo);
+      // CHAME processLogin AQUI:
+      if (typeof processLogin === 'function') {
+        processLogin(responseData); // Passa o objeto { grupo, message } para o contexto
       } else {
-        console.error("LoginFun: API NÃO RETORNOU 'grupo'. Login falhou em essência.");
-        setError("Falha ao obter informações de grupo do usuário. Tente novamente.");
-        // Limpar qualquer estado parcial
-        setUser(null);
-        setGrupo(null);
-        setDados(null);
-        localStorage.removeItem("user");
-        return; // Não prosseguir
+        console.error("LoginFun: processLogin não é uma função. Verifique AuthContext.");
+        setError("Erro interno ao tentar processar o login.");
+        return;
       }
 
-      // 3. Como não há 'nome' ou 'dados' na resposta, setDados será null
-      setDados(null);
-      console.log("LoginFun: 'dados' definido como null pois API não retorna nome/dados detalhados.");
+      // Não é mais necessário chamar setGrupo ou setDados diretamente aqui,
+      // pois o useEffect no AuthContext que observa 'user' cuidará disso.
+      // O localStorage.setItem("user", ...) também será feito pelo AuthContext
+      // se o 'user' for definido com sucesso por processLogin.
+      // A lógica de `localStorage.setItem("user", JSON.stringify(responseData));`
+      // está dentro do Efeito 2 do seu AuthContext quando `isEmployeeStructure` é verdadeiro.
 
-      // 4. Salvar no localStorage o objeto simples { grupo, message }
-      localStorage.setItem("user", JSON.stringify(responseData));
-      console.log("LoginFun: Usuário (simplificado) salvo no localStorage.");
-
-      const targetRoute = "/main";
+      const targetRoute = "/main"; // Ou a rota principal do dashboard do funcionário
       console.log(`LoginFun: Redirecionando para ${targetRoute}...`);
       router.push(targetRoute);
 

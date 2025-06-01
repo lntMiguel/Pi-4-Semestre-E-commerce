@@ -332,13 +332,46 @@ function Cadastro() {
     setEntregas([...novas, novo]);
   };
 
-  const validateNome = (nome) => {
-    const partes = nome.trim().split(' ');
-    return (
-      partes.length >= 2 &&
-      partes.every((parte) => parte.length >= 3)
-    );
-  };
+const validateNome = (nome) => {
+  const nomeLimpo = nome.trim();
+
+  // 1. Lida com nomes vazios ou apenas com espaços
+  if (!nomeLimpo) {
+    return false;
+  }
+
+  // 2. Divide o nome em partes, removendo strings vazias caso haja múltiplos espaços
+  const partes = nomeLimpo.split(' ').filter(parte => parte.length > 0);
+
+  // 3. Deve ter pelo menos duas partes no total (ex: "Ana Silva")
+  //    Isso já cobre o "nome e sobrenome" básico.
+  if (partes.length < 2) {
+    return false;
+  }
+
+  // 4. Define uma lista de palavras curtas comuns (conectivos, artigos)
+  //    que não devem ser consideradas "partes principais" do nome para a validação de tamanho.
+  //    É importante mantê-las em minúsculas para comparação case-insensitive.
+  const excecoes = ['da', 'de', 'do', 'dos', 'das', 'e', 'o', 'a', 'os', 'as'];
+
+  // 5. Filtra as partes do nome, removendo as exceções.
+  //    Estas são as partes que consideramos "significativas" (nome e sobrenomes).
+  const partesSignificativas = partes.filter(
+    (parte) => !excecoes.includes(parte.toLowerCase())
+  );
+
+  // 6. Deve haver pelo menos duas partes "significativas".
+  //    Ex: "O Silva" -> partesSignificativas = ["Silva"] (inválido, falta o primeiro nome significativo)
+  //    Ex: "Da Conceição" -> partesSignificativas = ["Conceição"] (inválido)
+  if (partesSignificativas.length < 2) {
+    return false;
+  }
+
+  // 7. Todas as partes "significativas" devem ter pelo menos 3 caracteres.
+  //    Ex: "Aroldo da Silva" -> partesSignificativas = ["Aroldo", "Silva"]. Ambas >= 3. Válido.
+  //    Ex: "Lu da Silva" -> partesSignificativas = ["Lu", "Silva"]. "Lu" < 3. Inválido.
+  return partesSignificativas.every((parte) => parte.length >= 3);
+};
 
   const validateCPF = (cpf) => {
     cpf = cpf.replace(/[^\d]+/g, '');
@@ -392,9 +425,7 @@ function Cadastro() {
   // Validação Senha
   if (!form.senha) {
     newErrors.senha = "Senha é obrigatória.";
-  } else if (form.senha.length < 6) { // Exemplo de regra de senha
-    newErrors.senha = "Senha deve ter no mínimo 6 caracteres.";
-  }
+  } 
 
   // Validação Confirmar Senha
   if (!form.confirmSenha) {

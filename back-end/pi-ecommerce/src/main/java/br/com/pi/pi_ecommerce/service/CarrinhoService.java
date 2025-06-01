@@ -2,6 +2,7 @@ package br.com.pi.pi_ecommerce.service;
 
 import br.com.pi.pi_ecommerce.models.Carrinho;
 import br.com.pi.pi_ecommerce.models.Produto;
+import br.com.pi.pi_ecommerce.models.ProdutoPedido;
 import br.com.pi.pi_ecommerce.repository.CarrinhoRepository;
 import br.com.pi.pi_ecommerce.repository.ClienteRepository; // Para verificar se o cliente existe
 import br.com.pi.pi_ecommerce.utils.ConsultaEstoque;
@@ -39,20 +40,53 @@ public class CarrinhoService {
                 });
     }
 
-    public Carrinho adicionarItemAoCarrinho(String idCliente, String idProduto, int quantidade) {
-        consultaEstoque.validarEstoqueEStatusParaItem(idProduto, quantidade);
-
-        Produto produto = productService.buscarPorId(idProduto); // Lança exceção se não achar
-
-        if (!produto.getStatus()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Produto " + produto.getNome() + " está inativo e não pode ser adicionado ao carrinho.");
+    public Carrinho adicionarItemAoCarrinho(String idCliente, String idProduto, int quantidadeParaAdicionar) {
+        if (quantidadeParaAdicionar <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A quantidade para adicionar deve ser maior que zero.");
         }
-        if (produto.getQtdEstoque() < quantidade) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Estoque insuficiente para o produto: " + produto.getNome() + ". Disponível: " + produto.getQtdEstoque());
+
+        Produto produto = productService.buscarPorId(idProduto); // Lança NOT_FOUND se não achar
+
+        // 1. Validar status do produto ANTES de qualquer outra coisa
+        if (!Boolean.TRUE.equals(produto.getStatus())) { // Usar Boolean.TRUE.equals para evitar NullPointerException se status for null
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Produto " + produto.getNome() + " está inativo e não pode ser adicionado ao carrinho.");
         }
 
         Carrinho carrinho = getCarrinhoPorClienteOuCriar(idCliente);
-        carrinho.adicionarOuAtualizarItem(produto, quantidade);
+
+        // 2. Calcular a quantidade que já existe no carrinho para este produto
+        int quantidadeJaNoCarrinho = carrinho.getItens().stream()
+                .filter(item -> item.getIdProduto().equals(idProduto))
+                .mapToInt(ProdutoPedido::getQuantidade)
+                .sum(); // Se o item não existe, sum() retorna 0
+
+        // 3. Calcular a quantidade total que o item teria no carrinho após esta adição
+        int quantidadeTotalResultante = quantidadeJaNoCarrinho + quantidadeParaAdicionar;
+
+        // 4. Validar o estoque do produto contra a QUANTIDADE TOTAL RESULTANTE
+        if (produto.getQtdEstoque() < quantidadeTotalResultante) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Estoque insuficiente para o produto: " + produto.getNome() +
+                            ". Solicitado para ter no total: " + quantidadeTotalResultante +
+                            " (você já tem " + quantidadeJaNoCarrinho + ", adicionando mais " + quantidadeParaAdicionar + ")" +
+                            ", Disponível em estoque: " + produto.getQtdEstoque());
+        }
+
+        // 5. Se todas as validações passaram, então adicione/atualize o item no objeto carrinho
+        // A função `consultaEstoque.validarEstoqueEStatusParaItem` aqui se torna um pouco redundante
+        // para a verificação de estoque, pois já fizemos acima, mas ela ainda valida o status do produto
+        // e a quantidade individual sendo adicionada (se > 0), o que é bom.
+        // No entanto, a validação de status já foi feita.
+        // A validação de quantidadeDesejada > 0 também.
+        // A validação principal de estoque (produto.getQtdEstoque() < quantidadeDesejada)
+        // é a que substituímos pela validação da quantidadeTotalResultante.
+        // Poderíamos até remover a chamada à consultaEstoque.validarEstoqueEStatusParaItem aqui,
+        // ou refatorá-la para que ela não repita a validação de estoque.
+        // Por agora, vamos manter como está no seu código original, mas a validação crucial é a de cima.
+        consultaEstoque.validarEstoqueEStatusParaItem(idProduto, quantidadeParaAdicionar);
+
+
+        carrinho.adicionarOuAtualizarItem(produto, quantidadeParaAdicionar); // Passa a quantidade a ser *adicionada*
         carrinho.setDataAtualizacao(new Date());
         return carrinhoRepository.save(carrinho);
     }

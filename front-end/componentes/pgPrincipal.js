@@ -527,7 +527,7 @@ const {
       console.log("pgPrincipal: AuthContext carregando, aguardando para verificar estado.");
       return;
     }
-    const userPresentButInvalid = user && !dados && !grupo;
+    const userPresentButInvalid = user && !dados && grupo;
     if (userPresentButInvalid && !errorHandled) {
       console.warn("pgPrincipal: Estado de usuário inválido detectado. Forçando logout.");
       if (typeof contextLogout === 'function') {
@@ -614,37 +614,72 @@ const {
 
   const handleAddToCartNoModal = async () => {
     if (!viewingProduct) return;
-    try {
-       await adicionarAoCarrinho(viewingProduct, 1);
-       setAddedMessage('Produto adicionado ao carrinho!');
-       setTimeout(() => setAddedMessage(''), 2000);
-    } catch (error) {
-       console.error("Erro ao adicionar ao carrinho (modal):", error);
-       alert(`Erro: ${error.message || 'Não foi possível adicionar o item.'}`);
+  try {
+    await adicionarAoCarrinho(viewingProduct, 1); // Adiciona 1 unidade
+    setAddedMessage('Produto adicionado ao carrinho!');
+    setTimeout(() => setAddedMessage(''), 2000);
+  } catch (error) {
+    // Trata o erro da mesma forma que handleIncreaseQuantity
+    if (error && error.message === "Desculpe, não há essa quantidade de produtos em estoque!") {
+      alert(error.message);
+    } else {
+      // Comentado para evitar outros alerts, mas loga para debug
+      console.error("Erro inesperado ao adicionar ao carrinho (modal):", error);
+      // Se você quisesse um fallback genérico para a UI, seria aqui, mas seu requisito é não ter.
+      // No entanto, como addItemToCarrinhoAPI agora SEMPRE lança a mensagem de estoque,
+      // este 'else' não deve ser atingido por erros da API.
     }
+  }
   };
 
   const handleBuyNoModal = async () => {
-    if (!viewingProduct) return;
-     try {
-        await adicionarAoCarrinho(viewingProduct, 1);
-        setShowModalDetalhes(false);
-        setShowModalCarrinho(true);
-     } catch (error) {
-        console.error("Erro ao comprar agora (modal):", error);
-        alert(`Erro: ${error.message || 'Não foi possível adicionar o item para compra.'}`);
-     }
-  };
+  if (!viewingProduct) return;
+  try {
+    await adicionarAoCarrinho(viewingProduct, 1); // Adiciona 1 unidade
+    setShowModalDetalhes(false);
+    setShowModalCarrinho(true);
+  } catch (error) {
+    // Trata o erro da mesma forma
+    if (error && error.message === "Desculpe, não há essa quantidade de produtos em estoque!") {
+      alert(error.message);
+    } else {
+      console.error("Erro inesperado ao comprar agora (modal):", error);
+    }
+  }
+};
 
   const handleCarrinhoIconClick = () => setShowModalCarrinho(!showModalCarrinho);
 
-  const handleIncreaseQuantity = async (idProduto) => {
-    const item = carrinho.find(p => p.idProduto === idProduto);
-    if (item) {
-       try { await atualizarQuantidadeNoCarrinho(idProduto, item.quantidade + 1); }
-       catch (error) { console.error("Erro ao aumentar qtd:", error); alert(`Erro: ${error.message}`); }
+ const handleIncreaseQuantity = async (produtoId) => {
+  console.log("Attempting to increase quantity for product:", produtoId); // Log de início
+  try {
+    const itemNoCarrinho = carrinho.find(item => item.idProduto === produtoId);
+    const quantidadeAtual = itemNoCarrinho ? itemNoCarrinho.quantidade : 0;
+
+    await atualizarQuantidadeNoCarrinho(produtoId, quantidadeAtual + 1);
+
+    console.log("Quantity increased successfully for product:", produtoId); // Log de sucesso
+
+  } catch (error) {
+    console.log("Caught error in handleIncreaseQuantity. Error message:", `"${error.message}"`); // Log do erro pego
+
+    if (error && typeof error.message === 'string' && error.message.trim() === "Desculpe, não há essa quantidade de produtos em estoque!") {
+      console.log("Displaying stock alert.");
+      alert(error.message); // Mostra o alert personalizado.
+    } else {
+      //console.error(
+      //  "Unexpected error type or message in handleIncreaseQuantity. Error details:",
+      //  error
+     // );
+      // DECIDA O QUE FAZER AQUI:
+      // Opção 1: Não fazer nada (sem alert para outros erros)
+      // Opção 2: Um alert genérico (mas você disse que não queria)
+      // alert("Ocorreu um erro inesperado.");
     }
-  };
+    // NENHUM 'throw error;' AQUI
+  }
+  console.log("Finished handleIncreaseQuantity for product:", produtoId); // Log de fim
+};
 
   const handleDecreaseQuantity = async (idProduto) => {
     const item = carrinho.find(p => p.idProduto === idProduto);

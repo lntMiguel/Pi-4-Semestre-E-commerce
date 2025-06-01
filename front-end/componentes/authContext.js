@@ -35,44 +35,87 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  const addItemToCarrinhoAPI = useCallback(async (idCliente, idProduto, quantidade) => {
-    // Sua implementação existente
-    if (!idCliente) throw new Error("ID Cliente ausente (addItemToCarrinhoAPI)");
-    try {
-      const response = await fetch(`${API_URL}/carrinho/${idCliente}/itens`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idProduto, quantidade }), // Backend espera idProduto e quantidade
-      });
-      if (!response.ok) {
-         const errorData = await response.json().catch(() => ({ message: "Erro desconhecido" }));
-         throw new Error(`Erro ao adicionar item na API: ${response.statusText} - ${errorData.message}`);
-      }
-      return await response.json();
-    } catch (error) {
-      console.error("AuthContext: Erro ao adicionar item na API:", error);
-      throw error;
-    }
-  }, []);
+ const addItemToCarrinhoAPI = useCallback(async (idCliente, idProduto, quantidade) => {
+  if (!idCliente) {
+    console.warn("AuthContext: ID do cliente ausente em addItemToCarrinhoAPI.");
+    throw new Error("Desculpe, não há essa quantidade de produtos em estoque!"); // Consistência com o tratamento de erro
+  }
+  if (!idProduto) {
+    console.warn("AuthContext: ID do produto ausente em addItemToCarrinhoAPI.");
+    throw new Error("Desculpe, não há essa quantidade de produtos em estoque!"); // Consistência
+  }
 
-  // ... (updateItemQuantityAPI, removeItemFromCarrinhoAPI, clearCarrinhoAPI permanecem os mesmos) ...
-  const updateItemQuantityAPI = useCallback(async (idCliente, idProduto, quantidade) => {
-    if (!idCliente) throw new Error("ID do cliente ausente para atualizar quantidade (API).");
-    try {
-      const response = await fetch(`${API_URL}/carrinho/${idCliente}/itens/${idProduto}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ quantidade }),
-      });
-       if (!response.ok) {
-         const errorData = await response.json().catch(() => ({ message: "Erro desconhecido" }));
-         throw new Error(`Erro ao atualizar item na API: ${response.statusText} - ${errorData.message}`);
-      }
-      return await response.json();
-    } catch (error) {
-      console.error("AuthContext: Erro ao atualizar item na API:", error);
-      throw error;
+  try {
+    const response = await fetch(`${API_URL}/carrinho/${idCliente}/itens`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idProduto, quantidade }),
+    });
+
+    if (!response.ok) {
+      // Qualquer erro da API será convertido na mensagem de "falta de estoque"
+      console.warn(
+        `AuthContext: addItemToCarrinhoAPI falhou com status ${response.status}.`
+      );
+      try {
+        const errorBody = await response.clone().json().catch(() => response.text());
+        console.log("Corpo da resposta de erro original da API (addItem):", errorBody);
+      } catch (e) { /* ignora */ }
+
+      throw new Error("Desculpe, não há essa quantidade de produtos em estoque!");
     }
-  }, []);
+
+    return await response.json(); // Retorna o carrinho atualizado
+
+  } catch (error) {
+    console.error( // Log interno para o desenvolvedor
+      "AuthContext: Erro capturado em addItemToCarrinhoAPI, propagando como 'falta de estoque':",
+      error.message
+    );
+    // Garante que qualquer erro que chegue aqui seja transformado na mensagem de estoque
+    if (error.message !== "Desculpe, não há essa quantidade de produtos em estoque!") {
+      throw new Error("Desculpe, não há essa quantidade de produtos em estoque!");
+    }
+    throw error; // Re-lança o erro (que agora é sempre o de "falta de estoque")
+  }
+}, [API_URL]);
+
+const updateItemQuantityAPI = useCallback(async (idCliente, idProduto, quantidade) => {
+  if (!idCliente) {
+    console.warn("AuthContext: ID do cliente ausente em updateItemQuantityAPI.");
+    throw new Error("Desculpe, não há essa quantidade de produtos em estoque!");
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/carrinho/${idCliente}/itens/${idProduto}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ quantidade }),
+    });
+
+    if (!response.ok) {
+      console.warn(
+        `AuthContext: updateItemQuantityAPI falhou com status ${response.status}.`
+      );
+      try {
+        const errorBody = await response.clone().json().catch(() => response.text());
+        console.log("Corpo da resposta de erro original da API:", errorBody);
+      } catch (e) { /* ignora */ }
+      // APENAS LANÇA O ERRO, SEM ALERT AQUI
+      throw new Error("Desculpe, não há essa quantidade de produtos em estoque!");
+    }
+    return await response.json();
+  } catch (error) {
+    // console.error( // Opcional: manter para debug se quiser
+    //   "AuthContext: Erro capturado em updateItemQuantityAPI, propagando como 'falta de estoque':",
+    //   error.message
+    // );
+    if (error.message !== "Desculpe, não há essa quantidade de produtos em estoque!") {
+      throw new Error("Desculpe, não há essa quantidade de produtos em estoque!");
+    }
+    throw error;
+  }
+}, [API_URL]);
 
   const removeItemFromCarrinhoAPI = useCallback(async (idCliente, idProduto) => {
     if (!idCliente) throw new Error("ID do cliente ausente para remover item (API).");
@@ -275,88 +318,135 @@ export function AuthProvider({ children }) {
 
   // --- Funções de Manipulação do Carrinho ---
   const adicionarAoCarrinho = useCallback(async (produto, quantidade) => {
-    setIsCartLoading(true);
-    let novoCarrinhoItens;
-    const idClienteLogado = dados?.id; // Usa 'dados' que já está processado
+  setIsCartLoading(true);
+  let novoCarrinhoItens = null; // Importante inicializar
+  const idClienteLogado = dados?.id;
 
+  try {
     if (idClienteLogado) { // Cliente logado
-      try {
-        const carrinhoAtualizadoAPI = await addItemToCarrinhoAPI(idClienteLogado, produto.id, quantidade);
-        novoCarrinhoItens = carrinhoAtualizadoAPI.itens || [];
-      } catch (error) {
-        console.error("Erro ao adicionar item (API):", error);
-        setIsCartLoading(false);
-        throw error;
+      // A função addItemToCarrinhoAPI agora lida com o lançamento do erro específico
+      const carrinhoAtualizadoAPI = await addItemToCarrinhoAPI(idClienteLogado, produto.id, quantidade);
+      if (carrinhoAtualizadoAPI && Array.isArray(carrinhoAtualizadoAPI.itens)) {
+        novoCarrinhoItens = carrinhoAtualizadoAPI.itens;
+      } else {
+        console.warn("AuthContext: Resposta da API para adicionar item não continha 'itens' como array.", carrinhoAtualizadoAPI);
+        novoCarrinhoItens = []; // Para evitar erro, mas sinaliza problema
       }
     } else if (!grupo) { // Convidado (não funcionário)
-      // Cria uma cópia do carrinho atual do estado para convidados
       const carrinhoAtualLocal = carrinho ? [...carrinho] : [];
       const itemExistenteIndex = carrinhoAtualLocal.findIndex(item => item.idProduto === produto.id);
 
       if (itemExistenteIndex > -1) {
+        // Para convidados, precisamos verificar o estoque "manualmente" aqui,
+        // pois não há chamada de API que valide ANTES de adicionar/atualizar.
+        // Ou, assumir que o backend é a única fonte da verdade e a UI apenas reflete.
+        // Para simplificar e manter a consistência do "tratar tudo como falta de estoque",
+        // vamos assumir que se o backend falhar, será por estoque.
+        // Uma validação de estoque do lado do cliente para convidados seria mais complexa
+        // pois exigiria ter os dados de estoque dos produtos no frontend.
+
+        // Se o item já existe, a ação de "adicionar 1" é na verdade um "atualizar quantidade".
+        // Precisamos chamar atualizarQuantidadeNoCarrinho que já tem a lógica de erro.
+        // Isso é um pouco redundante com a lógica interna de addItemToCarrinhoAPI se o usuário estiver logado,
+        // mas necessário para convidados se quisermos a mesma experiência de erro.
+        // No entanto, addItemToCarrinhoAPI para LOGADO já lida com incremento.
+        // A lógica de convidado aqui é mais sobre como o ESTADO LOCAL é atualizado.
+
+        // Se já existe, apenas incrementa a quantidade no estado local.
+        // A validação de estoque para convidado é mais difícil sem chamada à API.
+        // Para o escopo deste problema (erro de estoque ao adicionar), vamos focar no usuário logado.
+        // A lógica de convidado aqui não tem validação de estoque embutida.
         carrinhoAtualLocal[itemExistenteIndex].quantidade += quantidade;
       } else {
-        // O carrinho de convidado deve ter `idProduto` para ser compatível com a sincronização
         carrinhoAtualLocal.push({
-            idProduto: produto.id, // Chave importante para a API
-            nomeProduto: produto.nome,
-            quantidade: quantidade,
-            precoUnitario: produto.preco
-            // Adicione outros campos que seu modal de carrinho possa precisar,
-            // mas idProduto, nomeProduto, quantidade, precoUnitario são essenciais.
+          idProduto: produto.id,
+          nomeProduto: produto.nome,
+          quantidade: quantidade,
+          precoUnitario: produto.preco,
         });
       }
       novoCarrinhoItens = carrinhoAtualLocal;
       localStorage.setItem("carrinho_guest", JSON.stringify(novoCarrinhoItens));
     } else { // Funcionário
       console.warn("Funcionários não podem adicionar itens ao carrinho.");
-      setIsCartLoading(false);
+      //setIsCartLoading(false); // O finally cuidará disso
       return;
     }
-    setCarrinho(novoCarrinhoItens);
+
+    if (novoCarrinhoItens !== null) {
+      setCarrinho(novoCarrinhoItens);
+    }
+  } catch (error) { // Pega o erro de addItemToCarrinhoAPI
+    console.error( // Log para o desenvolvedor
+      "AuthContext: Erro durante adicionarAoCarrinho (antes de propagar para UI):",
+      error.message
+    );
+    throw error; // Propaga o erro (que deve ser o de "falta de estoque")
+  } finally {
     setIsCartLoading(false);
-  }, [dados, grupo, carrinho, addItemToCarrinhoAPI]);
+  }
+}, [
+  dados,
+  grupo,
+  carrinho,
+  addItemToCarrinhoAPI, // Agora usa a versão modificada
+  setCarrinho, // Adicionado
+  setIsCartLoading, // Adicionado
+  API_URL
+]);
 
-  const atualizarQuantidadeNoCarrinho = useCallback(async (idProduto, novaQuantidade) => {
-    setIsCartLoading(true);
-    let carrinhoResultanteItens;
-    const idClienteLogado = dados?.id;
+const atualizarQuantidadeNoCarrinho = useCallback(async (idProduto, novaQuantidade) => {
+  setIsCartLoading(true);
+  let carrinhoFinalParaAtualizar = null;
+  const idClienteLogado = dados?.id;
 
-    if (idClienteLogado) { // Cliente
-      try {
-        if (novaQuantidade <= 0) {
-          const res = await removeItemFromCarrinhoAPI(idClienteLogado, idProduto);
-          carrinhoResultanteItens = res.itens || [];
-        } else {
-          const res = await updateItemQuantityAPI(idClienteLogado, idProduto, novaQuantidade);
-          carrinhoResultanteItens = res.itens || [];
-        }
-      } catch (error) {
-        console.error("Erro ao atualizar quantidade (API):", error);
-        setIsCartLoading(false);
-        throw error;
+  try {
+    if (idClienteLogado) {
+      let responseDaAPI;
+      if (novaQuantidade <= 0) {
+        responseDaAPI = await removeItemFromCarrinhoAPI(idClienteLogado, idProduto);
+      } else {
+        responseDaAPI = await updateItemQuantityAPI(idClienteLogado, idProduto, novaQuantidade);
+      }
+      if (responseDaAPI && Array.isArray(responseDaAPI.itens)) {
+        carrinhoFinalParaAtualizar = responseDaAPI.itens;
+      } else {
+        console.warn("AuthContext: Resposta API carrinho não continha 'itens' array ao atualizar.", responseDaAPI);
+        carrinhoFinalParaAtualizar = [];
       }
     } else if (!grupo) { // Convidado
-      let carrinhoAtualLocal = carrinho ? [...carrinho] : [];
-      const itemIndex = carrinhoAtualLocal.findIndex(item => item.idProduto === idProduto);
+      const carrinhoConvidadoAtual = carrinho ? [...carrinho] : [];
+      const itemIndex = carrinhoConvidadoAtual.findIndex(item => item.idProduto === idProduto);
       if (itemIndex > -1) {
         if (novaQuantidade <= 0) {
-          carrinhoAtualLocal.splice(itemIndex, 1);
+          carrinhoConvidadoAtual.splice(itemIndex, 1);
         } else {
-          carrinhoAtualLocal[itemIndex].quantidade = novaQuantidade;
+          carrinhoConvidadoAtual[itemIndex].quantidade = novaQuantidade;
         }
       }
-      carrinhoResultanteItens = carrinhoAtualLocal;
-      localStorage.setItem("carrinho_guest", JSON.stringify(carrinhoResultanteItens));
+      carrinhoFinalParaAtualizar = carrinhoConvidadoAtual;
+      localStorage.setItem("carrinho_guest", JSON.stringify(carrinhoFinalParaAtualizar));
     } else { // Funcionário
       console.warn("Funcionários não podem atualizar carrinho.");
-      setIsCartLoading(false);
       return;
     }
-    setCarrinho(carrinhoResultanteItens);
-    setIsCartLoading(false);
-  }, [dados, grupo, carrinho, removeItemFromCarrinhoAPI, updateItemQuantityAPI]);
 
+    if (carrinhoFinalParaAtualizar !== null) {
+      setCarrinho(carrinhoFinalParaAtualizar);
+    }
+  } catch (error) {
+    // console.error( // Opcional: manter para debug
+    //  "AuthContext: Erro durante a atualização da quantidade no carrinho (antes de propagar para UI):",
+    //  error.message
+    // );
+    throw error; // <<<< ESSENCIAL PARA PROPAGAR PARA A UI
+  } finally {
+    setIsCartLoading(false);
+  }
+}, [
+  dados, grupo, carrinho, removeItemFromCarrinhoAPI, updateItemQuantityAPI,
+  setCarrinho, setIsCartLoading, API_URL
+]);
   const removerDoCarrinho = useCallback(async (idProduto) => {
     // Simplesmente chama atualizarQuantidadeNoCarrinho com 0, que já lida com a remoção.
     await atualizarQuantidadeNoCarrinho(idProduto, 0);

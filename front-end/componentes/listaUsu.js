@@ -57,10 +57,12 @@ const ModalContent = styled.div`
 const Select = styled.select`
   width: 100%;
   padding: 10px;
-  margin: 5px 0;
+  /* margin: 5px 0; // REMOVER OU AJUSTAR SE O FormGroup FOR USADO */
   border: 1px solid #ccc;
-  border-radius: 50px;
+  border-radius: 50px; // Mantendo seu estilo original
+  box-sizing: border-box; // Adicionado para consistência
 `;
+
 
 const Box = styled.div`
   background-color: #f0f0f0;
@@ -86,12 +88,26 @@ const Pesquisar = styled.div`
 `;
 
 const Input = styled.input`
-  flex: 1;
-  padding: 10px;
-  margin: 2px;
+    width: 100%;
+  padding: 12px 15px;
+  /* margin: 12px; // REMOVER OU AJUSTAR SE O FormGroup FOR USADO */
   border: 1px solid #ccc;
-  border-radius: 50px;
-  font-size: 16px;
+  border-radius: 25px;
+  font-size: 1rem;
+  transition: border 0.3s;
+  box-sizing: border-box;
+
+  &:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25); // Adiciona um brilho no foco
+  }
+
+  &:disabled {
+    background: #e9ecef; // Cor de desabilitado um pouco mais clara
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
 `;
 
 const AddBotoes = styled.button`
@@ -158,6 +174,14 @@ const Tbody = styled.tbody`
   &::-webkit-scrollbar-thumb {
     background: transparent;
   }
+`;
+
+const Label = styled.label`
+  font-size: 0.9em; // Um pouco menor que o texto padrão
+  color: #333;     // Cor escura para boa legibilidade
+  margin-bottom: 0.3rem; // Pequeno espaço entre o label e o input
+  font-weight: 600; // Um leve negrito para destacar
+  text-align: left; // Garante que o label esteja alinhado à esquerda
 `;
 
 const Tr = styled.tr`
@@ -548,12 +572,14 @@ const formatarCPF = (valor) => {
   <Modal>
   <ModalContent>
     <h2>Alterar Usuário</h2>
+    <Label>Nome:</Label>
     <Input
       name="nome"
       placeholder="Nome"
       value={formData.nome}
       onChange={handleInputChange}
     />
+    <Label>CPF:</Label>
     <Input
       name="cpf"
       
@@ -563,6 +589,7 @@ const formatarCPF = (valor) => {
       maxLength={14}
       placeholder="000.000.000-00"
     />
+    <Label>Email:</Label>
     <Input
        name="email"
        type="email"
@@ -573,6 +600,13 @@ const formatarCPF = (valor) => {
        style={{ backgroundColor: "#e0e0e0", cursor: "not-allowed" }}
     />
     {errors.email && <ErrorMessage>{errors.email}</ErrorMessage>}
+    <label>
+      <input 
+        type="checkbox" 
+        checked={senhaHabilitada} 
+        onChange={() => setSenhaHabilitada(!senhaHabilitada)}
+      /> Alterar senha
+    </label>
     <Input
       name="senha"
       type="password"
@@ -582,13 +616,7 @@ const formatarCPF = (valor) => {
       disabled={!senhaHabilitada}
       style={{ backgroundColor: !senhaHabilitada ? "#e0e0e0" : "white" }}
     />
-     <label>
-      <input 
-        type="checkbox" 
-        checked={senhaHabilitada} 
-        onChange={() => setSenhaHabilitada(!senhaHabilitada)}
-      /> Alterar senha
-    </label>
+     
     {errors.senha && <ErrorMessage>{errors.senha}</ErrorMessage>}
     <Input
       name="confirmSenha"
@@ -600,6 +628,7 @@ const formatarCPF = (valor) => {
       style={{ backgroundColor: !senhaHabilitada ? "#e0e0e0" : "white" }}
     />
     {errors.confirmSenha && <ErrorMessage>{errors.confirmSenha}</ErrorMessage>}
+    <Label>Grupo:</Label>
     <Select name="grupo" value={formData.grupo} onChange={handleInputChange}>
       <option value="admin">Admin</option>
       <option value="estoquista">Estoquista</option>

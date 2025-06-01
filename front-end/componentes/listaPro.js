@@ -289,22 +289,25 @@ const ProdutoInfo = styled.p`
 `;
 
 const Input = styled.input`
-  width: 40%;
-  padding: 10px;
-  margin: 12px;
+  width: 100%; // << ALTERADO de 40% para ocupar a largura do FormGroup
+  padding: 12px 15px; // Aumentei um pouco o padding para melhor toque/clique
+  /* margin: 12px; // REMOVIDO - O espaçamento agora é pelo FormGroup */
   border: 1px solid #ccc;
-  border-radius: 50px;
-  font-size: 16px;
+  border-radius: 25px; // Você tinha 50px, pode ajustar. 25px é mais comum para inputs.
+  font-size: 1rem; // Aumentei um pouco para melhor legibilidade
   transition: border 0.3s;
+  box-sizing: border-box;
 
   &:focus {
     border-color: #007bff;
     outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25); // Adiciona um brilho no foco
   }
 
   &:disabled {
-    background: #f4f4f4;
+    background: #e9ecef; // Cor de desabilitado um pouco mais clara
     cursor: not-allowed;
+    opacity: 0.7;
   }
 `;
 
@@ -454,6 +457,14 @@ const BotaoRetornar = styled.button`
     font-size: 18px; // Ajuste o tamanho conforme necessário
     line-height: 1;
   }
+`;
+
+const Label = styled.label`
+  font-size: 0.9em; // Um pouco menor que o texto padrão
+  color: #333;     // Cor escura para boa legibilidade
+  margin-bottom: 0.3rem; // Pequeno espaço entre o label e o input
+  font-weight: 600; // Um leve negrito para destacar
+  text-align: left; // Garante que o label esteja alinhado à esquerda
 `;
 
 function Produtos() {
@@ -1114,6 +1125,9 @@ const handleSetExistingImageAsPrincipal = (idImagemExistente) => {
       {error && !deleteImageMessage && <p style={{ color: 'red', textAlign: 'center', marginBottom: '15px', fontWeight: 'bold' }}>{error}</p>}
 
       <>
+
+      <Label>Nome do Produto:</Label>
+
         <Input // Seu componente Input
           type="text"
           name="nome"
@@ -1122,6 +1136,8 @@ const handleSetExistingImageAsPrincipal = (idImagemExistente) => {
           onChange={handleInputChange}
           disabled={grupo === "estoquista"}
         />
+        <Label>Código:</Label>
+
         <Input
           type="text"
           name="codigo"
@@ -1130,6 +1146,7 @@ const handleSetExistingImageAsPrincipal = (idImagemExistente) => {
           onChange={handleInputChange}
           disabled={grupo === "estoquista"}
         />
+        <Label>Preço:</Label>
         <Input
           type="number"
           name="preco"
@@ -1138,6 +1155,7 @@ const handleSetExistingImageAsPrincipal = (idImagemExistente) => {
           onChange={handleInputChange}
           disabled={grupo === "estoquista"}
         />
+        <Label>Quantidade em Estoque:</Label>
         <Input
           type="number"
           name="qtdEstoque"
@@ -1145,6 +1163,7 @@ const handleSetExistingImageAsPrincipal = (idImagemExistente) => {
           value={formData.qtdEstoque}
           onChange={handleInputChange}
         />
+        <Label>Descrição:</Label>
         <TextoArea // Seu componente TextoArea
           name="descDetalhada"
           placeholder="Descrição Detalhada"
@@ -1152,14 +1171,16 @@ const handleSetExistingImageAsPrincipal = (idImagemExistente) => {
           onChange={handleInputChange}
           disabled={grupo === "estoquista"}
         />
-        <Input
-          type="number"
-          name="avaliacao"
-          placeholder="Avaliação"
-          value={formData.avaliacao}
-          onChange={handleInputChange}
-          disabled={grupo === "estoquista"}
-        />
+       <Input
+    type="number"
+    name="avaliacao"
+    value={formData.avaliacao}
+    onChange={handleInputChange}
+    disabled={grupo === "estoquista"}
+    min="0"      // Define o valor mínimo permitido
+    max="5"      // Define o valor máximo permitido
+    step="0.5"   // Define o incremento/decremento para os botões e validação
+  />
 
         <h3 style={{ marginTop: '25px', marginBottom: '10px', borderTop: '1px solid #eee' }}>Imagens Salvas</h3>
         {viewingProduct.imagens && viewingProduct.imagens.length > 0 ? (

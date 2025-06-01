@@ -831,7 +831,13 @@ function Perfil() {
       return;
     }
     try {
-      const response = await fetch('http://localhost:8081/endereco', { /* ... */ });
+      const response = await fetch('http://localhost:8081/endereco', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(endereco) // o corpo da requisição DELETE
+        });
       if (!response.ok) throw new Error(await response.text());
       const mensagem = await response.text();
       setFeedback({...feedback, enderecos: "Endereço excluído com sucesso!"}); // Usar feedback
@@ -967,7 +973,7 @@ function Perfil() {
                 <BotaoPrimario type="submit">Salvar Alterações</BotaoPrimario>
               </div>
               <div style={{ textAlign: 'center', marginTop: '20px'}}>
-              <BotaoPrimario onClick={handleRedirect}>Voltar</BotaoPrimario>
+              <BotaoPrimario type="button" onClick={handleRedirect}>Voltar</BotaoPrimario>
               </div>
             </FormSection>
           </form>
