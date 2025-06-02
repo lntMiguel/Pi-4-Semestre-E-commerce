@@ -193,6 +193,39 @@ const Error = styled.p`
   margin-top: 2px;
 `;
 
+const colors = {
+  primary: "#164d09", // Verde escuro
+  accent: "#30f003",  // Verde neon
+  lightAccent: "rgba(48, 240, 3, 0.2)",
+  background: "#f8faf6",
+  white: "#ffffff",
+  lightGray: "#f0f0f0",
+  textDark: "#1a2e12",
+  textLight: "#ffffff",
+  border: "#e6e8e3"
+};
+
+const StatusBadge = styled.span`
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.2s ease;
+  
+  &::before {
+    content: "";
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+    background-color: currentColor;
+  }
+`;
+
+
 const Success = styled.p`
   color: #028a02;
   font-size: 0.85rem;
@@ -325,6 +358,7 @@ const PedidoNumero = styled.span`
   color: #164d09;
   font-size: 1.1rem;
 `;
+
 
 const PedidoStatus = styled.span`
   background-color: ${props => {
@@ -481,6 +515,71 @@ function Perfil() {
   const [errors, setErrors] = useState({ // Hook
     dados: {}, senha: {}, endereco: {}
   });
+const formatarDataPedido = (dataString) => {
+    if (!dataString) return ''; // Retorna string vazia se a data for nula ou indefinida
+    try {
+      const data = new Date(dataString);
+      return data.toLocaleDateString('pt-BR'); // Formato dd/mm/aaaa
+    } catch (error) {
+      console.error("Erro ao formatar data do pedido:", error, "Valor original:", dataString);
+      return dataString; // Retorna a string original em caso de erro
+    }
+  };
+   const getLabelFromEnum = (enumValue) => {
+    return (
+      Object.entries(statusMap).find(
+        ([label, value]) => value === enumValue
+      )?.[0] || enumValue // Retorna o próprio enumValue se não encontrar o label
+    );
+  };
+   const getStatusStyle = (status) => {
+    // Certifique-se que `colors` está acessível aqui
+    switch (status) {
+      case "Aguardando pagamento":
+        return {
+          background: "rgba(253, 230, 138, 0.2)", // colors.warningBackground (exemplo, ajuste conforme GPedidos)
+          color: "#854d0e", // colors.warningText
+        };
+      case "Pagamento rejeitado":
+        return {
+          background: "rgba(254, 202, 202, 0.2)", // colors.errorBackground
+          color: "#991b1b", // colors.errorText
+        };
+      case "Pagamento com sucesso":
+        return {
+          background: "rgba(48, 240, 3, 0.2)", // colors.successBackground
+          color: "#166534", // colors.successText
+        };
+      case "Aguardando retirada":
+        return {
+          background: "rgba(191, 219, 254, 0.2)", // colors.infoBackground
+          color: "#1e40af", // colors.infoText
+        };
+      case "Em trânsito":
+        return {
+          background: "rgba(221, 214, 254, 0.2)", // colors.purpleBackground (exemplo)
+          color: "#5b21b6", // colors.purpleText
+        };
+      case "Entregue":
+        return {
+          background: "rgba(22, 77, 9, 0.2)", // Ajuste para corresponder a GPedidos se necessário
+          color: "#164d09",
+        };
+      default:
+        return {
+          background: "rgba(209, 213, 219, 0.2)", // colors.defaultBackground
+          color: "#1f2937", // colors.defaultText
+        };
+    }
+  };
+  const statusMap = {
+    "Aguardando pagamento": "AGUARDANDO_PAGAMENTO",
+    "Pagamento rejeitado": "PAGAMENTO_REJEITADO",
+    "Pagamento com sucesso": "PAGAMENTO_COM_SUCESSO",
+    "Aguardando retirada": "AGUARDANDO_RETIRADA",
+    "Em trânsito": "EM_TRANSITO",
+    "Entregue": "ENTREGUE",
+  };
 
   // --- DEFINA FUNÇÕES COM HOOKS (useCallback, useMemo) AQUI ---
   const handleRedirect = useCallback(() => { // <<< MOVIDO PARA CIMA
@@ -1202,12 +1301,13 @@ function Perfil() {
         <PedidoCard key={pedido.id}>
           <PedidoHeader>
             <PedidoNumero>Pedido #{pedido.numero}</PedidoNumero>
-            <PedidoStatus status={pedido.status}>{pedido.status}</PedidoStatus>
-          </PedidoHeader>
+<StatusBadge style={getStatusStyle(getLabelFromEnum(pedido.status))}>
+            {getLabelFromEnum(pedido.status)}
+          </StatusBadge>          </PedidoHeader>
 
           <PedidoInfoItem>
                   <PedidoLabel>Data do Pedido</PedidoLabel>
-                  <PedidoValue>{new Date(pedido.dataPedido).toLocaleString()}</PedidoValue>
+                  <PedidoValue>{formatarDataPedido(pedido.dataPedido)}</PedidoValue>
                 </PedidoInfoItem>
           
           <PedidoValorTotal>
@@ -1225,7 +1325,7 @@ function Perfil() {
               <PedidoInfo>
                 <PedidoInfoItem>
                   <PedidoLabel>Data do Pedido</PedidoLabel>
-                  <PedidoValue>{new Date(pedido.dataPedido).toLocaleString()}</PedidoValue>
+                  <PedidoValue>{formatarDataPedido(pedido.dataPedido)}</PedidoValue>
                 </PedidoInfoItem>
                 <PedidoInfoItem>
                   <PedidoLabel>Método de Pagamento</PedidoLabel>

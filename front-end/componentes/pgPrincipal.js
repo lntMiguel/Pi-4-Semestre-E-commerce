@@ -868,7 +868,7 @@ const {
                       <img
                         src={`../` + imagem.caminhoArquivo.slice(22)}
                         alt={`Imagem ${index + 1}`}
-                        onClick={() => setImagemSelecionada(`../${imagem.caminhoArquivo.slice(22)}`)}
+                        onClick={() => setImagemAmpliada(`../${imagem.caminhoArquivo.slice(22)}`)}
                         style={{ cursor: "pointer" }}
                       />
                     </div>

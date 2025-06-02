@@ -491,13 +491,35 @@ const formatarCPF = (valor) => {
   };
 
   const handleUpdate = async () => {
-    setError(""); // Limpa mensagens de erro antes de começar
+    setError(""); // Limpa mensagens de erro gerais
+    setErrors({}); // Limpa erros específicos de campos
+
+    let newErrors = {}; // Objeto para coletar novos erros
+
+    // Validação de senha SOMENTE se a alteração de senha estiver habilitada
+    if (senhaHabilitada) {
+      if (!formData.senha) {
+        newErrors.senha = "Nova senha é obrigatória.";
+      }
+      if (!formData.confirmSenha) {
+        newErrors.confirmSenha = "Confirmação de senha é obrigatória.";
+      } else if (formData.senha && formData.senha !== formData.confirmSenha) {
+        newErrors.confirmSenha = "As senhas não coincidem.";
+      }
+    }
+
+    // Se houver erros de validação de senha (ou outros que você possa adicionar no futuro)
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return; // Interrompe a execução se houver erros
+    }
   
     const updatedData = new URLSearchParams();
     if (formData.nome) updatedData.append("nome", formData.nome);
     if (formData.cpf) updatedData.append("cpf", formData.cpf);
-    if (formData.senha) updatedData.append("senha", formData.senha);
-    if (formData.grupo) updatedData.append("grupo", formData.grupo);
+    if (senhaHabilitada && formData.senha) {
+      updatedData.append("senha", formData.senha);
+    }    if (formData.grupo) updatedData.append("grupo", formData.grupo);
   
     try {
       const response = await fetch(`http://localhost:8081/users/${editingUser.id}/dados`, {
@@ -516,7 +538,7 @@ const formatarCPF = (valor) => {
 
       await fetchUsers(); 
       setShowAlterarModal(false);
-  
+      setSenhaHabilitada(false);
       const data = await response.json();
       console.log("Usuário atualizado:", data);
     } catch (error) {
@@ -550,7 +572,7 @@ const formatarCPF = (valor) => {
               <h2>Cadastrar Usuário</h2>
               <Input name="nome" placeholder="Nome" onChange={handleInputChange} />
               {errors.nome && <ErrorMessage>{errors.nome}</ErrorMessage>}
-              <Input name="cpf" placeholder="CPF" onChange={handleInputChange} />
+              <Input maxLength={11} name="cpf" placeholder="CPF" onChange={handleInputChange} />
               {errors.cpf && <ErrorMessage>{errors.cpf}</ErrorMessage>}
               <Input name="email" type="email" placeholder="E-mail" onChange={handleInputChange} />
               {errors.email && <ErrorMessage>{errors.email}</ErrorMessage>}
@@ -586,8 +608,8 @@ const formatarCPF = (valor) => {
       value={formData.cpf}
       onChange={(e) => handleCPFInput(e.target.value, setFormData)}
       onKeyDown={handleCPFKeyDown}
-      maxLength={14}
-      placeholder="000.000.000-00"
+      maxLength={11}
+      placeholder="00000000000"
     />
     <Label>Email:</Label>
     <Input
