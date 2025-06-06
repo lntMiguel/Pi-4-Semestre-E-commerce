@@ -33,6 +33,30 @@ public class UserDTO {
         return id;
     }
 
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public void setStatus(Boolean status) {
+        this.status = status;
+    }
+
+    public void setGrupo(String grupo) {
+        this.grupo = grupo;
+    }
+
+    public void setCpf(Long cpf) {
+        this.cpf = cpf;
+    }
+
     public UserDTO(String nome, String email, Boolean status, String grupo, String id) {
         this.nome = nome;
         this.email = email;
@@ -55,6 +79,9 @@ public class UserDTO {
         this.status = status;
         this.grupo = grupo;
         this.cpf = cpf;
+    }
+
+    public UserDTO() {
     }
 }
 

@@ -72,17 +72,7 @@ public class CarrinhoService {
                             ", Disponível em estoque: " + produto.getQtdEstoque());
         }
 
-        // 5. Se todas as validações passaram, então adicione/atualize o item no objeto carrinho
-        // A função `consultaEstoque.validarEstoqueEStatusParaItem` aqui se torna um pouco redundante
-        // para a verificação de estoque, pois já fizemos acima, mas ela ainda valida o status do produto
-        // e a quantidade individual sendo adicionada (se > 0), o que é bom.
-        // No entanto, a validação de status já foi feita.
-        // A validação de quantidadeDesejada > 0 também.
-        // A validação principal de estoque (produto.getQtdEstoque() < quantidadeDesejada)
-        // é a que substituímos pela validação da quantidadeTotalResultante.
-        // Poderíamos até remover a chamada à consultaEstoque.validarEstoqueEStatusParaItem aqui,
-        // ou refatorá-la para que ela não repita a validação de estoque.
-        // Por agora, vamos manter como está no seu código original, mas a validação crucial é a de cima.
+
         consultaEstoque.validarEstoqueEStatusParaItem(idProduto, quantidadeParaAdicionar);
 
 

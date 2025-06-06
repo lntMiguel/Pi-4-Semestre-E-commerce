@@ -389,7 +389,7 @@ const validateNome = (nome) => {
   };
 
  const validarFormulario = () => {
-  const newErrors = {}; // Mudei 'e' para 'newErrors' para clareza
+  const newErrors = {}; 
 
   // Validação do Nome
   if (!form.nome.trim()) {
@@ -488,8 +488,7 @@ const validateNome = (nome) => {
 
   const handleSubmit = async (e) => {
   e.preventDefault();
-  const currentErrors = validarFormulario(); // validarFormulario agora retorna o objeto de erros
-
+  const currentErrors = validarFormulario(); 
   if (Object.keys(currentErrors).length > 0) {
     // Monta a mensagem de erro para o alert
     let alertMessage = "Por favor, corrija os seguintes erros:\n\n";
@@ -517,7 +516,6 @@ const validateNome = (nome) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      // Tenta parsear como JSON se for uma mensagem estruturada do backend
       try {
         const errorJson = JSON.parse(errorText);
         alert("Erro ao cadastrar: " + (errorJson.message || errorJson.error || errorText));
@@ -570,7 +568,7 @@ const validateNome = (nome) => {
     }
 
     alert("Cliente cadastrado com sucesso!");
-    router.push('/login'); // Ou para a página de perfil, dashboard, etc.
+    router.push('/login'); 
 
   } catch (error) {
     console.error("Erro no processo de cadastro:", error);

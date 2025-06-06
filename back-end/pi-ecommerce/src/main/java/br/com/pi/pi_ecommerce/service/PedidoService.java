@@ -1,7 +1,6 @@
 package br.com.pi.pi_ecommerce.service;
 
 
-import br.com.pi.pi_ecommerce.models.Carrinho;
 import br.com.pi.pi_ecommerce.models.Pedido;
 import br.com.pi.pi_ecommerce.models.ProdutoPedido;
 import br.com.pi.pi_ecommerce.models.statusPedido.StatusPedido;
@@ -12,11 +11,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 
-import static br.com.pi.pi_ecommerce.utils.GeradorDeNumeros.gerarNumeroPedido;
+import br.com.pi.pi_ecommerce.utils.GeradorDeNumeros;
 
 @Service
 public class PedidoService {
@@ -32,13 +30,16 @@ public class PedidoService {
     @Autowired
     private ConsultaEstoque consultaEstoque;
 
+    @Autowired
+    private GeradorDeNumeros geradorDeNumeros;
+
     public Pedido criarPedido(Pedido pedido) {
 
         consultaEstoque.validarEstoqueEStatus(pedido.getProdutos());
 
         diminuirQuantidade(pedido.getProdutos());
 
-        String numeroPedido = gerarNumeroPedido();
+        String numeroPedido = geradorDeNumeros.gerarNumeroPedido();
         pedido.setNumero(numeroPedido); // Definir o número do pedido gerado
         return pedidoRepository.save(pedido); // Salvar o pedido no banco de dados
     }

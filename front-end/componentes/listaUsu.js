@@ -508,7 +508,7 @@ const formatarCPF = (valor) => {
       }
     }
 
-    // Se houver erros de validação de senha (ou outros que você possa adicionar no futuro)
+    // Se houver erros de validação de senha 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return; // Interrompe a execução se houver erros

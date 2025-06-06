@@ -1,18 +1,24 @@
 package br.com.pi.pi_ecommerce.models;
 
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-
 import java.math.BigDecimal;
 
-@NoArgsConstructor
-@AllArgsConstructor
+
 public class ProdutoPedido {
 
     private String idProduto;        // ID do produto comprado
     private String nomeProduto;      // Nome do produto (snapshotted)
     private int quantidade;          // Quantidade comprada
     private BigDecimal precoUnitario; // Preço na hora da compra
+
+    public ProdutoPedido(String idProduto, String nomeProduto, int quantidade, BigDecimal precoUnitario) {
+        this.idProduto = idProduto;
+        this.nomeProduto = nomeProduto;
+        this.quantidade = quantidade;
+        this.precoUnitario = precoUnitario;
+    }
+
+    public ProdutoPedido() {
+    }
 
     public String getIdProduto() {
         return idProduto;

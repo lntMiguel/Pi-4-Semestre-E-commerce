@@ -58,4 +58,7 @@ public class Imagem {
         this.caminhoArquivo = caminhoArquivo;
         this.principal = principal;
     }
+
+    public Imagem() {
+    }
 }

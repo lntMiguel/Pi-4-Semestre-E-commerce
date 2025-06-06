@@ -40,7 +40,7 @@ public class ImagemService {
         }
     }
 
-    private void salvarImagemNoSistema(String idProduto, MultipartFile file, String nomeImagemPrincipal) throws Exception {
+    void salvarImagemNoSistema(String idProduto, MultipartFile file, String nomeImagemPrincipal) throws Exception {
         try {
             // Verifica se a imagem atual deve ser a principal
             boolean isPrincipal = nomeImagemPrincipal != null && Objects.equals(file.getOriginalFilename(), nomeImagemPrincipal);

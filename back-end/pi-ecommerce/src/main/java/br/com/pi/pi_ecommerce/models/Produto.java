@@ -117,4 +117,7 @@ public class Produto {
         this.avaliacao = avaliacao;
         this.status = true;
     }
+
+    public Produto() {
+    }
 }
